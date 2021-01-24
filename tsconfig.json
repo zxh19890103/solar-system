@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "module": "ESNext",
+    "target": "ESNext",
+    "moduleResolution": "Node",
+    "resolveJsonModule": true,
+    "lib": [
+      "ScriptHost",
+      "DOM",
+      "DOM.Iterable",
+      "ESNext",
+      "ESNext.Array",
+      "ESNext.AsyncIterable",
+      "ESNext.Promise"
+    ],
+    "noImplicitThis": true
+  }
+}

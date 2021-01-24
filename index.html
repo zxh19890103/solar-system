@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Solar System</title>
+  <link rel="stylesheet" type="text/css" href="/style.css">
+</head>
+
+<body>
+  <script type="module" referrerpolicy="unsafe-url" src="/canvas-uni.ts"></script>
+  <script type="module" referrerpolicy="unsafe-url" src="/canvas-uni-matrix-spec.ts"></script>
+  <script>
+    const es = new EventSource("/sse-open")
+    es.onmessage = (evt) => {
+      location.reload()
+    }
+  </script>
+</body>
+
+</html>
