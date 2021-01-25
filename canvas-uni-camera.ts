@@ -67,20 +67,21 @@ export class CameraSys {
     const xAxis = new Vector(1, 0, 0)
     const yAxis = new Vector(0, 1, 0)
     if (v.x === 0 && v.z === 0) {
-      // it means yAxis -> zAxis
-      this.rotatesX(PI * 1.5)
+      // it means yAxis -> v
+      const ang = v.angleTo(zAxis, xAxis)
+      this.rotatesX(ang)
     } else {
-      // TODO: ?????
       const angle1 = v.angleTo(vOnXZ, xAxis)
       const angle2 = vOnXZ.angleTo(zAxis, yAxis)
       this.rotatesX(angle1)
       this.rotatesY(angle2)
-      const xAxis2 = new Vector(...this.transforms.reduce((p, m) => {
-        return m.multipleWithXyz(...p)
-      }, [1, 0, 0]))
-      const angle3 = yAxis.angleTo(xAxis2, zAxis)
-      this.rotatesZ(angle3)
     }
+    // Rotates Z
+    const xAxis2 = new Vector(...this.transforms.reduce((p, m) => {
+      return m.multipleWithXyz(...p)
+    }, [1, 0, 0]))
+    const angle3 = yAxis.angleTo(xAxis2, zAxis)
+    this.rotatesZ(angle3)
   }
 
   rotates(angleX: number, angleY?: number, angleZ?: number) {

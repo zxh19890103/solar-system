@@ -39,36 +39,36 @@ const createBodyByConfig = (inf: BodyInfo) => {
 }
 
 const camera = new CameraSys()
-camera.translates(0, 4 * AU, Pluto.aphelion)
+camera.translates(0, Neptune.aphelion + AU, 0)
 camera.setZAxis()
 camera.adjustCanvasCoords()
-camera.setFocalLength(AU * .004)
+camera.setFocalLength(AU * .03)
 
 const ether = new Ether(createCanvasCtx(), camera)
 
-const dispayRadiusTimes = 50
+const dispayRadiusTimes = 100
 
 ether.put(createBodyByConfig({
   ...Sun,
   sizeInPixels: 1,
   avatar: ""
 }))
-ether.put(createBodyByConfig({
-  ...Mercury,
-  dispayRadiusTimes,
-}))
-ether.put(createBodyByConfig({
-  ...Venus,
-  dispayRadiusTimes,
-}))
-ether.put(createBodyByConfig({
-  ...Earth,
-  dispayRadiusTimes,
-}))
-ether.put(createBodyByConfig({
-  ...Mars,
-  dispayRadiusTimes,
-}))
+// ether.put(createBodyByConfig({
+//   ...Mercury,
+//   dispayRadiusTimes,
+// }))
+// ether.put(createBodyByConfig({
+//   ...Venus,
+//   dispayRadiusTimes,
+// }))
+// ether.put(createBodyByConfig({
+//   ...Earth,
+//   dispayRadiusTimes,
+// }))
+// ether.put(createBodyByConfig({
+//   ...Mars,
+//   dispayRadiusTimes,
+// }))
 ether.put(createBodyByConfig({
   ...Jupiter,
   dispayRadiusTimes,
@@ -85,10 +85,10 @@ ether.put(createBodyByConfig({
   ...Neptune,
   dispayRadiusTimes,
 }))
-ether.put(createBodyByConfig({
-  ...Halley,
-  dispayRadiusTimes
-}))
+// ether.put(createBodyByConfig({
+//   ...Halley,
+//   dispayRadiusTimes
+// }))
 // ether.put(createBodyByConfig({
 //   ...Tempel1,
 //   sizeInPixels: .2
