@@ -1,3 +1,5 @@
+import { Vector } from "./canvas-uni-vector"
+
 export class Matrix {
   /**
    * count as rows
@@ -66,7 +68,7 @@ export class Matrix {
     })
   }
 
-  multipWith(matrix: Matrix | string) {
+  multipleWith(matrix: Matrix | string) {
     const realmatrix = typeof matrix === "string" ? new Matrix(matrix) : matrix
     const mat = Matrix.create(realmatrix.m, this.n)
     const data = mat.data
@@ -79,9 +81,9 @@ export class Matrix {
     return mat
   }
 
-  multipedBy(matrix: Matrix | string) {
+  multipleBy(matrix: Matrix | string) {
     const mat = typeof matrix === "string" ? new Matrix(matrix) : matrix
-    return mat.multipWith(this)
+    return mat.multipleWith(this)
   }
 
   private dot(v1: number[], v2: number[]) {
@@ -90,9 +92,13 @@ export class Matrix {
     }, 0)
   }
 
-  multipWithVector(...nums: number[]) {
+  multipleWithXyz(...nums: number[]) {
     return this.data.map(x => {
       return this.dot(x, nums)
     })
+  }
+
+  multipleWithVector(v: Vector) {
+    return this.multipleWithXyz(...v.toPoint())
   }
 }

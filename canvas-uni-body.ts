@@ -16,7 +16,7 @@ import {
 import { Ether } from "./canvas-uni-ether"
 import { Vector } from "./canvas-uni-vector"
 
-const { PI, sqrt, cos, sin, abs } = Math
+const { PI, sqrt, cos, sin, abs, round } = Math
 
 export class CelestialBody {
   name: string = "unknown"
@@ -258,12 +258,13 @@ export const createBody = (inf: BodyInfo, ctx: CanvasRenderingContext2D): Create
     if (point2d[0] === null) {
       x = null
       y = null
+    } else {
+      x = point2d[0]
+      y = point2d[1]
     }
     ether.ctx.fillStyle = color
     ether.setLayersOrder(name, canvasElement, point2d[3], inf.index)
     r = inf.sizeInPixels ? inf.sizeInPixels : (R * BODY_SIZE_COEFFICIENT * point2d[2])
-    x = 0 ^ point2d[0]
-    y = 0 ^ point2d[1]
   }
 
   let avatar: HTMLImageElement = null

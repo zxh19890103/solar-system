@@ -1,7 +1,7 @@
 import { Matrix } from "./canvas-uni-matrix";
 import { Vector } from "./canvas-uni-vector";
 
-const { PI, cos, sin } = Math
+const { PI, cos, sin, round } = Math
 
 export class CameraSys {
   private coord: Vector = new Vector().xyz(0, 0, 0)
@@ -9,7 +9,16 @@ export class CameraSys {
    * focal length, unit: x10^3 km
    */
   private fl = 1000
-  private rotation: Matrix[] = []
+  private transforms: Matrix[] = []
+  private finalRot: Matrix
+
+  constructor() {
+    this.finalRot = new Matrix(`
+    1 0 0
+    0 1 0
+    0 0 1
+    `)
+  }
 
   translates(x: number, y?: number, z?: number) {
     this.coord.x += x
@@ -54,7 +63,7 @@ export class CameraSys {
      */
     const v = z ? z.times(-1) : this.coord.clone().times(-1)
     const zAxis = new Vector(0, 0, 1)
-    const vOnY = new Vector(v.x, 0, v.z)
+    const vOnXZ = new Vector(v.x, 0, v.z)
     const xAxis = new Vector(1, 0, 0)
     const yAxis = new Vector(0, 1, 0)
     if (v.x === 0 && v.z === 0) {
@@ -62,11 +71,15 @@ export class CameraSys {
       this.rotatesX(PI * 1.5)
     } else {
       // TODO: ?????
-      const angle1 = v.angleTo(vOnY, xAxis)
-      const angle2 = vOnY.angleTo(zAxis, yAxis)
-      console.log(angle1, angle2 / PI)
-      // this.rotatesX(angle1)
+      const angle1 = v.angleTo(vOnXZ, xAxis)
+      const angle2 = vOnXZ.angleTo(zAxis, yAxis)
+      this.rotatesX(angle1)
       this.rotatesY(angle2)
+      const xAxis2 = new Vector(...this.transforms.reduce((p, m) => {
+        return m.multipleWithXyz(...p)
+      }, [1, 0, 0]))
+      const angle3 = yAxis.angleTo(xAxis2, zAxis)
+      this.rotatesZ(angle3)
     }
   }
 
@@ -81,64 +94,57 @@ export class CameraSys {
     return this
   }
 
-  rotateXYZ(r, b, a) {
-    this.rotation.push(new Matrix(`
-    ${cos(a) * cos(b)} ${cos(a) * sin(b) * sin(r) - sin(a) * cos(r)} ${cos(a) * sin(b) * cos(r) + sin(a) * sin(r)} 
-    ${sin(a) * cos(b)} ${sin(a) * sin(b) * sin(r) + cos(a) * cos(r)} ${sin(a) * sin(b) * cos(r) - cos(a) * sin(r)} 
-    ${-sin(b)} ${cos(b) * sin(r)} ${cos(b) * cos(r)}
-    `))
-  }
-
   rotatesX(angle: number) {
     const cosine = cos(angle)
     const sine = sin(angle)
-    this.rotation.push(new Matrix(
+    const matrix = new Matrix(
       `
       1 0 0
       0 ${cosine} ${- sine}
       0 ${sine} ${cosine}
       `
-    ))
+    )
+    this.transforms.push(matrix)
+    this.finalRot = matrix.multipleBy(this.finalRot)
     return this
   }
 
   rotatesY(angle: number) {
     const cosine = cos(angle)
     const sine = sin(angle)
-    this.rotation.push(new Matrix(
+    const matrix = new Matrix(
       `
       ${cosine} 0 ${sine}
       0 1 0
       ${- sine} 0 ${cosine}
       `
-    ))
+    )
+    this.transforms.push(matrix)
+    this.finalRot = matrix.multipleBy(this.finalRot)
     return this
   }
 
   rotatesZ(angle: number) {
     const cosine = cos(angle)
     const sine = sin(angle)
-    this.rotation.push(new Matrix(
+    const matrix = new Matrix(
       `
       ${cosine} ${- sine} 0
       ${sine} ${cosine} 0
       0 0 1
       `
-    ))
+    )
+    this.transforms.push(matrix)
+    this.finalRot = matrix.multipleBy(this.finalRot)
     return this
   }
 
   transform(...xyz: number[]) {
     const origin = this.coord.toPoint()
-    const [x, y, z] = xyz.map((n, i) => n - origin[i])
-    const [x1, y1, z1] = this.rotation.reduce((p, matrix) => {
-      return matrix.multipWithVector(...p)
-    }, [x, y, z])
-    return [
-      x1,
-      y1,
-      z1
-    ]
+    const Pt = xyz.map((n, i) => n - origin[i])
+    return this.transforms.reduce((point, matrix) => {
+      return matrix.multipleWithXyz(...point)
+    }, Pt)
   }
 
   project(...xyz: number[]) {
@@ -150,11 +156,21 @@ export class CameraSys {
     // unit: pixels / (10^3 km)
     const ratio = this.fl / Zt
     return [
-      isBehind ? null : ratio * Xt,
-      isBehind ? null : ratio * Yt,
+      isBehind ? null : round(ratio * Xt),
+      isBehind ? null : round(ratio * Yt),
       ratio,
       Zt
     ]
+  }
+
+  adjustCanvasCoords() {
+    // const yAxis = new Vector(0, 1, 0)
+    // const angle = yAxis.angleTo()
+    this.transforms.push(new Matrix(`
+    0 -1 0
+    -1 0 0
+    0 0 1
+    `))
   }
 
   /**
@@ -170,6 +186,6 @@ export class CameraSys {
   }
 
   toString() {
-    this.rotation.forEach(m => m.print())
+    this.transforms.forEach(m => m.print())
   }
 }

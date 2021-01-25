@@ -48,6 +48,20 @@ data: ${JSON.stringify(payload)}
   }
 }
 
+fs.watch("./", (event, name) => {
+  if (event !== "change") return
+  if (!name.endsWith(".ts")) return
+  compileTs(name, `./dist/${name.replace('.ts', '.js')}`)
+  eventSource.emit({ reload: true })
+})
+
+const compileTs = (tsFile, saveAs) => {
+  const source = fs.readFileSync(tsFile, "utf-8")
+  const output = require("typescript").transpileModule(source, require("./tsconfig.json"))
+  fs.writeFileSync(saveAs, output.outputText)
+  console.log("gen", saveAs)
+}
+
 http.createServer((req, res) => {
   const url = req.url
   if (/\.(jpg|png|gif)$/.test(url)) {
@@ -74,10 +88,7 @@ http.createServer((req, res) => {
       isExpired = statTs.mtimeMs > statJs.ctimeMs
     }
     if (!isJsExisting || isExpired) {
-      const source = fs.readFileSync(oriRresouce, "utf-8")
-      const output = require("typescript").transpileModule(source, require("./tsconfig.json"))
-      fs.writeFileSync(asJsResource, output.outputText)
-      console.log("gen", asJsResource)
+      compileTs(oriRresouce, asJsResource)
     }
     const rs = fs.createReadStream(asJsResource)
     rs.pipe(res)
@@ -93,7 +104,7 @@ http.createServer((req, res) => {
     if (/open$/.test(url)) {
       eventSource.set(res)
     } else {
-      eventSource.emit({ name: "singhi" })
+      eventSource.emit({ reload: true })
       res.end("sent!")
     }
   } else {

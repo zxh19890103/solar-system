@@ -65,9 +65,8 @@ export class Vector {
   angleTo(v: Vector, Vn: Vector) {
     const Vc = this.cross(v)
     const dVnVc = Vc.dot(Vn)
-    const ang = acos(
-      this.dot(v) / (this.mag() * v.mag())
-    )
+    const ra = this.dot(v) / (this.mag() * v.mag())
+    const ang = ra > 1 ? 0 : acos(ra)
     if (dVnVc < 0) {
       return PI * 2 - ang
     }
