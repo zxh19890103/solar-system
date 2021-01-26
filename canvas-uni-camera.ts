@@ -58,30 +58,38 @@ export class CameraSys {
     /**
      * let vector (0, 0, 0) -> (x, y, z) to be the new Z axis.
      * steps: 
-     * 1. rotates about to X axis by angle([x, y, z], [x, 0, z])
-     * 2. rotates about to Y axis by angle([x, 0, z], [0, 0, z])
+     * 1. rotates about to X axis by angle([0, y, z], [0, 0, 1])
+     * 2. rotates about to Y axis by angle([x, 0, -y], [0, 0, 1])
      */
-    const v = z ? z.times(-1) : this.coord.clone().times(-1)
+    const newZAxis = z ? z.times(-1) : this.coord.clone().times(-1)
     const zAxis = new Vector(0, 0, 1)
-    const vOnXZ = new Vector(v.x, 0, v.z)
     const xAxis = new Vector(1, 0, 0)
     const yAxis = new Vector(0, 1, 0)
-    if (v.x === 0 && v.z === 0) {
-      // it means yAxis -> v
-      const ang = v.angleTo(zAxis, xAxis)
-      this.rotatesX(ang)
-    } else {
-      const angle1 = v.angleTo(vOnXZ, xAxis)
-      const angle2 = vOnXZ.angleTo(zAxis, yAxis)
-      this.rotatesX(angle1)
-      this.rotatesY(angle2)
+    const v1 = new Vector(0, newZAxis.y, newZAxis.z)
+
+    if (newZAxis.y === 0 && newZAxis.z === 0) {
+      const ang = newZAxis.angleTo(zAxis, yAxis)
+      this.rotatesY(ang)
+      return
     }
+
+    if (newZAxis.y === 0 && newZAxis.x === 0) {
+      const ang = newZAxis.angleTo(zAxis, yAxis)
+      this.rotatesY(ang)
+      return
+    }
+
+    const angle1 = v1.angleTo(zAxis, xAxis)
+    const v2 = new Vector(newZAxis.x, 0, Math.abs(newZAxis.y))
+    const angle2 = v2.angleTo(zAxis, yAxis)
+    this.rotatesX(angle1)
+    this.rotatesY(angle2)
     // Rotates Z
-    const xAxis2 = new Vector(...this.transforms.reduce((p, m) => {
-      return m.multipleWithXyz(...p)
-    }, [1, 0, 0]))
-    const angle3 = yAxis.angleTo(xAxis2, zAxis)
-    this.rotatesZ(angle3)
+    // const xAxis2 = new Vector(...this.transforms.reduce((p, m) => {
+    //   return m.multipleWithXyz(...p)
+    // }, [1, 0, 0]))
+    // const angle3 = yAxis.angleTo(xAxis2, zAxis)
+    // this.rotatesZ(angle3)
   }
 
   rotates(angleX: number, angleY?: number, angleZ?: number) {

@@ -14,6 +14,7 @@ import {
   SECONDS_IN_A_DAY
 } from "./canvas-uni-constants"
 import { Ether } from "./canvas-uni-ether"
+import { rand } from "./canvas-uni-utils"
 import { Vector } from "./canvas-uni-vector"
 
 const { PI, sqrt, cos, sin, abs, round } = Math
@@ -300,8 +301,10 @@ export const createBody = (inf: BodyInfo, ctx: CanvasRenderingContext2D): Create
     fill = avatar === null ? fillBall : fillAvatar
 
     const speedOnAphe = computesOrbitSpeedOnR(inf.semiMajorAxis, aphelion, inf.ref)
-    velocity.addXYZ(0, speedOnAphe, 0)
-    coord.addXYZ(aphelion * cos(inf.inclination), 0, aphelion * sin(inf.inclination))
+    const angleOnXY = rand(0, PI * 2)
+    velocity.addXYZ(speedOnAphe * cos(angleOnXY + PI / 2), speedOnAphe * sin(angleOnXY + PI / 2), 0)
+    const xy = aphelion * cos(inf.inclination)
+    coord.addXYZ(xy * cos(angleOnXY), xy * sin(angleOnXY), aphelion * sin(inf.inclination))
     body.setupSatellites()
 
     const orbitalPeriod = computesOrbitalPeriod(inf.semiMajorAxis, inf.ref)
