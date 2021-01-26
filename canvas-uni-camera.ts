@@ -80,7 +80,7 @@ export class CameraSys {
     }
 
     const angle1 = v1.angleTo(zAxis, xAxis)
-    const v2 = new Vector(newZAxis.x, 0, Math.abs(newZAxis.y))
+    const v2 = new Vector(newZAxis.x, 0, Math.sqrt(newZAxis.y * newZAxis.y + newZAxis.z * newZAxis.z))
     const angle2 = v2.angleTo(zAxis, yAxis)
     this.rotatesX(angle1)
     this.rotatesY(angle2)

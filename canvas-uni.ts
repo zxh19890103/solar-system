@@ -39,9 +39,9 @@ const createBodyByConfig = (inf: BodyInfo) => {
 }
 
 const camera = new CameraSys()
-camera.translates(3 * AU, 3 * AU, AU)
+camera.translates(3 * AU, 1 * AU, AU)
 camera.setZAxis()
-camera.adjustCanvasCoords()
+// camera.adjustCanvasCoords()
 camera.setFocalLength(AU * .01)
 
 const ether = new Ether(createCanvasCtx(), camera)
