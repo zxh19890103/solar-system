@@ -42,20 +42,20 @@ export class CelestialBody {
   move() {
     // debugger
     // km
-    const dS = this.velocity.cloneAndTimes(UNIT_OF_TIME)
+    const dS = this.velocity.cloneAndScale(UNIT_OF_TIME)
     const fi = this.computeComposedIntensity()
-    if (fi.distanceFrom() === 0) {
+    if (fi.mag() === 0) {
       // nothing.
     } else {
-      const dV = fi.cloneAndTimes(UNIT_OF_TIME)
-      const dS1 = dV.cloneAndTimes(.5 * UNIT_OF_TIME)
+      const dV = fi.cloneAndScale(UNIT_OF_TIME)
+      const dS1 = dV.cloneAndScale(.5 * UNIT_OF_TIME)
       dS.add(dS1)
       // and velocity changes
       this.velocity.add(dV)
     }
     // coordinates changes
     // console.log(dS.z)
-    this.coord.add(dS.times(.001))
+    this.coord.add(dS.scale(.001))
   }
 
   notify() {
@@ -111,7 +111,7 @@ export class CelestialBody {
   }
 
   computeFieldIntensityFromBody(b: CelestialBody) {
-    const r = b.coord.distanceFrom(this.coord)
+    const r = b.coord.diff(this.coord).mag()
     /**
      * this unit would be m/s2
      * to be km/s2
@@ -119,7 +119,7 @@ export class CelestialBody {
      */
     let intensity = (.001 * GRAVITY_CONST * b.mass) / (r * r)
     if (intensity < MIN_INTENSITY) intensity = 0
-    return b.coord.clone().substract(this.coord).withMag(intensity)
+    return b.coord.diff(this.coord).withMag(intensity)
   }
 }
 

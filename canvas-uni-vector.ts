@@ -20,14 +20,15 @@ export class Vector {
   }
 
   withMag(mag: number) {
-    return this.normalize().times(mag)
+    return this.normalize().scale(mag)
   }
 
   /**
    * let mag = 1
    */
   normalize() {
-    const d = this.distanceFrom()
+    const d = this.mag()
+    if (d === 0) return this
     const k = 1 / d
     this.x *= k
     this.y *= k
@@ -36,7 +37,7 @@ export class Vector {
   }
 
   extends(mag: number) {
-    const d = this.distanceFrom()
+    const d = this.mag()
     this.withMag(d + mag)
     return this
   }
@@ -97,30 +98,20 @@ export class Vector {
   /**
    * A new one
    */
-  cloneAndTimes(value: number) {
+  cloneAndScale(value: number) {
     const v = this.clone()
-    v.times(value)
+    v.scale(value)
     return v
   }
 
   /**
    * the same one
    */
-  times(factor: number) {
+  scale(factor: number) {
     this.x *= factor
     this.y *= factor
     this.z *= factor
     return this
-  }
-
-  distanceFrom(v?: Vector) {
-    let { x, y, z } = this
-    if (v) {
-      x -= v.x
-      y -= v.y
-      z -= v.z
-    }
-    return sqrt(x * x + y * y + z * z)
   }
 
   /**
@@ -131,6 +122,14 @@ export class Vector {
     this.y -= v.y
     this.z -= v.z
     return this
+  }
+
+  diff(v: Vector) {
+    return new Vector(
+      this.x - v.x,
+      this.y - v.y,
+      this.z - v.z
+    )
   }
 
   /**

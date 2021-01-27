@@ -61,7 +61,7 @@ export class CameraSys {
      * 1. rotates about to X axis by angle([0, y, z], [0, 0, 1])
      * 2. rotates about to Y axis by angle([x, 0, -y], [0, 0, 1])
      */
-    const newZAxis = z ? z.times(-1) : this.coord.clone().times(-1)
+    const newZAxis = z ? z.scale(-1) : this.coord.clone().scale(-1)
     const zAxis = new Vector(0, 0, 1)
     const xAxis = new Vector(1, 0, 0)
     const yAxis = new Vector(0, 1, 0)
@@ -84,12 +84,6 @@ export class CameraSys {
     const angle2 = v2.angleTo(zAxis, yAxis)
     this.rotatesX(angle1)
     this.rotatesY(angle2)
-    // Rotates Z
-    // const xAxis2 = new Vector(...this.transforms.reduce((p, m) => {
-    //   return m.multipleWithXyz(...p)
-    // }, [1, 0, 0]))
-    // const angle3 = yAxis.angleTo(xAxis2, zAxis)
-    // this.rotatesZ(angle3)
   }
 
   rotates(angleX: number, angleY?: number, angleZ?: number) {
@@ -170,16 +164,6 @@ export class CameraSys {
       ratio,
       Zt
     ]
-  }
-
-  adjustCanvasCoords() {
-    // const yAxis = new Vector(0, 1, 0)
-    // const angle = yAxis.angleTo()
-    this.transforms.push(new Matrix(`
-    0 -1 0
-    -1 0 0
-    0 0 1
-    `))
   }
 
   /**

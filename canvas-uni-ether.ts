@@ -11,7 +11,7 @@ export class Ether {
   w: number = 0
   h: number = 0
   private textLineNo: number = 0
-  private textLineHeight = 20
+  private textLineHeight = 16
   private textLeftBo = 0
   private textBottomBo = 0
   /**
@@ -32,7 +32,7 @@ export class Ether {
 
     this.w = this.canvas.width
     this.h = this.canvas.height
-    ctx.font = "14px Kristen ITC"
+    ctx.font = "12px  'OCR A'"
     ctx.strokeStyle = "white"
     ctx.fillStyle = "white"
     ctx.lineWidth = 1

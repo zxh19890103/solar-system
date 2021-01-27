@@ -2,8 +2,8 @@ import { Ether } from "./canvas-uni-ether"
 import { createBody } from "./canvas-uni-body"
 import {
   Sun,
-  Earth,
   BodyInfo,
+  Earth,
   Venus,
   Mars,
   Jupiter,
@@ -11,12 +11,15 @@ import {
   Uranus,
   Pluto,
   Neptune,
-  Saturn
+  Saturn,
+  Ceres,
+  Eris
 } from "./canvas-uni-8"
 import { Halley, Tempel1, Holmes, HaleBopp } from "./canvas-uni-comets"
 import { CameraSys } from "./canvas-uni-camera"
 import { AU } from "./canvas-uni-constants"
 import { Luna } from "./canvas-uni-satellites"
+import { Apophis } from "./canvas-uni-asteroids"
 
 const dpr = window.devicePixelRatio
 const W = window.innerWidth
@@ -39,14 +42,13 @@ const createBodyByConfig = (inf: BodyInfo) => {
 }
 
 const camera = new CameraSys()
-camera.translates(3 * AU, 1 * AU, AU)
+camera.translates(0, Eris.aphelion, 0)
 camera.setZAxis()
-// camera.adjustCanvasCoords()
-camera.setFocalLength(AU * .01)
+camera.setFocalLength(AU * .009)
 
 const ether = new Ether(createCanvasCtx(), camera)
 
-const dispayRadiusTimes = 100
+const dispayRadiusTimes = 100000
 
 ether.put(createBodyByConfig({
   ...Sun,
@@ -54,21 +56,37 @@ ether.put(createBodyByConfig({
   avatar: ""
 }))
 // ether.put(createBodyByConfig({
+//   ...Ceres,
+//   sizeInPixels: 10
+// }))
+// ether.put(createBodyByConfig({
+//   ...Apophis,
+//   sizeInPixels: 10
+// }))
+ether.put(createBodyByConfig({
+  ...Eris,
+  dispayRadiusTimes
+}))
+ether.put(createBodyByConfig({
+  ...Pluto,
+  dispayRadiusTimes
+}))
+// ether.put(createBodyByConfig({
 //   ...Mercury,
 //   dispayRadiusTimes,
 // }))
-ether.put(createBodyByConfig({
-  ...Venus,
-  dispayRadiusTimes,
-}))
-ether.put(createBodyByConfig({
-  ...Earth,
-  dispayRadiusTimes,
-}))
-ether.put(createBodyByConfig({
-  ...Mars,
-  dispayRadiusTimes,
-}))
+// ether.put(createBodyByConfig({
+//   ...Venus,
+//   dispayRadiusTimes,
+// }))
+// ether.put(createBodyByConfig({
+//   ...Earth,
+//   sizeInPixels: 10,
+// }))
+// ether.put(createBodyByConfig({
+//   ...Mars,
+//   dispayRadiusTimes,
+// }))
 // ether.put(createBodyByConfig({
 //   ...Jupiter,
 //   dispayRadiusTimes,
@@ -97,9 +115,9 @@ ether.put(createBodyByConfig({
 //   ...Holmes,
 //   sizeInPixels: .2
 // }))
-// ether.put(createBodyByConfig({
-//   ...HaleBopp,
-//   sizeInPixels: 30
-// }))
+ether.put(createBodyByConfig({
+  ...HaleBopp,
+  dispayRadiusTimes
+}))
 
 ether.loop()

@@ -183,3 +183,27 @@ export const Pluto: BodyInfo = {
   radius: (1188.3 + rand(-.8, .8)) * .001,
   inclination: 11.88 * RAD_PER_DEGREE
 }
+
+export const Ceres: BodyInfo = {
+  name: "Ceres",
+  aphelion: 2.9796467093 * AU,
+  peribelion: 2.5586835997 * AU,
+  semiMajorAxis: 2.7691651545 * AU,
+  avatar: "/nineplanets-org/ceres.png",
+  color: "white",
+  mass: (9.3835 + rand(-.0001, .0001)) * .0001,
+  radius: .46973,
+  inclination: 0 * RAD_PER_DEGREE
+}
+
+export const Eris: BodyInfo = {
+  name: "Eris",
+  aphelion: 97.457 * AU,
+  peribelion: 38.271 * AU,
+  semiMajorAxis: 67.864 * AU,
+  avatar: "/nineplanets-org/eris.png",
+  color: "white",
+  mass: (1.6466 + rand(-.0085, .0085)) * .01,
+  radius: (1163 + rand(-6, 6)) * .001,
+  inclination: 44.040 * RAD_PER_DEGREE
+}
