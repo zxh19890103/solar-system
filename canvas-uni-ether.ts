@@ -101,7 +101,7 @@ export class Ether {
   loop() {
     const resol = (this.camera.computesResolutionOnZ() * 1000).toFixed(2)
     const dps = DAYS_PER_SECOND.toFixed(2)
-    this.writeLine(`1pixel ≈ ${resol} km at the Sun; 1s ≈ ${dps} days.`)
+    this.writeLine(`1pixel ≈ ${resol} km at the origin; 1s ≈ ${dps} days.`)
     Promise.all(
       this.bodies.map(b => b.prepare())
     ).then(() => {

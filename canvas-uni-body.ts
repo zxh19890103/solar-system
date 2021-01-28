@@ -192,6 +192,7 @@ export const createBody = (inf: BodyInfo, ctx: CanvasRenderingContext2D): Create
   let camera: CameraSys = null
   let fill: () => void = () => { }
   let ether: Ether = null
+  let etherCtx: CanvasRenderingContext2D = null
 
   const loop = () => {
     if (!inf.stick) {
@@ -209,6 +210,13 @@ export const createBody = (inf: BodyInfo, ctx: CanvasRenderingContext2D): Create
       } else {
         clearFill()
         fill()
+        // if (lastY !== null) {
+        //   etherCtx.beginPath()
+        //   etherCtx.moveTo(lastX, lastY)
+        //   etherCtx.lineTo(x, y)
+        //   etherCtx.strokeStyle = color
+        //   etherCtx.stroke()
+        // }
         saveLastFill()
       }
     }
@@ -265,7 +273,7 @@ export const createBody = (inf: BodyInfo, ctx: CanvasRenderingContext2D): Create
     }
     ether.ctx.fillStyle = color
     ether.setLayersOrder(name, canvasElement, point2d[3], inf.index)
-    r = inf.sizeInPixels ? inf.sizeInPixels : (R * BODY_SIZE_COEFFICIENT * point2d[2])
+    r = inf.sizeInPixels ? inf.sizeInPixels : Math.max(2, R * BODY_SIZE_COEFFICIENT * point2d[2])
   }
 
   let avatar: HTMLImageElement = null
@@ -295,6 +303,7 @@ export const createBody = (inf: BodyInfo, ctx: CanvasRenderingContext2D): Create
 
     ether = body.ether
     camera = ether.camera
+    etherCtx = ether.ctx
 
     await loadAvatar()
 
