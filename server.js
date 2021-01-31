@@ -107,6 +107,17 @@ http.createServer((req, res) => {
       eventSource.emit({ reload: true })
       res.end("sent!")
     }
+  } else if (/^\/npm\//.test(url)) {
+    const [, name] = /^\/npm\/(.+)$/.exec(url)
+    const resource = `../node_modules/${name}`
+    if (fs.existsSync(resource)) {
+      res.setHeader("Content-Type", getContentType(name))
+      const rs = fs.createReadStream(resource)
+      rs.pipe(res)
+    } else {
+      res.setHeader("Content-Type", "text/javascript")
+      res.end(`console.error('file "${name}" is not found.')`)
+    }
   } else {
     // fallback
     const rs = fs.createReadStream("./index.html")

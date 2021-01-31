@@ -126,16 +126,15 @@ const solarSystem = () => {
 
 const earthSystem = () => {
   const camera = new CameraSys()
-  camera.translates(Earth.radius, Luna.aphelion, Luna.aphelion)
+  camera.translates(0, 0, Luna.aphelion + 50)
   camera.setZAxis()
-  camera.setFocalLength(Luna.aphelion * .6)
+  camera.setFocalLength(300)
 
   const ether = new Ether(createCanvasCtx(), camera)
   const dispayRadiusTimes = 1
 
   ether.put(createBodyByConfig({
     ...Earth,
-    avatar: "",
     aphelion: 0,
     peribelion: 0,
     semiMajorAxis: 0,
@@ -147,7 +146,6 @@ const earthSystem = () => {
   ether.put(createBodyByConfig({
     ...Luna,
     ref: Earth,
-    avatar: "",
     dispayRadiusTimes
   }))
 
@@ -165,7 +163,6 @@ const jupiterSystem = () => {
 
   ether.put(createBodyByConfig({
     ...Jupiter,
-    avatar: "",
     aphelion: 0,
     peribelion: 0,
     semiMajorAxis: 0,
@@ -176,14 +173,12 @@ const jupiterSystem = () => {
 
   ether.put(createBodyByConfig({
     ...Lo,
-    avatar: "",
     ref: Jupiter,
     dispayRadiusTimes
   }))
 
   ether.put(createBodyByConfig({
     ...Europa,
-    avatar: "",
     ref: Jupiter,
     dispayRadiusTimes
   }))
@@ -191,14 +186,12 @@ const jupiterSystem = () => {
   ether.put(createBodyByConfig({
     ...Ganymede,
     ref: Jupiter,
-    avatar: "",
     dispayRadiusTimes
   }))
 
   ether.put(createBodyByConfig({
     ...Callisto,
     ref: Jupiter,
-    avatar: "",
     dispayRadiusTimes
   }))
 
@@ -239,6 +232,6 @@ const saturnSystem = () => {
   ether.loop()
 }
 
-/// earthSystem()
-jupiterSystem()
+earthSystem()
+// jupiterSystem()
 // saturnSystem()

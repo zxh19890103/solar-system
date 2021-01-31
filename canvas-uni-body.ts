@@ -299,7 +299,7 @@ export const createBody = (inf: BodyInfo, ctx: CanvasRenderingContext2D): Create
     ctx.strokeStyle = color
     ctx.fillStyle = color
     ctx.lineWidth = 1
-    ctx.font = "18px Kristen ITC"
+    ctx.font = "18px Consola"
 
     ether = body.ether
     camera = ether.camera
@@ -310,7 +310,7 @@ export const createBody = (inf: BodyInfo, ctx: CanvasRenderingContext2D): Create
     fill = avatar === null ? fillBall : fillAvatar
 
     const speedOnAphe = computesOrbitSpeedOnR(inf.semiMajorAxis, aphelion, inf.ref)
-    const angleOnXY = rand(0, PI * 2)
+    const angleOnXY = 0 // rand(0, PI * 2)
     velocity.addXYZ(speedOnAphe * cos(angleOnXY + PI / 2), speedOnAphe * sin(angleOnXY + PI / 2), 0)
     const xy = aphelion * cos(inf.inclination)
     coord.addXYZ(xy * cos(angleOnXY), xy * sin(angleOnXY), aphelion * sin(inf.inclination))

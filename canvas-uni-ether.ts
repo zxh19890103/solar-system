@@ -32,7 +32,7 @@ export class Ether {
 
     this.w = this.canvas.width
     this.h = this.canvas.height
-    ctx.font = "12px  'OCR A'"
+    ctx.font = "12px Consola"
     ctx.strokeStyle = "white"
     ctx.fillStyle = "white"
     ctx.lineWidth = 1

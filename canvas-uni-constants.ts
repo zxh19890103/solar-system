@@ -8,10 +8,10 @@ export const DAYS_OF_EARTH_YEAR = 365.25
 export const SECONDS_IN_A_DAY = 24 * 60 * 60
 
 // km / s
-export const UNIT_OF_TIME = 5 // s
+export const UNIT_OF_TIME = 10 // s
 // 1 / 60s = RENDER_PERIOD * UNIT_OF_TIME s
 //  1s = 60 * RENDER_PERIOD * UNIT_OF_TIME s
-export const RENDER_PERIOD = 600
+export const RENDER_PERIOD = 100
 export const MIN_INTENSITY = 0
 export const DAYS_PER_SECOND = RENDER_PERIOD * UNIT_OF_TIME / (60 * 24)
 /**
