@@ -51,121 +51,9 @@ function loadShader(gl, type, source) {
   return shader
 }
 
-function initBuffers(gl: WebGLRenderingContext) {
-
-  // Create a buffer for the square's positions.
-
-  const positionBuffer = gl.createBuffer()
-
-  // Select the positionBuffer as the one to apply buffer
-  // operations to from here out.
-
-  gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer)
-
-  // Now create an array of positions for the square.
-
-  const positions = [
-    1.0, 1,
-    -1.0, 1.0,
-    1.0, -1.0,
-    -1.0, -1.0,
-  ]
-
-  // Now pass the list of positions into WebGL to build the
-  // shape. We do this by creating a Float32Array from the
-  // JavaScript array, then use it to fill the current buffer.
-
-  gl.bufferData(gl.ARRAY_BUFFER,
-    new Float32Array(positions),
-    gl.STATIC_DRAW)
-
-  return {
-    position: positionBuffer,
-  }
-}
-
-function drawScene(gl: WebGLRenderingContext, programInfo, buffers) {
-  gl.clearColor(0.0, 0.0, 0.0, 1.0)  // Clear to black, fully opaque
-  gl.clearDepth(1.0)                 // Clear everything
-  gl.enable(gl.DEPTH_TEST)           // Enable depth testing
-  gl.depthFunc(gl.LEQUAL)            // Near things obscure far things
-
-  // Clear the canvas before we start drawing on it.
-
-  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-
-  // Create a perspective matrix, a special matrix that is
-  // used to simulate the distortion of perspective in a camera.
-  // Our field of view is 45 degrees, with a width/height
-  // ratio that matches the display size of the canvas
-  // and we only want to see objects between 0.1 units
-  // and 100 units away from the camera.
-
-  const fieldOfView = 45 * Math.PI / 180   // in radians
-  const aspect = gl.canvas.width / gl.canvas.height
-  const zNear = 0.1
-  const zFar = 100.0
-  const projectionMatrix = mat4.create()
-
-  // note: glmatrix.js always has the first argument
-  // as the destination to receive the result.
-  mat4.perspective(projectionMatrix,
-    fieldOfView,
-    aspect,
-    zNear,
-    zFar)
-
-  // Set the drawing position to the "identity" point, which is
-  // the center of the scene.
-  const modelViewMatrix = mat4.create()
-  mat4.translate(modelViewMatrix,     // destination matrix
-    modelViewMatrix,     // matrix to translate
-    [-0.0, 0.0, -100.0])  // amount to translate
-
-  // Now move the drawing position a bit to where we want to
-  // start drawing the square.
-
-  // Tell WebGL how to pull out the positions from the position
-  // buffer into the vertexPosition attribute.
-  {
-    const numComponents = 2  // pull out 2 values per iteration
-    const type = gl.FLOAT    // the data in the buffer is 32bit floats
-    const normalize = false  // don't normalize
-    const stride = 0         // how many bytes to get from one set of values to the next
-    // 0 = use type and numComponents above
-    const offset = 0         // how many bytes inside the buffer to start from
-    // gl.bindBuffer(gl.ARRAY_BUFFER, buffers.position)
-    gl.vertexAttribPointer(
-      programInfo.attribLocations.vertexPosition,
-      numComponents,
-      type,
-      normalize,
-      stride,
-      offset)
-    gl.enableVertexAttribArray(
-      programInfo.attribLocations.vertexPosition)
-  }
-
-  // Tell WebGL to use our program when drawing
-
-  gl.useProgram(programInfo.program)
-
-  // Set the shader uniforms
-
-  gl.uniformMatrix4fv(
-    programInfo.uniformLocations.projectionMatrix,
-    false,
-    projectionMatrix)
-  gl.uniformMatrix4fv(
-    programInfo.uniformLocations.modelViewMatrix,
-    false,
-    modelViewMatrix)
-
-  {
-    const offset = 0
-    const vertexCount = 4
-    gl.drawArrays(gl.TRIANGLE_STRIP, offset, vertexCount)
-  }
+const loadRemoteShaderCode = async (url: string) => {
+  const resp = await fetch(url)
+  return await resp.text()
 }
 
 const setUpGLContext = (): [WebGLRenderingContext, number, number] => {
@@ -179,121 +67,110 @@ const setUpGLContext = (): [WebGLRenderingContext, number, number] => {
   return [gl, w, h]
 }
 
-const main_legacy = () => {
-
-  const canvasElement = document.createElement("canvas")
-  canvasElement.width = window.innerWidth
-  canvasElement.height = window.innerHeight
-  canvasElement.style.margin = "10px"
-  document.documentElement.style.backgroundColor = "white"
-  document.body.appendChild(canvasElement)
-  const gl = canvasElement.getContext("webgl")
-
-  const vsSource = `
-  attribute vec4 aVertexPosition;
-  
-  uniform mat4 uModelViewMatrix;
-  uniform mat4 uProjectionMatrix;
-  
-  void main() {
-    // gl_Position = aVertexPosition;
-    gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
+const generateSpherePoints = (r: number) => {
+  const { PI, sin, cos } = Math
+  const points: number[] = []
+  const total = 30, half = total / 2
+  let alpha = 0, beta = 0, zr = 0
+  for (let y = 0; y < total; y += 1) {
+    alpha = PI * (y - half) / total
+    zr = r * cos(alpha)
+    for (let x = 0; x < total; x += 1) {
+      beta = 2 * PI * x / total
+      points.push(
+        zr * cos(beta),
+        zr * sin(beta),
+        r * sin(alpha)
+      )
+    }
   }
-  `
-
-  const fsSource = `
-  void main() {
-    gl_FragColor = vec4(.9, .5, .4, 1.0);
-  }
-  `
-
-  const shaderProgram = initShaderProgram(gl, vsSource, fsSource)
-  const programInfo = {
-    program: shaderProgram,
-    attribLocations: {
-      vertexPosition: gl.getAttribLocation(shaderProgram, 'aVertexPosition'),
-    },
-    uniformLocations: {
-      projectionMatrix: gl.getUniformLocation(shaderProgram, 'uProjectionMatrix'),
-      modelViewMatrix: gl.getUniformLocation(shaderProgram, 'uModelViewMatrix'),
-    },
-  }
-
-  // Here's where we call the routine that builds all the
-  // objects we'll be drawing.
-  const buffers = initBuffers(gl)
-
-  // Draw the scene
-  drawScene(gl, programInfo, buffers)
+  return points
 }
 
-const main = () => {
+const main = async () => {
   const [gl, w, h] = setUpGLContext()
 
-  const vsCode = `
-  attribute vec4 aVertex;
-  attribute vec4 aColor;
-  uniform mat4 mAnyMat;
-
-  varying lowp vec4 vColor;
-
-  void main() {
-    gl_Position = mAnyMat * aVertex;
-    vColor = aColor;
-  }
-  `
-  const fsCode = `
-  varying lowp vec4 vColor;
-  void main() {
-    gl_FragColor = vColor;
-  }
-  `
+  const vsCode = await loadRemoteShaderCode("/shaders/vertex.glsl")
+  const fsCode = await loadRemoteShaderCode("/shaders/fragment.glsl")
 
   const program = initShaderProgram(gl, vsCode, fsCode)
 
-  const vetices = new Float32Array([
-    0, 0, 0, 1,
-    1, 1, 0, 1,
-    1, 0, 0, 1
-  ])
-  gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer())
-  gl.bufferData(gl.ARRAY_BUFFER, vetices, gl.STATIC_DRAW)
-  const attrVertexLoc = gl.getAttribLocation(program, 'aVertex')
-  gl.vertexAttribPointer(
-    attrVertexLoc,
-    4,
-    gl.FLOAT,
-    false,
-    0,
-    0
-  )
-  gl.enableVertexAttribArray(attrVertexLoc)
+  const bindFloatArrayToGPU = (data: number[], attribName: string, pointerSize: number) => {
+    const farray = new Float32Array(data)
+    const buf = gl.createBuffer()
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf)
+    gl.bufferData(gl.ARRAY_BUFFER, farray, gl.STATIC_DRAW)
+    const loc = gl.getAttribLocation(program, attribName)
+    gl.vertexAttribPointer(
+      loc, pointerSize, gl.FLOAT, false, 0, 0
+    )
+    gl.enableVertexAttribArray(loc)
+  }
 
-  const colors = new Float32Array([
-    1, 0, 0, 1,
-    0, 1, 0, 1,
-    0, 0, 1, 1
-  ])
-  gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer())
-  gl.bufferData(gl.ARRAY_BUFFER, colors, gl.STATIC_DRAW)
-  const attrColorLoc = gl.getAttribLocation(program, 'aColor')
-  gl.vertexAttribPointer(
-    attrColorLoc,
-    4,
-    gl.FLOAT,
-    false,
-    0,
-    0
+  const create3Matrices = () => {
+    const [model, view, projection] = Array(3).fill(0).map(() => {
+      return glMatrix.mat4.create()
+    })
+
+    const locations = Array('model', 'view', 'projection').map(name => {
+      return gl.getUniformLocation(program, name)
+    })
+
+    glMatrix.mat4.lookAt(
+      view,
+      [0, 30, 30],
+      [0, 0, 0],
+      [0, 1, 0])
+
+    glMatrix.mat4.perspective(
+      projection,
+      Math.PI * .5,
+      w / h,
+      1.0,
+      100.0
+    )
+
+    return {
+      rotate: () => {
+        glMatrix.mat4.rotate(
+          model,
+          model,
+          Math.PI * .001,
+          [0, 1, 1]
+        )
+      },
+      uniform: (m = 1, v = 1, p = 1) => {
+        m && gl.uniformMatrix4fv(locations[0], false, model)
+        v && gl.uniformMatrix4fv(locations[1], false, view)
+        p && gl.uniformMatrix4fv(locations[2], false, projection)
+      }
+    }
+  }
+
+  const points = generateSpherePoints(10)
+  console.log(points)
+  bindFloatArrayToGPU(
+    points,
+    "aVertex",
+    3
   )
-  gl.enableVertexAttribArray(attrColorLoc)
+
+  // bindFloatArrayToGPU(
+  //   [
+  //     1, 0, 0, 1,
+  //     0, 1, 0, 1,
+  //     0, 0, 1, 1
+  //   ],
+  //   "aColor",
+  //   4
+  // )
 
   gl.useProgram(program)
 
-  const mat = glMatrix.mat4.create()
+  const { rotate, uniform } = create3Matrices()
+  uniform(1, 1, 1)
 
-  const uniLoc = gl.getUniformLocation(program, "mAnyMat")
-
-  const draw = () => {
+  const loop = () => {
     gl.clearColor(0.0, 0.0, 0.0, 1.0)  // Clear to black, fully opaque
     gl.clearDepth(1.0)                 // Clear everything
     gl.enable(gl.DEPTH_TEST)           // Enable depth testing
@@ -301,19 +178,15 @@ const main = () => {
 
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
-    gl.uniformMatrix4fv(uniLoc, false, mat)
-    glMatrix.mat4.rotateZ(
-      mat,
-      mat,
-      Math.PI * .001
-    )
+    uniform(1, 0, 0)
+    rotate()
 
-    gl.drawArrays(gl.TRIANGLES, 0, 3)
+    gl.drawArrays(gl.LINES, 0, points.length / 3)
 
-    requestAnimationFrame(draw)
+    requestAnimationFrame(loop)
   }
 
-  draw()
+  loop()
 
 }
 

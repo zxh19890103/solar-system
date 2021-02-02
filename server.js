@@ -118,6 +118,11 @@ http.createServer((req, res) => {
       res.setHeader("Content-Type", "text/javascript")
       res.end(`console.error('file "${name}" is not found.')`)
     }
+  } else if (/\.glsl$/.test(url)) {
+    res.setHeader("Content-Type", "text/plain")
+    const [, name] = /^\/(.+)\.glsl$/.exec(url)
+    const rs = fs.createReadStream(`./${name}.glsl`)
+    rs.pipe(res)
   } else {
     // fallback
     const rs = fs.createReadStream("./index.html")
