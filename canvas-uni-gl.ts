@@ -9,7 +9,7 @@
  *    - draw arrays.
  */
 
-function initShaderProgram(gl, vsSource, fsSource) {
+const initShaderProgram = (gl, vsSource, fsSource) => {
   const vertexShader = loadShader(gl, gl.VERTEX_SHADER, vsSource)
   const fragmentShader = loadShader(gl, gl.FRAGMENT_SHADER, fsSource)
 
@@ -29,7 +29,7 @@ function initShaderProgram(gl, vsSource, fsSource) {
   return shaderProgram
 }
 
-function loadShader(gl, type, source) {
+const loadShader = (gl, type, source) => {
   const shader = gl.createShader(type)
 
   // Send the source to the shader object
@@ -56,6 +56,34 @@ const loadRemoteShaderCode = async (url: string) => {
   return await resp.text()
 }
 
+const loadTexture = async (gl: WebGLRenderingContext, url: string) => {
+  const tex = gl.createTexture()
+  gl.bindTexture(gl.TEXTURE_2D, tex)
+  const img = await loadImage(url)
+  gl.texImage2D(
+    gl.TEXTURE_2D,
+    0, // level
+    gl.RGBA,
+    gl.RGBA,
+    gl.UNSIGNED_BYTE,
+    img
+  )
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+}
+
+const loadImage = (url: string) => {
+  return new Promise<HTMLImageElement>((done, fail) => {
+    const img = new Image()
+    img.onload = () => {
+      done(img)
+    }
+    img.onerror = fail
+    img.src = url
+  })
+}
+
 const setUpGLContext = (): [WebGLRenderingContext, number, number] => {
   const canvasElement = document.createElement("canvas")
   const w = window.innerWidth
@@ -67,35 +95,8 @@ const setUpGLContext = (): [WebGLRenderingContext, number, number] => {
   return [gl, w, h]
 }
 
-const generateSpherePoints = (r: number) => {
-  const { PI, sin, cos } = Math
-  const points: number[] = []
-  const total = 30, half = total / 2
-  let alpha = 0, beta = 0, zr = 0
-  for (let y = 0; y < total; y += 1) {
-    alpha = PI * (y - half) / total
-    zr = r * cos(alpha)
-    for (let x = 0; x < total; x += 1) {
-      beta = 2 * PI * x / total
-      points.push(
-        zr * cos(beta),
-        zr * sin(beta),
-        r * sin(alpha)
-      )
-    }
-  }
-  return points
-}
-
 const main = async () => {
-  const [gl, w, h] = setUpGLContext()
-
-  const vsCode = await loadRemoteShaderCode("/shaders/vertex.glsl")
-  const fsCode = await loadRemoteShaderCode("/shaders/fragment.glsl")
-
-  const program = initShaderProgram(gl, vsCode, fsCode)
-
-  const bindFloatArrayToGPU = (data: number[], attribName: string, pointerSize: number) => {
+  const defineFloat32Attrib = (data: number[], attribName: string, pointerSize: number) => {
     const farray = new Float32Array(data)
     const buf = gl.createBuffer()
     gl.bindBuffer(gl.ARRAY_BUFFER, buf)
@@ -107,20 +108,31 @@ const main = async () => {
     gl.enableVertexAttribArray(loc)
   }
 
-  const create3Matrices = () => {
-    const [model, view, projection] = Array(3).fill(0).map(() => {
-      return glMatrix.mat4.create()
-    })
+  const defineUniform3fv = (name: string, value: Iterable<number>) => {
+    const loc = gl.getUniformLocation(program, name)
+    gl.uniform3fv(loc, value)
+  }
 
-    const locations = Array('model', 'view', 'projection').map(name => {
-      return gl.getUniformLocation(program, name)
-    })
+  const defineUniformMatrix4fv = (name: string): [mat4, voidFn] => {
+    const mat4 = glMatrix.mat4.create()
+    const loc = gl.getUniformLocation(program, name)
+    return [
+      mat4,
+      () => {
+        gl.uniformMatrix4fv(loc, false, mat4)
+      }]
+  }
+
+  const createMVP = () => {
+    const [model, uniformModel] = defineUniformMatrix4fv("model")
+    const [view, uniformView] = defineUniformMatrix4fv("view")
+    const [projection, uniformProj] = defineUniformMatrix4fv("projection")
 
     glMatrix.mat4.lookAt(
       view,
-      [0, 30, 30],
+      [0, 100, 40],
       [0, 0, 0],
-      [0, 1, 0])
+      [0, 0, 1])
 
     glMatrix.mat4.perspective(
       projection,
@@ -130,45 +142,123 @@ const main = async () => {
       100.0
     )
 
+    uniformView()
+    uniformProj()
+
     return {
       rotate: () => {
         glMatrix.mat4.rotate(
           model,
           model,
-          Math.PI * .001,
-          [0, 1, 1]
+          Math.PI * .005,
+          [0, .4, 1]
         )
-      },
-      uniform: (m = 1, v = 1, p = 1) => {
-        m && gl.uniformMatrix4fv(locations[0], false, model)
-        v && gl.uniformMatrix4fv(locations[1], false, view)
-        p && gl.uniformMatrix4fv(locations[2], false, projection)
+        uniformModel()
       }
     }
   }
 
-  const points = generateSpherePoints(10)
-  console.log(points)
-  bindFloatArrayToGPU(
-    points,
+  const makeVertex = (lat: number, lon: number) => {
+    const alpha = PI * (.5 - lat / M)
+    const beta = DOUBLE_PI * (lon / N)
+    return [
+      R * cos(alpha) * cos(beta),
+      R * cos(alpha) * sin(beta),
+      R * sin(alpha)
+    ]
+  }
+
+  const makeTexCoords = (lat: number, lon: number) => {
+    return [
+      lon / N,
+      lat / M
+    ]
+  }
+
+  const randColor = () => {
+    return Array(4).fill(0).map((v, i) => {
+      if (i === 3) return 1
+      return Math.random()
+    })
+  }
+
+  const { PI, cos, sin } = Math
+  const HALF_PI = PI / 2
+  const DOUBLE_PI = 2 * PI
+
+  const vertices: number[] = []
+  const normals: number[] = []
+  const texCoords: number[] = []
+  const indices: number[] = []
+  const colors: number[] = []
+  // M is the latitudes' count
+  // N is the longitudes' count
+  const M = 30, N = 60, R = 50
+
+  let lat = 0, lon = 0, index = 0
+  for (; lat < M; lat += 1) {
+    for (lon = 0; lon < N; lon += 1) {
+      indices.push(
+        index++,
+        index++,
+        index++,
+        index - 1,
+        index - 2,
+        index++,
+      )
+      vertices.push(...makeVertex(lat, lon))
+      vertices.push(...makeVertex(lat, lon + 1))
+      vertices.push(...makeVertex(lat + 1, lon))
+      vertices.push(...makeVertex(lat + 1, lon + 1))
+      // const fillColor = randColor()
+      // colors.push(...fillColor, ...fillColor, ...fillColor, ...fillColor)
+      texCoords.push(
+        ...makeTexCoords(lat, lon),
+        ...makeTexCoords(lat, lon + 1),
+        ...makeTexCoords(lat + 1, lon),
+        ...makeTexCoords(lat + 1, lon + 1)
+      )
+    }
+  }
+
+  const [gl, w, h] = setUpGLContext()
+
+  const vsCode = await loadRemoteShaderCode("/shaders/vertex.glsl")
+  const fsCode = await loadRemoteShaderCode("/shaders/fragment.glsl")
+
+  const program = initShaderProgram(gl, vsCode, fsCode)
+
+  defineFloat32Attrib(
+    vertices,
     "aVertex",
     3
   )
 
-  // bindFloatArrayToGPU(
-  //   [
-  //     1, 0, 0, 1,
-  //     0, 1, 0, 1,
-  //     0, 0, 1, 1
-  //   ],
-  //   "aColor",
+  // defineFloat32Attrib(
+  //   colors,
+  //   "aVertexColor",
   //   4
   // )
 
-  gl.useProgram(program)
+  defineFloat32Attrib(
+    texCoords,
+    "aVertexTexCoord",
+    2
+  )
 
-  const { rotate, uniform } = create3Matrices()
-  uniform(1, 1, 1)
+  const indicesBuffer = gl.createBuffer()
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indicesBuffer)
+  gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW)
+
+  await loadTexture(gl, "/maps/earthmap1k.jpg")
+
+  gl.useProgram(program)
+  gl.activeTexture(gl.TEXTURE0)
+  gl.uniform1i(gl.getUniformLocation(program, "uSampler"), 0)
+
+  const { rotate } = createMVP()
+
+  const INDICES_COUNT = indices.length
 
   const loop = () => {
     gl.clearColor(0.0, 0.0, 0.0, 1.0)  // Clear to black, fully opaque
@@ -178,10 +268,9 @@ const main = async () => {
 
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
-    uniform(1, 0, 0)
     rotate()
 
-    gl.drawArrays(gl.LINES, 0, points.length / 3)
+    gl.drawElements(gl.TRIANGLES, INDICES_COUNT, gl.UNSIGNED_SHORT, 0)
 
     requestAnimationFrame(loop)
   }

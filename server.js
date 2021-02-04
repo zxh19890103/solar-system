@@ -55,6 +55,12 @@ fs.watch("./", (event, name) => {
   eventSource.emit({ reload: true })
 })
 
+fs.watch("./shaders", (event) => {
+  if (event !== "change") return
+  eventSource.emit({ reload: true })
+})
+
+
 const compileTs = (tsFile, saveAs) => {
   const source = fs.readFileSync(tsFile, "utf-8")
   const output = require("typescript").transpileModule(source, require("./tsconfig.json"))
