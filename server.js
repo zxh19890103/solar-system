@@ -48,10 +48,9 @@ data: ${JSON.stringify(payload)}
   }
 }
 
-fs.watch("./", (event, name) => {
+fs.watch("./3d", (event, name) => {
   if (event !== "change") return
   if (!name.endsWith(".ts")) return
-  compileTs(name, `./dist/${name.replace('.ts', '.js')}`)
   eventSource.emit({ reload: true })
 })
 
@@ -81,7 +80,7 @@ http.createServer((req, res) => {
       const rs = fs.createReadStream("./planets-inf/Earth.jpg")
       rs.pipe(res)
     }
-  } else if (/canvas-uni/.test(url)) {
+  } else if (/canvas-uni|3d/.test(url)) {
     const [, name] = /^\/(.*?)(\.ts)?$/.exec(url)
     const oriRresouce = `${name}.ts`
     res.setHeader("Content-Type", "text/javascript")

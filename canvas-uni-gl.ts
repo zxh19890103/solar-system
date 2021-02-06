@@ -9,6 +9,11 @@
  *    - draw arrays.
  */
 
+const {
+  mat4,
+  vec3
+} = glMatrix
+
 const initShaderProgram = (gl, vsSource, fsSource) => {
   const vertexShader = loadShader(gl, gl.VERTEX_SHADER, vsSource)
   const fragmentShader = loadShader(gl, gl.FRAGMENT_SHADER, fsSource)
@@ -71,6 +76,11 @@ const loadTexture = async (gl: WebGLRenderingContext, url: string) => {
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+
+  return [
+    img.naturalWidth,
+    img.naturalHeight
+  ]
 }
 
 const loadImage = (url: string) => {
@@ -96,6 +106,19 @@ const setUpGLContext = (): [WebGLRenderingContext, number, number] => {
 }
 
 const main = async () => {
+
+  const BODY_MAPS = {
+    earth: "/maps/earthmap1k.jpg",
+    moon: "/maps/moonmap1k.jpg",
+    jupiter: "/maps/jupitermap.jpg",
+    mars: "/maps/mars_1k_color.jpg",
+    neptune: "/maps/Neptune1.jpg",
+    mercury: "/maps/merc_diff.jpg",
+    saturn: "/maps/saturnmap.jpg",
+    uranus: "/maps/uranusmap.jpg",
+    venus: "/maps/venusmap.jpg"
+  }
+
   const defineFloat32Attrib = (data: number[], attribName: string, pointerSize: number) => {
     const farray = new Float32Array(data)
     const buf = gl.createBuffer()
@@ -123,42 +146,56 @@ const main = async () => {
       }]
   }
 
-  const createMVP = () => {
+  const createMVPMatrices = () => {
+
+    const [local, uniformLocal] = defineUniformMatrix4fv("local")
     const [model, uniformModel] = defineUniformMatrix4fv("model")
     const [view, uniformView] = defineUniformMatrix4fv("view")
     const [projection, uniformProj] = defineUniformMatrix4fv("projection")
 
-    glMatrix.mat4.lookAt(
+    // const [normal, uniformNormal] = defineUniformMatrix4fv("faceNormal")
+
+    mat4.lookAt(
       view,
-      [0, 100, 40],
+      [0, 8000, 2000],
       [0, 0, 0],
       [0, 0, 1])
 
-    glMatrix.mat4.perspective(
+    mat4.perspective(
       projection,
-      Math.PI * .5,
+      Math.PI * .8,
       w / h,
-      1.0,
-      100.0
+      1,
+      800000.0
     )
 
     uniformView()
     uniformProj()
+    uniformModel()
 
     return {
       rotate: () => {
-        glMatrix.mat4.rotate(
-          model,
-          model,
+        mat4.rotate(
+          local,
+          local,
           Math.PI * .005,
           [0, .4, 1]
         )
-        uniformModel()
+        // mat4.translate(
+        //   model,
+        //   model,
+        //   [0, 1, 0]
+        // )
+        uniformLocal()
+        // uniformModel()
+        // mat4.invert(normal, model)
+        // mat4.transpose(normal, normal)
+        // uniformNormal()
       }
     }
   }
 
-  const makeVertex = (lat: number, lon: number) => {
+  const makeVertex = (lat: number, lon: number): ReadonlyVec3 => {
     const alpha = PI * (.5 - lat / M)
     const beta = DOUBLE_PI * (lon / N)
     return [
@@ -182,6 +219,11 @@ const main = async () => {
     })
   }
 
+  const [gl, w, h] = setUpGLContext()
+  const [imgW, imgH] = await loadTexture(gl, BODY_MAPS.mars)
+  const vsCode = await loadRemoteShaderCode("/shaders/vertex.glsl")
+  const fsCode = await loadRemoteShaderCode("/shaders/fragment.glsl")
+
   const { PI, cos, sin } = Math
   const HALF_PI = PI / 2
   const DOUBLE_PI = 2 * PI
@@ -191,9 +233,12 @@ const main = async () => {
   const texCoords: number[] = []
   const indices: number[] = []
   const colors: number[] = []
-  // M is the latitudes' count
-  // N is the longitudes' count
-  const M = 30, N = 60, R = 50
+  // M is the latitudes' count, it's Y
+  // N is the longitudes' count. it's X
+  const M = 100
+  const N = 100
+  const R = 6371 // km
+  console.log(M, N)
 
   let lat = 0, lon = 0, index = 0
   for (; lat < M; lat += 1) {
@@ -206,10 +251,21 @@ const main = async () => {
         index - 2,
         index++,
       )
+
       vertices.push(...makeVertex(lat, lon))
       vertices.push(...makeVertex(lat, lon + 1))
       vertices.push(...makeVertex(lat + 1, lon))
       vertices.push(...makeVertex(lat + 1, lon + 1))
+
+      const normal = vec3.create()
+      vec3.normalize(normal, makeVertex(lat + .5, lon + .5))
+      normals.push(
+        ...normal,
+        ...normal,
+        ...normal,
+        ...normal
+      )
+
       // const fillColor = randColor()
       // colors.push(...fillColor, ...fillColor, ...fillColor, ...fillColor)
       texCoords.push(
@@ -220,11 +276,6 @@ const main = async () => {
       )
     }
   }
-
-  const [gl, w, h] = setUpGLContext()
-
-  const vsCode = await loadRemoteShaderCode("/shaders/vertex.glsl")
-  const fsCode = await loadRemoteShaderCode("/shaders/fragment.glsl")
 
   const program = initShaderProgram(gl, vsCode, fsCode)
 
@@ -246,19 +297,39 @@ const main = async () => {
     2
   )
 
+  defineFloat32Attrib(
+    normals,
+    "aVertexNormal",
+    3
+  )
+
   const indicesBuffer = gl.createBuffer()
   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indicesBuffer)
   gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW)
 
-  await loadTexture(gl, "/maps/earthmap1k.jpg")
-
   gl.useProgram(program)
+
   gl.activeTexture(gl.TEXTURE0)
   gl.uniform1i(gl.getUniformLocation(program, "uSampler"), 0)
 
-  const { rotate } = createMVP()
+  const { rotate } = createMVPMatrices()
 
   const INDICES_COUNT = indices.length
+
+  defineUniform3fv(
+    "uAmbientLight",
+    [.4, .4, .5]
+  )
+
+  defineUniform3fv(
+    "uDirectionalLightColor",
+    [1, 1, 1]
+  )
+
+  defineUniform3fv(
+    "uLightDirection",
+    [0, 0, 1]
+  )
 
   const loop = () => {
     gl.clearColor(0.0, 0.0, 0.0, 1.0)  // Clear to black, fully opaque
