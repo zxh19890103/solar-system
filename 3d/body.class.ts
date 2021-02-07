@@ -9,6 +9,13 @@ const {
   mat4
 } = glMatrix
 
+export enum BodyLooksLike {
+  Point = 10,
+  Circle = 20,
+  Ball = 30,
+  Body = 40
+}
+
 export class Body {
   center: vec3 = [0, 0, 0]
   velocity: vec3 = [0, 0, 0]
@@ -31,7 +38,9 @@ export class Body {
 
   readonly inf: BodyInfo
 
-  constructor(inf: BodyInfo, at: ReadonlyVec3, velocity?: vec3) {
+  blk: BodyLooksLike = BodyLooksLike.Body
+
+  constructor(inf: BodyInfo, at: ReadonlyVec3, velocity: vec3) {
     this.M = 100
     this.N = 100
     this.inf = inf
@@ -57,7 +66,7 @@ export class Body {
     )
   }
 
-  makeVertex(lat: number, lon: number, r: number): ReadonlyVec3 {
+  private makeVertex(lat: number, lon: number, r: number): ReadonlyVec3 {
     const alpha = PI * (.5 - lat / this.M)
     const beta = DOUBLE_PI * (lon / this.N)
     return [
@@ -67,14 +76,32 @@ export class Body {
     ]
   }
 
-  makeTexCoords = (lat: number, lon: number) => {
+  private makeTexCoords = (lat: number, lon: number) => {
     return [
       lon / this.N,
       lat / this.M
     ]
   }
 
-  make() {
+  /**
+   * when it's too small
+   */
+  makeAs1Point() {
+    // just one vertex
+    this.vertices = [0, 0, 0]
+  }
+
+  makeAs1Circle() {
+    // just one vertex
+    this.vertices = [0, 0, 0]
+  }
+
+  makeAs1Ball() {
+    // just one vertex
+    this.vertices = [0, 0, 0]
+  }
+
+  makeAs1Body() {
     const { M, N } = this
     const r = this.inf.radius
 
@@ -122,6 +149,28 @@ export class Body {
     this.normals = normals
     this.texCoords = texCoords
     this.indices = indices
+  }
+
+  make() {
+    switch (this.blk) {
+      case BodyLooksLike.Point: {
+        this.makeAs1Point()
+        break
+      }
+      case BodyLooksLike.Circle: {
+        this.makeAs1Circle()
+        break
+      }
+      case BodyLooksLike.Ball: {
+        this.makeAs1Ball()
+        break
+      }
+      case BodyLooksLike.Point:
+      default: {
+        this.makeAs1Body()
+        break
+      }
+    }
   }
 
 }

@@ -1,7 +1,8 @@
 import { Body } from "./body.class"
 
-const GRAVITY_CONST = 66.7430 * 0.000001
+const GRAVITY_CONST = 6.67430 * 0.00001
 const UNIT_OF_TIME = 1
+const RENDER_PERIOD = 1000
 
 const { mat4, vec3 } = glMatrix
 
@@ -49,6 +50,18 @@ export class Ether {
   }
 
   moveBody(b: Body) {
+    let n = RENDER_PERIOD
+    while (n--) {
+      this._moveBody(b)
+    }
+    mat4.translate(
+      b.modelMat,
+      mat4.create(),
+      b.center
+    )
+  }
+
+  private _moveBody(b: Body) {
     const ds = vec3.scale(
       [0, 0, 0],
       b.velocity,
@@ -85,12 +98,6 @@ export class Ether {
       b.center,
       b.center,
       ds
-    )
-
-    mat4.translate(
-      b.modelMat,
-      mat4.create(),
-      b.center
     )
   }
 }

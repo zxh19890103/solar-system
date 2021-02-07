@@ -19,7 +19,11 @@ import { Earth, Jupiter, Mars, Mercury, Neptune, Saturn, Sun, Uranus, Venus } fr
 import { BodyProgram } from "./body-program.class"
 import { Body } from "./body.class"
 import { Camera } from "./camera.class"
+import { CircleProgram } from "./circle-program.class"
 import { Ether } from "./ether"
+import { PointProgram } from "./point-program.class"
+import { ObjectProgram } from "./program.class"
+import { BallProgram } from "./ball-program.class"
 
 let W: number = 0
 let H: number = 0
@@ -28,7 +32,7 @@ let cam: Camera
 let ether: Ether
 const frames = []
 
-const setUpGLContext = () => {
+const setupGLContext = () => {
   const canvasElement = document.createElement("canvas")
   W = window.innerWidth
   H = window.innerHeight
@@ -39,16 +43,12 @@ const setUpGLContext = () => {
 }
 
 const createProgram = async (body: Body) => {
-  const program = new BodyProgram(
-    gl,
-    body,
-    "/shaders/vertex.glsl",
-    "/shaders/fragment.glsl"
-  )
+  const program = new BodyProgram(gl, body)
   program.setCam(cam)
   program.setEther(ether)
   ether.put(body)
-  frames.push(await program.boot())
+  await program.setup()
+  frames.push(program.boot())
 }
 
 const run = () => {
@@ -74,70 +74,26 @@ const run = () => {
   loop()
 }
 
-const eight = async () => {
-  setUpGLContext()
-
-  cam = new Camera(W / H)
-  cam.put([
-    0, Jupiter.radius * 10, Jupiter.radius * 6
-  ], [
-    0, 0, 1
-  ]).adjust(
-    Math.PI * .1,
-    .1,
-    Jupiter.radius * 20
-  )
-
-  let offset = Jupiter.radius * 3.5
-
-  await createProgram(new Body(
-    Mercury, [offset -= 20, 0, 0]
-  ))
-  await createProgram(new Body(
-    Venus, [offset -= 20, 0, 0]
-  ))
-  await createProgram(new Body(
-    Earth, [offset -= 20, 0, 0]
-  ))
-  await createProgram(new Body(
-    Mars, [offset -= 20, 0, 0]
-  ))
-  await createProgram(new Body(
-    Jupiter, [offset -= Jupiter.radius + 10, 0, 0]
-  ))
-  await createProgram(new Body(
-    Saturn, [offset -= Jupiter.radius + Saturn.radius + 10, 0, 0]
-  ))
-  await createProgram(new Body(
-    Uranus, [offset -= Saturn.radius + Uranus.radius + 10, 0, 0]
-  ))
-  await createProgram(new Body(
-    Neptune, [offset -= Uranus.radius + Neptune.radius + 10, 0, 0]
-  ))
-
-  console.log('it\'s working.')
-
-  run()
-}
-
 const solar = async () => {
-  setUpGLContext()
+  setupGLContext()
 
   cam = new Camera(W / H)
+  // 2492 mkm
   cam.put([
-    0, 0, Mars.aphelion / 200
+    0, 0, Earth.aphelion
   ], [
     0, 1, 0
   ]).adjust(
-    Math.PI * .98,
+    Math.PI * .06,
     .1,
-    Jupiter.aphelion
+    Infinity
   )
 
   ether = new Ether()
   // ether.put(new Body(Sun, [0, 0, 0], [0, 0, 0]))
-
-  await createProgram(new Body(Earth, [Earth.aphelion, 0, 0], [0, 29.78 * .001, 0]))
+  // const mars = new Body(Mars, [0, 0, 0], [0, 0, 0])
+  const sun = new Body(Sun, [0, 0, 0], [0, 0, 0])
+  await createProgram(sun)
 
   run()
 }

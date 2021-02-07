@@ -67,7 +67,7 @@ export const Earth: BodyInfo = {
   semiMajorAxis: 149598.023,
   avatar: "/nineplanets-org/earth.png",
   map: "/maps/earthmap1k.jpg",
-  color: "skyblue",
+  color: "#66ff22",
   mass: 5.97237,
   radius: 6.371,
   inclination: 7.155 * RAD_PER_DEGREE
@@ -80,7 +80,7 @@ export const Venus: BodyInfo = {
   semiMajorAxis: 108208,
   avatar: "/nineplanets-org/venus.png",
   map: "/maps/venusmap.jpg",
-  color: "skyblue",
+  color: "#66ff22",
   mass: 4.8675,
   radius: 6.0518,
   inclination: 3.86 * RAD_PER_DEGREE
@@ -93,7 +93,7 @@ export const Mars: BodyInfo = {
   semiMajorAxis: 227939.2,
   avatar: "/nineplanets-org/mars.png",
   map: "/maps/mars_1k_color.jpg",
-  color: "orange",
+  color: "#ffa500",
   mass: .64171,
   radius: 3.3895,
   inclination: 5.65 * RAD_PER_DEGREE
@@ -106,7 +106,7 @@ export const Jupiter: BodyInfo = {
   semiMajorAxis: 778570,
   avatar: "/nineplanets-org/jupiter.png",
   map: "/maps/jupitermap.jpg",
-  color: "skyblue",
+  color: "#ffa500",
   mass: 1.8982 * 1000,
   radius: 69.911,
   inclination: 6.09 * RAD_PER_DEGREE
@@ -119,7 +119,7 @@ export const Mercury: BodyInfo = {
   semiMajorAxis: 57909.050,
   avatar: "/nineplanets-org/mercury.png",
   map: "/maps/merc_diff.jpg",
-  color: "white",
+  color: "#ffa500",
   mass: .33011,
   radius: 2.4397,
   inclination: 3.38 * RAD_PER_DEGREE
@@ -132,7 +132,7 @@ export const Saturn: BodyInfo = {
   semiMajorAxis: 1433530,
   avatar: "/nineplanets-org/saturn.png",
   map: "/maps/saturnmap.jpg",
-  color: "white",
+  color: "#ffa500",
   mass: 568.34,
   radius: 58.232,
   inclination: 5.51 * RAD_PER_DEGREE
@@ -145,7 +145,7 @@ export const Neptune: BodyInfo = {
   semiMajorAxis: 30.07 * AU,
   avatar: "/nineplanets-org/neptune.png",
   map: "/maps/Neptune1.jpg",
-  color: "white",
+  color: "#ffa500",
   mass: 102.413,
   radius: approximates(24.622, .019),
   inclination: 6.43 * RAD_PER_DEGREE
@@ -158,7 +158,7 @@ export const Uranus: BodyInfo = {
   semiMajorAxis: 19.2184 * AU,
   avatar: "/nineplanets-org/uranus.png",
   map: "/maps/uranusmap.jpg",
-  color: "white",
+  color: "#ffa500",
   mass: approximates(86.810, .013),
   radius: approximates(25362, 7) * .001,
   inclination: 6.48 * RAD_PER_DEGREE
@@ -171,7 +171,7 @@ export const Pluto: BodyInfo = {
   semiMajorAxis: 39.482 * AU,
   avatar: "/nineplanets-org/pluto.png",
   map: "/maps/earthmap1k.jpg",
-  color: "white",
+  color: "#ffa500",
   mass: approximates(1.303, .003) * .01, // (1.303±0.003)×1022
   radius: approximates(1188.3, .8) * .001,
   inclination: 11.88 * RAD_PER_DEGREE
@@ -184,7 +184,7 @@ export const Ceres: BodyInfo = {
   semiMajorAxis: 2.7691651545 * AU,
   avatar: "/nineplanets-org/ceres.png",
   map: "/maps/earthmap1k.jpg",
-  color: "white",
+  color: "#ffa500",
   mass: approximates(9.3835, .0001) * .0001,
   radius: .46973,
   inclination: 0 * RAD_PER_DEGREE
@@ -197,7 +197,7 @@ export const Eris: BodyInfo = {
   semiMajorAxis: 67.864 * AU,
   avatar: "/nineplanets-org/eris.png",
   map: "/maps/earthmap1k.jpg",
-  color: "white",
+  color: "#ffa500",
   mass: approximates(1.6466, .0085) * .01,
   radius: approximates(1163, 6) * .001,
   inclination: 44.040 * RAD_PER_DEGREE
