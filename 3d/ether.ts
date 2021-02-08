@@ -1,19 +1,45 @@
+import { BodyInfo, Sun } from "./body-info"
 import { Body } from "./body.class"
+import { range } from "./utils"
 
 const GRAVITY_CONST = 6.67430 * 0.00001
-const UNIT_OF_TIME = 1
-const RENDER_PERIOD = 1000
+const UNIT_OF_TIME = 7000
+const RENDER_PERIOD = 100
 
 const { mat4, vec3 } = glMatrix
+const { cos, sin, PI } = Math
 
 export class Ether {
   bodies: Body[] = []
 
   put(b: Body) {
-    b.modelMat
+    const inf = b.inf
+    const angleOnXY = range(0, PI * 2)
+
+    if (b.coordinates === undefined) {
+      const xy = inf.aphelion * cos(inf.inclination)
+      b.coordinates = [
+        xy * cos(angleOnXY),
+        xy * sin(angleOnXY),
+        inf.aphelion * sin(inf.inclination)
+      ]
+    }
+
+    if (b.velocity === undefined) {
+      const speed = this.computesOrbitSpeedOnR(
+        b.inf.semiMajorAxis,
+        b.inf.aphelion
+      )
+      b.velocity = [
+        speed * cos(angleOnXY + PI / 2),
+        speed * sin(angleOnXY + PI / 2),
+        0
+      ]
+    }
+
     vec3.transformMat4(
-      b.center,
-      b.center,
+      b.coordinates,
+      b.coordinates,
       b.modelMat
     )
     this.bodies.push(b)
@@ -21,15 +47,15 @@ export class Ether {
 
   computesFieldIntensityFromBody(target: Body, from: Body) {
     const r = vec3.distance(
-      target.center,
-      from.center
+      target.coordinates,
+      from.coordinates
     )
     const mag = (GRAVITY_CONST * from.inf.mass) / (r * r)
     const vec = vec3.create()
     vec3.subtract(
       vec,
-      from.center,
-      target.center
+      from.coordinates,
+      target.coordinates
     )
     vec3.normalize(vec, vec)
     const fi = vec3.scale(vec, vec, mag)
@@ -49,19 +75,19 @@ export class Ether {
     return fi
   }
 
-  moveBody(b: Body) {
+  move(b: Body) {
     let n = RENDER_PERIOD
     while (n--) {
-      this._moveBody(b)
+      this._move(b)
     }
     mat4.translate(
       b.modelMat,
       mat4.create(),
-      b.center
+      b.coordinates
     )
   }
 
-  private _moveBody(b: Body) {
+  private _move(b: Body) {
     const ds = vec3.scale(
       [0, 0, 0],
       b.velocity,
@@ -95,9 +121,15 @@ export class Ether {
     )
 
     vec3.add(
-      b.center,
-      b.center,
+      b.coordinates,
+      b.coordinates,
       ds
     )
+  }
+
+  computesOrbitSpeedOnR(sma: number, r: number, ref?: BodyInfo) {
+    if (sma === 0) return 0
+    const m = ref ? ref.mass : Sun.mass
+    return Math.sqrt(GRAVITY_CONST * m * (2 / r - 1 / sma))
   }
 }

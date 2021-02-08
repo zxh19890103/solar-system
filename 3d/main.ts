@@ -15,7 +15,7 @@
  * 1. N vertices
  * 2. the center.
  */
-import { Earth, Jupiter, Mars, Mercury, Neptune, Saturn, Sun, Uranus, Venus } from "./body-info"
+import { Ceres, Earth, Jupiter, Mars, Mercury, Neptune, Saturn, Sun, Uranus, Venus, Eris, Pluto, Halley, Tempel1, Holmes, HaleBopp } from "./body-info"
 import { BodyProgram } from "./body-program.class"
 import { Body } from "./body.class"
 import { Camera } from "./camera.class"
@@ -43,7 +43,7 @@ const setupGLContext = () => {
 }
 
 const createProgram = async (body: Body) => {
-  const program = new BodyProgram(gl, body)
+  const program = new PointProgram(gl, body)
   program.setCam(cam)
   program.setEther(ether)
   ether.put(body)
@@ -80,20 +80,36 @@ const solar = async () => {
   cam = new Camera(W / H)
   // 2492 mkm
   cam.put([
-    0, 0, Earth.aphelion
+    0, Neptune.aphelion, Saturn.aphelion
   ], [
-    0, 1, 0
+    0, 0, 1
   ]).adjust(
-    Math.PI * .06,
+    Math.PI * .5,
     .1,
     Infinity
   )
 
   ether = new Ether()
-  // ether.put(new Body(Sun, [0, 0, 0], [0, 0, 0]))
-  // const mars = new Body(Mars, [0, 0, 0], [0, 0, 0])
-  const sun = new Body(Sun, [0, 0, 0], [0, 0, 0])
-  await createProgram(sun)
+  await createProgram(new Body(Sun))
+  await createProgram(new Body(Mercury))
+  await createProgram(new Body(Venus))
+  await createProgram(new Body(Earth))
+  await createProgram(new Body(Mars))
+  await createProgram(new Body(Jupiter))
+  await createProgram(new Body(Saturn))
+  await createProgram(new Body(Uranus))
+  await createProgram(new Body(Neptune))
+
+  await createProgram(new Body(Ceres))
+  // await createProgram(new Body(Eris))
+  await createProgram(new Body(Pluto))
+
+  await createProgram(new Body(Halley))
+  await createProgram(new Body(Tempel1))
+  await createProgram(new Body(Holmes))
+  await createProgram(new Body(HaleBopp))
+
+
 
   run()
 }

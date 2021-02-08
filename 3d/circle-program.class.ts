@@ -16,13 +16,11 @@ export class CircleProgram extends ObjectProgram {
   }
 
   boot(): () => void {
-    const { gl, program, cam, body } = this
+    const { gl, program, body } = this
     const { cos, PI, sin } = Math
     const inf = body.inf
 
     gl.useProgram(program)
-
-    this.setUniform4fv("uVertexColor", parseColor(inf.color))()
 
     const vertices = []
     const r = inf.radius
@@ -40,9 +38,7 @@ export class CircleProgram extends ObjectProgram {
       3
     )
 
-    const uniform = this.setUniformMatrix4fv("local", body.localMat)
-    this.setUniformMatrix4fv("view", cam.viewMat)()
-    this.setUniformMatrix4fv("projection", cam.projectionMat)()
+    const uniform = this.setUniformLMVP()
 
     const pointsCount = vertices.length / 3
 

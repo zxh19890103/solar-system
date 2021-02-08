@@ -17,7 +17,7 @@ export enum BodyLooksLike {
 }
 
 export class Body {
-  center: vec3 = [0, 0, 0]
+  coordinates: vec3 = [0, 0, 0]
   velocity: vec3 = [0, 0, 0]
   vertices: number[]
   normals: number[]
@@ -40,21 +40,15 @@ export class Body {
 
   blk: BodyLooksLike = BodyLooksLike.Body
 
-  constructor(inf: BodyInfo, at: ReadonlyVec3, velocity: vec3) {
-    this.M = 100
-    this.N = 100
+  constructor(inf: BodyInfo, at?: vec3, velocity?: vec3) {
+    this.M = 60
+    this.N = 60
     this.inf = inf
+    this.coordinates = at
+    this.velocity = velocity
 
     this.localMat = mat4.create()
     this.modelMat = mat4.create()
-
-    this.velocity = velocity
-
-    mat4.translate(
-      this.modelMat,
-      this.modelMat,
-      at
-    )
   }
 
   rotates(rad: number) {

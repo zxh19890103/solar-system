@@ -122,6 +122,7 @@ export class BodyProgram extends ObjectProgram {
     uniformModel()
 
     // just once.
+    const uniform = this.setUniformLMVP()
     this.setUniformMatrix4fv("view", cam.viewMat)()
     this.setUniformMatrix4fv("projection", cam.projectionMat)()
 
@@ -137,9 +138,7 @@ export class BodyProgram extends ObjectProgram {
       gl.useProgram(this.program)
       setSampler()
       attribSetter.forEach(setter => setter())
-      uniformLocal()
-      // this.ether.moveBody(body)
-      // uniformModel()
+      uniform()
       gl.drawElements(TRIANGLES, indicesCount, UNSIGNED_SHORT, 0)
     }
   }

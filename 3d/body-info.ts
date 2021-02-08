@@ -30,7 +30,7 @@ export interface BodyInfo {
   /**
    * the color of the planet.
    */
-  color: string
+  color: Iterable<number>
   /**
    * image url relative to path ./planets-inf
    */
@@ -39,12 +39,38 @@ export interface BodyInfo {
   /**
    * to the Sun's equator;
    */
-  inclination?: number,
+  inclination?: number
   /**
    * the reference system.
    * default is the the solar
    */
   ref?: BodyInfo
+}
+
+const COLORS = {
+  grey: [128, 128, 128],
+  brown: [165, 42, 42],
+  blue: [0, 0, 255],
+  green: [0, 255, 0],
+  white: [255, 255, 255],
+  red: [255, 0, 0],
+  tan: [210, 180, 140],
+  orange: [255, 165, 0],
+  golden: [255, 215, 0]
+}
+
+const composeColors = (...colors: Array<number[]>) => {
+  return colors.reduce(
+    (c, i) => {
+      return [
+        c[0] + i[0],
+        c[1] + i[1],
+        c[2] + i[2]
+      ]
+    }
+    , [0, 0, 0]).map(c => {
+      return (c / colors.length) / 255
+    }).concat([1])
 }
 
 export const Sun: BodyInfo = {
@@ -54,23 +80,23 @@ export const Sun: BodyInfo = {
   semiMajorAxis: 0,
   avatar: "/nineplanets-org/sun.png",
   map: "/nineplanets-org/sun.png",
-  color: "#e74c0e",
+  color: composeColors(COLORS.red),
   mass: 1.9885 * 1000000,
   radius: 696.342,
   inclination: 0
 }
 
-export const Earth: BodyInfo = {
-  name: "Earth",
-  aphelion: 152100,
-  peribelion: 147095,
-  semiMajorAxis: 149598.023,
-  avatar: "/nineplanets-org/earth.png",
-  map: "/maps/earthmap1k.jpg",
-  color: "#66ff22",
-  mass: 5.97237,
-  radius: 6.371,
-  inclination: 7.155 * RAD_PER_DEGREE
+export const Mercury: BodyInfo = {
+  name: "Mercury",
+  aphelion: 69816.900,
+  peribelion: 46001.200,
+  semiMajorAxis: 57909.050,
+  avatar: "/nineplanets-org/mercury.png",
+  map: "/maps/merc_diff.jpg",
+  color: composeColors(COLORS.grey),
+  mass: .33011,
+  radius: 2.4397,
+  inclination: 3.38 * RAD_PER_DEGREE
 }
 
 export const Venus: BodyInfo = {
@@ -80,10 +106,23 @@ export const Venus: BodyInfo = {
   semiMajorAxis: 108208,
   avatar: "/nineplanets-org/venus.png",
   map: "/maps/venusmap.jpg",
-  color: "#66ff22",
+  color: composeColors(COLORS.grey, COLORS.brown),
   mass: 4.8675,
   radius: 6.0518,
   inclination: 3.86 * RAD_PER_DEGREE
+}
+
+export const Earth: BodyInfo = {
+  name: "Earth",
+  aphelion: 152100,
+  peribelion: 147095,
+  semiMajorAxis: 149598.023,
+  avatar: "/nineplanets-org/earth.png",
+  map: "/maps/earthmap1k.jpg",
+  color: composeColors(COLORS.blue, COLORS.green, COLORS.white),
+  mass: 5.97237,
+  radius: 6.371,
+  inclination: 7.155 * RAD_PER_DEGREE
 }
 
 export const Mars: BodyInfo = {
@@ -93,7 +132,7 @@ export const Mars: BodyInfo = {
   semiMajorAxis: 227939.2,
   avatar: "/nineplanets-org/mars.png",
   map: "/maps/mars_1k_color.jpg",
-  color: "#ffa500",
+  color: composeColors(COLORS.red, COLORS.brown, COLORS.tan),
   mass: .64171,
   radius: 3.3895,
   inclination: 5.65 * RAD_PER_DEGREE
@@ -106,23 +145,10 @@ export const Jupiter: BodyInfo = {
   semiMajorAxis: 778570,
   avatar: "/nineplanets-org/jupiter.png",
   map: "/maps/jupitermap.jpg",
-  color: "#ffa500",
+  color: composeColors(COLORS.brown, COLORS.orange, COLORS.tan, COLORS.white),
   mass: 1.8982 * 1000,
   radius: 69.911,
   inclination: 6.09 * RAD_PER_DEGREE
-}
-
-export const Mercury: BodyInfo = {
-  name: "Mercury",
-  aphelion: 69816.900,
-  peribelion: 46001.200,
-  semiMajorAxis: 57909.050,
-  avatar: "/nineplanets-org/mercury.png",
-  map: "/maps/merc_diff.jpg",
-  color: "#ffa500",
-  mass: .33011,
-  radius: 2.4397,
-  inclination: 3.38 * RAD_PER_DEGREE
 }
 
 export const Saturn: BodyInfo = {
@@ -132,23 +158,10 @@ export const Saturn: BodyInfo = {
   semiMajorAxis: 1433530,
   avatar: "/nineplanets-org/saturn.png",
   map: "/maps/saturnmap.jpg",
-  color: "#ffa500",
+  color: composeColors(COLORS.golden, COLORS.brown, COLORS.green, COLORS.blue),
   mass: 568.34,
   radius: 58.232,
   inclination: 5.51 * RAD_PER_DEGREE
-}
-
-export const Neptune: BodyInfo = {
-  name: "Neptune",
-  aphelion: 30.33 * AU,
-  peribelion: 29.81 * AU,
-  semiMajorAxis: 30.07 * AU,
-  avatar: "/nineplanets-org/neptune.png",
-  map: "/maps/Neptune1.jpg",
-  color: "#ffa500",
-  mass: 102.413,
-  radius: approximates(24.622, .019),
-  inclination: 6.43 * RAD_PER_DEGREE
 }
 
 export const Uranus: BodyInfo = {
@@ -158,10 +171,23 @@ export const Uranus: BodyInfo = {
   semiMajorAxis: 19.2184 * AU,
   avatar: "/nineplanets-org/uranus.png",
   map: "/maps/uranusmap.jpg",
-  color: "#ffa500",
+  color: composeColors(COLORS.blue, COLORS.green),
   mass: approximates(86.810, .013),
   radius: approximates(25362, 7) * .001,
   inclination: 6.48 * RAD_PER_DEGREE
+}
+
+export const Neptune: BodyInfo = {
+  name: "Neptune",
+  aphelion: 30.33 * AU,
+  peribelion: 29.81 * AU,
+  semiMajorAxis: 30.07 * AU,
+  avatar: "/nineplanets-org/neptune.png",
+  map: "/maps/Neptune1.jpg",
+  color: composeColors(COLORS.blue),
+  mass: 102.413,
+  radius: approximates(24.622, .019),
+  inclination: 6.43 * RAD_PER_DEGREE
 }
 
 export const Pluto: BodyInfo = {
@@ -171,7 +197,7 @@ export const Pluto: BodyInfo = {
   semiMajorAxis: 39.482 * AU,
   avatar: "/nineplanets-org/pluto.png",
   map: "/maps/earthmap1k.jpg",
-  color: "#ffa500",
+  color: composeColors(COLORS.white),
   mass: approximates(1.303, .003) * .01, // (1.303±0.003)×1022
   radius: approximates(1188.3, .8) * .001,
   inclination: 11.88 * RAD_PER_DEGREE
@@ -184,7 +210,7 @@ export const Ceres: BodyInfo = {
   semiMajorAxis: 2.7691651545 * AU,
   avatar: "/nineplanets-org/ceres.png",
   map: "/maps/earthmap1k.jpg",
-  color: "#ffa500",
+  color: composeColors(COLORS.white),
   mass: approximates(9.3835, .0001) * .0001,
   radius: .46973,
   inclination: 0 * RAD_PER_DEGREE
@@ -197,8 +223,62 @@ export const Eris: BodyInfo = {
   semiMajorAxis: 67.864 * AU,
   avatar: "/nineplanets-org/eris.png",
   map: "/maps/earthmap1k.jpg",
-  color: "#ffa500",
+  color: composeColors(COLORS.white),
   mass: approximates(1.6466, .0085) * .01,
   radius: approximates(1163, 6) * .001,
   inclination: 44.040 * RAD_PER_DEGREE
+}
+
+// Commets bellow
+
+export const Halley: BodyInfo = {
+  name: "Halley",
+  aphelion: 35.082 * AU,
+  peribelion: 0.586 * AU,
+  semiMajorAxis: 17.834 * AU,
+  avatar: "/nineplanets-org/ceres.png",
+  map: "/maps/earthmap1k.jpg",
+  color: composeColors(COLORS.white),
+  mass: 2.2 * Math.pow(10, -10),
+  radius: 11 * .001,
+  inclination: 0
+}
+
+export const Tempel1: BodyInfo = {
+  name: "Tempel-1",
+  aphelion: 4.748 * AU,
+  peribelion: 1.542 * AU,
+  semiMajorAxis: 3.145 * AU,
+  avatar: "/nineplanets-org/PIA02142_Tempel_1_bottom_sharped.jpg",
+  map: "/maps/earthmap1k.jpg",
+  color: composeColors(COLORS.white),
+  mass: 2.2 * Math.pow(10, -10),
+  radius: 5 * .001,
+  inclination: 10.474 * RAD_PER_DEGREE
+}
+
+export const Holmes: BodyInfo = {
+  name: "Holmes",
+  aphelion: 5.183610 * AU,
+  peribelion: 2.053218 * AU,
+  semiMajorAxis: 3.618414 * AU,
+  avatar: "/nineplanets-org/asteroid.png",
+  map: "/maps/earthmap1k.jpg",
+  color: composeColors(COLORS.white),
+  mass: 2.2 * Math.pow(10, -10),
+  radius: 5 * .001,
+  inclination: 19.1126 * RAD_PER_DEGREE
+}
+
+export const HaleBopp: BodyInfo = {
+  name: "Hale-Bopp",
+  aphelion: 370.8 * AU,
+  peribelion: 0.914 * AU,
+  semiMajorAxis: 186 * AU,
+  avatar: "/nineplanets-org/asteroid.png",
+  map: "/maps/earthmap1k.jpg",
+  color: composeColors(COLORS.white),
+  mass: 2.2 * Math.pow(10, -10),
+  radius: approximates(60, 20) * .001,
+  inclination: 89.4 * RAD_PER_DEGREE
 }

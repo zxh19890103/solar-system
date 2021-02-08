@@ -11,27 +11,27 @@ export class PointProgram extends ObjectProgram {
   }
 
   boot(): () => void {
-    const { gl, program, cam } = this
+    const { gl, program, body, ether } = this
+    const inf = body.inf
 
     gl.useProgram(program)
 
-    this.setUniform4fv("uVertexColor", parseColor(this.body.inf.color))()
-    this.setUniform1f("uVertexSize", this.body.inf.radius)()
+    this.setUniform4fv("uVertexColor", inf.color)()
+    this.setUniform1f("uVertexSize", inf.radius)()
 
     const setAttrib = this.setFloat32Attrib(
       "aVertex",
-      [...this.body.center],
+      [0, 0, 0],
       3
     )
 
-    this.setUniformMatrix4fv("view", cam.viewMat)()
-    this.setUniformMatrix4fv("projection", cam.projectionMat)()
-
-    // let alpha = 1
+    const uniform = this.setUniformLMVP()
 
     return () => {
       gl.useProgram(program)
       setAttrib()
+      uniform()
+      ether.move(body)
       gl.drawArrays(
         gl.POINTS, 0, 1
       )
