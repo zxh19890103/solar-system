@@ -168,11 +168,13 @@ export abstract class ObjectProgram {
     const { cam, body } = this
     const l = this.setUniformMatrix4fv("local", body.localMat)
     const m = this.setUniformMatrix4fv("model", body.modelMat)
-    this.setUniformMatrix4fv("view", cam.viewMat)()
+    const v = this.setUniformMatrix4fv("view", cam.viewMat)
     this.setUniformMatrix4fv("projection", cam.projectionMat)()
+    m()
     return () => {
       l()
-      m()
+      // m()
+      v()
     }
   }
 }

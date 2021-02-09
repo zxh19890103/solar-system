@@ -62,9 +62,9 @@ export class BodyProgram extends ObjectProgram {
     const loc = gl.getUniformLocation(this.program, "uSampler")
     gl.uniform1i(loc, 0)
     return () => {
+      gl.bindTexture(gl.TEXTURE_2D, this.tex)
       gl.activeTexture(gl.TEXTURE0)
       gl.uniform1i(loc, 0)
-      gl.bindTexture(gl.TEXTURE_2D, this.tex)
     }
   }
 
@@ -109,22 +109,8 @@ export class BodyProgram extends ObjectProgram {
       [0, 0, 1]
     )()
 
-    const uniformLocal = this.setUniformMatrix4fv(
-      "local",
-      body.localMat
-    )
-
-    const uniformModel = this.setUniformMatrix4fv(
-      "model",
-      body.modelMat
-    )
-
-    uniformModel()
-
     // just once.
     const uniform = this.setUniformLMVP()
-    this.setUniformMatrix4fv("view", cam.viewMat)()
-    this.setUniformMatrix4fv("projection", cam.projectionMat)()
 
     const setSampler = this.setUniformTexSampler()
 

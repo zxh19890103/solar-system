@@ -144,7 +144,7 @@ const computesOrbitalPeriod = (sma: number, ref: BodyInfo) => {
   const a = sma // * pow(10, 6)
   const g = GRAVITY_CONST //  * pow(10, -12)
   const m = (ref ? ref.mass : Sun.mass) // * pow(10, 24)
-  return (PI * 2 * sqrt(1000000 * a * a * a / (g * m))) / (SECONDS_IN_A_DAY)
+  return (PI * 2 * sqrt(10000 * a * a * a / (g * m))) / (SECONDS_IN_A_DAY)
 }
 
 const duration = (seconds: number) => {

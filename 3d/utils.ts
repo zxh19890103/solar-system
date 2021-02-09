@@ -18,3 +18,11 @@ export const parseColor = (color: string): Iterable<number> => {
     return parseInt(c, 16) / 256
   })
 }
+
+export const debounce = (fn, ms = 300) => {
+  let int = -1
+  return (...args) => {
+    clearTimeout(int)
+    int = setTimeout(fn, ms, ...args)
+  }
+}

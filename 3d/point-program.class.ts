@@ -1,5 +1,5 @@
 import { ObjectProgram } from "./program.class"
-import { parseColor } from "./utils"
+import { parseColor, range } from "./utils"
 
 export class PointProgram extends ObjectProgram {
 
@@ -13,10 +13,12 @@ export class PointProgram extends ObjectProgram {
   boot(): () => void {
     const { gl, program, body, ether } = this
     const inf = body.inf
+    const { PI, sin } = Math
 
     gl.useProgram(program)
 
-    this.setUniform4fv("uVertexColor", inf.color)()
+    const color = [...inf.color]
+    const setColor = this.setUniform4fv("uVertexColor", color)
     this.setUniform1f("uVertexSize", inf.radius)()
 
     const setAttrib = this.setFloat32Attrib(
@@ -25,13 +27,18 @@ export class PointProgram extends ObjectProgram {
       3
     )
 
+    let alpha = 0 ^ range(0, PI) * 100
+
     const uniform = this.setUniformLMVP()
 
     return () => {
       gl.useProgram(program)
+      color[3] = sin((alpha % 314) * .01)
       setAttrib()
+      setColor()
       uniform()
       ether.move(body)
+      alpha += 20
       gl.drawArrays(
         gl.POINTS, 0, 1
       )

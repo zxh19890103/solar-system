@@ -24,6 +24,8 @@ import { Ether } from "./ether"
 import { PointProgram } from "./point-program.class"
 import { ObjectProgram } from "./program.class"
 import { BallProgram } from "./ball-program.class"
+import { AU } from "./constants"
+import { debounce } from "./utils"
 
 let W: number = 0
 let H: number = 0
@@ -43,19 +45,21 @@ const setupGLContext = () => {
 }
 
 const createProgram = async (body: Body) => {
-  const program = new PointProgram(gl, body)
+  const program = new BodyProgram(gl, body)
   program.setCam(cam)
   program.setEther(ether)
   ether.put(body)
   await program.setup()
   frames.push(program.boot())
+  return body
 }
 
 const run = () => {
 
+  gl.enable(gl.BLEND)
   gl.blendFunc(
-    gl.DST_COLOR,
-    gl.SRC_COLOR
+    gl.SRC_ALPHA,
+    gl.ONE_MINUS_SRC_ALPHA
   )
 
   const loop = () => {
@@ -78,38 +82,57 @@ const solar = async () => {
   setupGLContext()
 
   cam = new Camera(W / H)
-  // 2492 mkm
-  cam.put([
-    0, Neptune.aphelion, Saturn.aphelion
-  ], [
-    0, 0, 1
-  ]).adjust(
-    Math.PI * .5,
+  const at: vec3 = [
+    0, Mars.aphelion, Jupiter.aphelion
+  ]
+  // // 2492 mkm
+  cam.adjust(
+    Math.PI * .9,
     .1,
     Infinity
   )
 
   ether = new Ether()
+  const distance = glMatrix.vec3.distance(
+    at,
+    [0, 0, 0]
+  )
+  ether.writeLine(`You're ${(distance / AU).toFixed(6)} AU far from the origin, the sun.`)
   await createProgram(new Body(Sun))
-  await createProgram(new Body(Mercury))
-  await createProgram(new Body(Venus))
-  await createProgram(new Body(Earth))
-  await createProgram(new Body(Mars))
-  await createProgram(new Body(Jupiter))
-  await createProgram(new Body(Saturn))
-  await createProgram(new Body(Uranus))
-  await createProgram(new Body(Neptune))
+  // await createProgram(new Body(Mercury))
+  // await createProgram(new Body(Venus))
+  const earth = await createProgram(new Body(Earth))
+  // await createProgram(new Body(Mars))
+  // await createProgram(new Body(Jupiter))
+  // await createProgram(new Body(Saturn))
+  // await createProgram(new Body(Uranus))
+  // const neptune = await createProgram(new Body(Neptune))
 
-  await createProgram(new Body(Ceres))
+  // console.log(neptune.coordinates, d)
+  const d = glMatrix.vec3.add(
+    [0, 0, 0],
+    earth.coordinates,
+    [1, 0, 0]
+  )
+  // console.log(earth.coordinates, d)
+  cam.put(d)
+  cam.lookAt(earth)
+  // await createProgram(new Body(Ceres))
   // await createProgram(new Body(Eris))
-  await createProgram(new Body(Pluto))
+  // await createProgram(new Body(Pluto))
 
-  await createProgram(new Body(Halley))
-  await createProgram(new Body(Tempel1))
-  await createProgram(new Body(Holmes))
-  await createProgram(new Body(HaleBopp))
+  // await createProgram(new Body(Halley))
+  // await createProgram(new Body(Tempel1))
+  // await createProgram(new Body(Holmes))
+  // await createProgram(new Body(HaleBopp))
 
-
+  // gl.canvas.addEventListener("mousemove", debounce((evt: MouseEvent) => {
+  //   const { offsetX, offsetY } = evt
+  //   const x = offsetX - W / 2
+  //   const y = offsetY - H / 2
+  //   console.log(x, y)
+  //   cam.rotate(Math.atan(y / x))
+  // }))
 
   run()
 }
