@@ -32,6 +32,7 @@ let H: number = 0
 let gl: WebGLRenderingContext
 let cam: Camera
 let ether: Ether
+const programs: ObjectProgram[] = []
 const frames = []
 
 const setupGLContext = () => {
@@ -45,12 +46,12 @@ const setupGLContext = () => {
 }
 
 const createProgram = async (body: Body) => {
-  const program = new BodyProgram(gl, body)
+  const program = new PointProgram(gl, body)
   program.setCam(cam)
   program.setEther(ether)
   ether.put(body)
   await program.setup()
-  frames.push(program.boot())
+  programs.push(program)
   return body
 }
 
@@ -60,6 +61,10 @@ const run = () => {
   gl.blendFunc(
     gl.SRC_ALPHA,
     gl.ONE_MINUS_SRC_ALPHA
+  )
+
+  frames.push(
+    ...programs.map(prog => prog.boot())
   )
 
   const loop = () => {
@@ -82,41 +87,17 @@ const solar = async () => {
   setupGLContext()
 
   cam = new Camera(W / H)
-  const at: vec3 = [
-    0, Mars.aphelion, Jupiter.aphelion
-  ]
-  // // 2492 mkm
-  cam.adjust(
-    Math.PI * .9,
-    .1,
-    Infinity
-  )
-
   ether = new Ether()
-  const distance = glMatrix.vec3.distance(
-    at,
-    [0, 0, 0]
-  )
-  ether.writeLine(`You're ${(distance / AU).toFixed(6)} AU far from the origin, the sun.`)
+
   await createProgram(new Body(Sun))
   // await createProgram(new Body(Mercury))
   // await createProgram(new Body(Venus))
-  const earth = await createProgram(new Body(Earth))
+  await createProgram(new Body(Earth))
   // await createProgram(new Body(Mars))
   // await createProgram(new Body(Jupiter))
   // await createProgram(new Body(Saturn))
   // await createProgram(new Body(Uranus))
   // const neptune = await createProgram(new Body(Neptune))
-
-  // console.log(neptune.coordinates, d)
-  const d = glMatrix.vec3.add(
-    [0, 0, 0],
-    earth.coordinates,
-    [1, 0, 0]
-  )
-  // console.log(earth.coordinates, d)
-  cam.put(d)
-  cam.lookAt(earth)
   // await createProgram(new Body(Ceres))
   // await createProgram(new Body(Eris))
   // await createProgram(new Body(Pluto))
@@ -125,6 +106,21 @@ const solar = async () => {
   // await createProgram(new Body(Tempel1))
   // await createProgram(new Body(Holmes))
   // await createProgram(new Body(HaleBopp))
+
+  cam.put([
+    0, 0, Earth.aphelion
+  ])
+    .lookAt([0, 0, 0])
+    .adjust(
+      Math.PI * .6,
+      .1,
+      Infinity
+    )
+  const distance = glMatrix.vec3.distance(
+    cam.coord,
+    [0, 0, 0]
+  )
+  ether.writeLine(`You're ${(distance / AU).toFixed(6)} AU far from the origin, the sun.`)
 
   // gl.canvas.addEventListener("mousemove", debounce((evt: MouseEvent) => {
   //   const { offsetX, offsetY } = evt

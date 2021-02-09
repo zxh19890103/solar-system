@@ -3,8 +3,8 @@ import { Body } from "./body.class"
 import { range } from "./utils"
 
 const GRAVITY_CONST = 6.67430 * 0.00001 // x 10 ^ -5
-const UNIT_OF_TIME = 1
-const RENDER_PERIOD = 1
+const UNIT_OF_TIME = 100
+const RENDER_PERIOD = 100
 const SECONDS_IN_A_DAY = 24 * 60 * 60
 const DAYS_PER_SECOND = RENDER_PERIOD * UNIT_OF_TIME / (60 * 24)
 

@@ -173,7 +173,7 @@ export abstract class ObjectProgram {
     m()
     return () => {
       l()
-      // m()
+      m()
       v()
     }
   }
