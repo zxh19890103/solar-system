@@ -1,7 +1,5 @@
-import { Body } from "./body.class"
-import { Camera } from "./camera.class"
-import { Ether } from "./ether"
 import { ObjectProgram } from "./program.class"
+import { isPowerOfTwo } from "./utils"
 
 export class BodyProgram extends ObjectProgram {
 
@@ -39,9 +37,14 @@ export class BodyProgram extends ObjectProgram {
       gl.UNSIGNED_BYTE,
       img
     )
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+
+    if (isPowerOfTwo(img.naturalWidth) && isPowerOfTwo(img.naturalHeight)) {
+      gl.generateMipmap(gl.TEXTURE_2D)
+    } else {
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+    }
     return tex
   }
 
@@ -69,30 +72,29 @@ export class BodyProgram extends ObjectProgram {
   }
 
   boot() {
-    const { gl, body, cam } = this
+    const { gl, body, ether } = this
 
     gl.useProgram(this.program)
 
     body.make()
 
-    const attribSetter: Array<() => void> = []
-    attribSetter.push(this.setFloat32Attrib(
+    const setVertices = this.setFloat32Attrib(
       "aVertex",
       body.vertices,
       3
-    ))
+    )
 
-    attribSetter.push(this.setFloat32Attrib(
+    const setTexCoords = this.setFloat32Attrib(
       "aVertexTexCoord",
       body.texCoords,
       2
-    ))
+    )
 
-    attribSetter.push(this.setFloat32Attrib(
+    const setNormals = this.setFloat32Attrib(
       "aVertexNormal",
       body.normals,
       3
-    ))
+    )
 
     this.setUniform3fv(
       "uAmbientLight",
@@ -123,7 +125,10 @@ export class BodyProgram extends ObjectProgram {
       body.rotates(.01)
       gl.useProgram(this.program)
       setSampler()
-      attribSetter.forEach(setter => setter())
+      setVertices()
+      setNormals()
+      setTexCoords()
+      ether.move(body)
       uniform()
       gl.drawElements(TRIANGLES, indicesCount, UNSIGNED_SHORT, 0)
     }

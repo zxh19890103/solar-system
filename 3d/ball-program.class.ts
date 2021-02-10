@@ -16,46 +16,32 @@ export class BallProgram extends ObjectProgram {
   }
 
   boot(): () => void {
-    const { gl, program, cam, body } = this
-    const { cos, PI, sin } = Math
+    const { gl, program, ether, body } = this
     const inf = body.inf
 
     gl.useProgram(program)
 
-    this.setUniform4fv("uVertexColor", parseColor(inf.color))()
+    body.make()
 
-    const vertices = []
-    const R = inf.radius
-    let z = 0
-    for (z = - PI / 2; z <= PI / 2; z += .17) {
-      const r = R * cos(z)
-      const h = R * sin(z)
-      for (let a = 0, end = PI * 2; a < end; a += .17) {
-        vertices.push(
-          r * cos(a),
-          r * sin(a),
-          h
-        )
-      }
-    }
+    const color = [...inf.color]
+    this.setUniform4fv("uVertexColor", color)()
 
     const setAttrib = this.setFloat32Attrib(
       "aVertex",
-      vertices,
+      body.vertices,
       3
     )
 
-    const uniform = this.setUniformMatrix4fv("local", body.localMat)
-    this.setUniformMatrix4fv("view", cam.viewMat)()
-    this.setUniformMatrix4fv("projection", cam.projectionMat)()
+    const uniform = this.setUniformLMVP()
 
-    const pointsCount = vertices.length / 3
+    const pointsCount = body.vertices.length / 3
 
     return () => {
       body.rotates(.01)
       gl.useProgram(program)
       setAttrib()
       uniform()
+      ether.move(body)
       gl.drawArrays(
         gl.LINES, 0, pointsCount
       )

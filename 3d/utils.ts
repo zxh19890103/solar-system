@@ -26,3 +26,7 @@ export const debounce = (fn, ms = 300) => {
     int = setTimeout(fn, ms, ...args)
   }
 }
+
+export const isPowerOfTwo = (num: number) => {
+  return 0 === ((num - 1) & num)
+}

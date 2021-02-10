@@ -3,7 +3,7 @@ import { Body } from "./body.class"
 import { range } from "./utils"
 
 const GRAVITY_CONST = 6.67430 * 0.00001 // x 10 ^ -5
-const UNIT_OF_TIME = 100
+const UNIT_OF_TIME = 400
 const RENDER_PERIOD = 100
 const SECONDS_IN_A_DAY = 24 * 60 * 60
 const DAYS_PER_SECOND = RENDER_PERIOD * UNIT_OF_TIME / (60 * 24)
@@ -59,7 +59,8 @@ export class Ether {
     if (b.velocity === undefined) {
       const speed = this.computesOrbitSpeedOnR(
         b.inf.semiMajorAxis,
-        b.inf.aphelion
+        b.inf.aphelion,
+        b.inf.ref
       )
       b.velocity = [
         speed * cos(angleOnXY + PI / 2),
@@ -75,7 +76,7 @@ export class Ether {
     )
     this.bodies.push(b)
 
-    const orbitalPeriod = this.computesOrbitalPeriod(inf.semiMajorAxis)
+    const orbitalPeriod = this.computesOrbitalPeriod(inf.semiMajorAxis, b.inf.ref)
     const secBodyTakes = orbitalPeriod / DAYS_PER_SECOND
 
     const rgba = [].map.call(b.inf.color, c => 0 ^ c * 255)
@@ -182,7 +183,7 @@ export class Ether {
 
   duration(seconds: number) {
     if (seconds < 1) return seconds.toFixed(2) + 'sec'
-    const overs = [60, 60, 24, 1]
+    const overs = [60, 60, 24, Infinity]
     const units = ['sec', 'min', 'hr', 'dy']
     let rem = 0 ^ seconds
     let m = 0

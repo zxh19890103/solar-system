@@ -1,4 +1,5 @@
 import { BodyInfo } from "./body-info"
+import { RADIUS_K } from "./constants"
 
 const { PI, cos, sin } = Math
 const HALF_PI = PI / 2
@@ -80,24 +81,47 @@ export class Body {
   /**
    * when it's too small
    */
-  makeAs1Point() {
+  private makePoint() {
     // just one vertex
     this.vertices = [0, 0, 0]
   }
 
-  makeAs1Circle() {
+  private makeCircle() {
     // just one vertex
-    this.vertices = [0, 0, 0]
+    const vertices = []
+    const r = this.inf.radius * RADIUS_K
+    for (let a = 0, end = PI * 2; a < end; a += .17) {
+      vertices.push(
+        r * cos(a),
+        r * sin(a),
+        0
+      )
+    }
+    this.vertices = vertices
   }
 
-  makeAs1Ball() {
+  private makeBall() {
     // just one vertex
-    this.vertices = [0, 0, 0]
+    const vertices = []
+    const R = this.inf.radius * RADIUS_K
+    let z = 0
+    for (z = - PI / 2; z <= PI / 2; z += .1) {
+      const r = R * cos(z)
+      const h = R * sin(z)
+      for (let a = 0, end = PI * 2; a < end; a += .1) {
+        vertices.push(
+          r * cos(a),
+          r * sin(a),
+          h
+        )
+      }
+    }
+    this.vertices = vertices
   }
 
-  makeAs1Body() {
+  private makeBody() {
     const { M, N } = this
-    const r = this.inf.radius
+    const r = this.inf.radius * RADIUS_K
 
     const vertices: number[] = []
     const normals: number[] = []
@@ -148,20 +172,20 @@ export class Body {
   make() {
     switch (this.blk) {
       case BodyLooksLike.Point: {
-        this.makeAs1Point()
+        this.makePoint()
         break
       }
       case BodyLooksLike.Circle: {
-        this.makeAs1Circle()
+        this.makeCircle()
         break
       }
       case BodyLooksLike.Ball: {
-        this.makeAs1Ball()
+        this.makeBall()
         break
       }
       case BodyLooksLike.Point:
       default: {
-        this.makeAs1Body()
+        this.makeBody()
         break
       }
     }

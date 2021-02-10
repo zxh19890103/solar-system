@@ -5,9 +5,9 @@ export class Camera {
   viewMat: mat4
   projectionMat: mat4
 
-  coord: ReadonlyVec3
-  private lookTo: ReadonlyVec3 = [0, 0, 0]
-  private up: ReadonlyVec3 = [0, 1, 0]
+  coord: vec3
+  private lookTo: vec3 = [0, 0, 0]
+  private up: vec3 = [0, 1, 0]
 
   private aspectRatio: number
 
@@ -18,12 +18,12 @@ export class Camera {
   }
 
   put(coord: ReadonlyVec3) {
-    this.coord = coord
+    this.coord = glMatrix.vec3.clone(coord)
     return this
   }
 
   setUp(up: ReadonlyVec3) {
-    this.up = up
+    this.up = glMatrix.vec3.clone(up)
     return this
   }
 
