@@ -1,6 +1,7 @@
 import { Ether } from "./ether"
 import { Camera } from "./camera.class"
 import { Body } from "./body.class"
+import { isPowerOfTwo } from "./utils"
 
 export abstract class ObjectProgram {
   readonly gl: WebGLRenderingContext
@@ -16,9 +17,15 @@ export abstract class ObjectProgram {
 
   abstract boot(): () => void
 
+  protected tex: WebGLTexture
+
   constructor(gl: WebGLRenderingContext, body: Body) {
     this.gl = gl
     this.body = body
+  }
+
+  protected log(...data: unknown[]) {
+    console.log("program: ", ...data)
   }
 
   async setup() {
@@ -86,6 +93,52 @@ export abstract class ObjectProgram {
     )
   }
 
+  protected async loadTexture(gl: WebGLRenderingContext, url: string) {
+    const tex = gl.createTexture()
+    gl.bindTexture(gl.TEXTURE_2D, tex)
+    const img = await this.loadImage(url)
+    gl.texImage2D(
+      gl.TEXTURE_2D,
+      0, // level
+      gl.RGBA,
+      gl.RGBA,
+      gl.UNSIGNED_BYTE,
+      img
+    )
+
+    if (isPowerOfTwo(img.naturalWidth) && isPowerOfTwo(img.naturalHeight)) {
+      gl.generateMipmap(gl.TEXTURE_2D)
+    } else {
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+    }
+    return tex
+  }
+
+  private loadImage(url: string) {
+    return new Promise<HTMLImageElement>((done, fail) => {
+      const img = new Image()
+      img.onload = () => {
+        done(img)
+      }
+      img.onerror = fail
+      img.src = url
+    })
+  }
+
+  protected setUniformTexSampler() {
+    const gl = this.gl
+    gl.activeTexture(gl.TEXTURE0)
+    const loc = gl.getUniformLocation(this.program, "uSampler")
+    gl.uniform1i(loc, 0)
+    return () => {
+      gl.bindTexture(gl.TEXTURE_2D, this.tex)
+      // gl.activeTexture(gl.TEXTURE0)
+      gl.uniform1i(loc, 0)
+    }
+  }
+
   protected setFloat32Attrib(attribName: string, data: number[], pointerSize: number) {
     const { gl, program } = this
     const farray = new Float32Array(data)
@@ -93,14 +146,12 @@ export abstract class ObjectProgram {
     gl.bindBuffer(gl.ARRAY_BUFFER, buf)
     gl.bufferData(gl.ARRAY_BUFFER, farray, gl.STATIC_DRAW)
     const loc = gl.getAttribLocation(program, attribName)
-
     return () => {
-      // ????
       gl.bindBuffer(gl.ARRAY_BUFFER, buf)
+      gl.enableVertexAttribArray(loc)
       gl.vertexAttribPointer(
         loc, pointerSize, gl.FLOAT, false, 0, 0
       )
-      gl.enableVertexAttribArray(loc)
     }
   }
 

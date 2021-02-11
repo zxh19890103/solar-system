@@ -3,10 +3,18 @@ import { ObjectProgram } from "./program.class"
 export class CircleProgram extends ObjectProgram {
 
   get vertexShaderSource(): string {
-    return "/shaders/point.vert.glsl"
+    return "/shaders/circle.vert.glsl"
   }
   get fragmentShaderSource(): string {
-    return "/shaders/point.frag.glsl"
+    return "/shaders/circle.frag.glsl"
+  }
+
+  async setup() {
+    this.log("initializing...")
+    const gl = this.gl
+    this.tex = await this.loadTexture(gl, this.body.inf.avatar)
+    await super.setup()
+    this.log("initialized")
   }
 
   boot(): () => void {
@@ -17,26 +25,36 @@ export class CircleProgram extends ObjectProgram {
 
     body.make()
 
-    const color = [...inf.color]
-    this.setUniform4fv("uVertexColor", color)()
     const setAttrib = this.setFloat32Attrib(
       "aVertex",
       body.vertices,
       3
     )
 
+    const setTexCoords = this.setFloat32Attrib(
+      "aVertexTexCoord",
+      body.texCoords,
+      2
+    )
+    const setSampler = this.setUniformTexSampler()
+    const setIndices = this.bufferUInt16Array(body.indices)
+
+    const { TRIANGLES, UNSIGNED_SHORT } = gl
+    const indicesCount = body.indices.length
+
     const uniform = this.setUniformLMVP()
-    const pointsCount = body.vertices.length / 3
 
     return () => {
       body.rotates(.001)
       gl.useProgram(program)
+      setIndices()
       setAttrib()
+      setSampler()
+      setTexCoords()
       uniform()
       ether.move(body)
-      gl.drawArrays(
-        gl.POINTS, 0, pointsCount
-      )
+      gl.lineWidth(10)
+      gl.drawElements(TRIANGLES, indicesCount, UNSIGNED_SHORT, 0)
     }
   }
 

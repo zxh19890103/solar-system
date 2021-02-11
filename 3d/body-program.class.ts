@@ -11,12 +11,6 @@ export class BodyProgram extends ObjectProgram {
     return "/shaders/body.frag.glsl"
   }
 
-  private tex: WebGLTexture
-
-  log(...data: unknown[]) {
-    console.log("program: ", ...data)
-  }
-
   async setup() {
     this.log("initializing...")
     const gl = this.gl
@@ -25,58 +19,18 @@ export class BodyProgram extends ObjectProgram {
     this.log("initialized")
   }
 
-  async loadTexture(gl: WebGLRenderingContext, url: string) {
-    const tex = gl.createTexture()
-    gl.bindTexture(gl.TEXTURE_2D, tex)
-    const img = await this.loadImage(url)
-    gl.texImage2D(
-      gl.TEXTURE_2D,
-      0, // level
-      gl.RGBA,
-      gl.RGBA,
-      gl.UNSIGNED_BYTE,
-      img
-    )
-
-    if (isPowerOfTwo(img.naturalWidth) && isPowerOfTwo(img.naturalHeight)) {
-      gl.generateMipmap(gl.TEXTURE_2D)
-    } else {
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
-    }
-    return tex
-  }
-
-  private loadImage(url: string) {
-    return new Promise<HTMLImageElement>((done, fail) => {
-      const img = new Image()
-      img.onload = () => {
-        done(img)
-      }
-      img.onerror = fail
-      img.src = url
-    })
-  }
-
-  private setUniformTexSampler() {
-    const gl = this.gl
-    gl.activeTexture(gl.TEXTURE0)
-    const loc = gl.getUniformLocation(this.program, "uSampler")
-    gl.uniform1i(loc, 0)
-    return () => {
-      gl.bindTexture(gl.TEXTURE_2D, this.tex)
-      gl.activeTexture(gl.TEXTURE0)
-      gl.uniform1i(loc, 0)
-    }
-  }
-
   boot() {
     const { gl, body, ether } = this
 
     gl.useProgram(this.program)
 
     body.make()
+
+    const setColors = this.setFloat32Attrib(
+      "aVertexColor",
+      body.colors,
+      4
+    )
 
     const setVertices = this.setFloat32Attrib(
       "aVertex",
@@ -113,24 +67,28 @@ export class BodyProgram extends ObjectProgram {
 
     // just once.
     const uniform = this.setUniformLMVP()
-
     const setSampler = this.setUniformTexSampler()
+    const setIndices = this.bufferUInt16Array(body.indices)
 
-    this.bufferUInt16Array(body.indices)
-
-    const { TRIANGLES, UNSIGNED_SHORT } = gl
+    const { TRIANGLES, LINE_LOOP, UNSIGNED_SHORT } = gl
     const indicesCount = body.indices.length
+    const { ringsVertexIndexOffset } = body
+    const ringsVertexIndicesCount = indicesCount - ringsVertexIndexOffset
 
-    return () => {
+    const frame01 = () => {
       body.rotates(.01)
       gl.useProgram(this.program)
+      setIndices()
       setSampler()
       setVertices()
       setNormals()
       setTexCoords()
       ether.move(body)
       uniform()
+      setColors()
       gl.drawElements(TRIANGLES, indicesCount, UNSIGNED_SHORT, 0)
     }
+
+    return frame01
   }
 }

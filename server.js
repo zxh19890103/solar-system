@@ -72,6 +72,7 @@ http.createServer((req, res) => {
   if (/\.(jpg|png|gif)$/.test(url)) {
     const [path, , ext] = /^\/(.+?)\.(jpg|png|gif)$/.exec(url)
     res.setHeader("Content-Type", `image/${ext}`)
+    res.setHeader("Cache-Control", `private, max-age=2592000`)
     const filename = `./planets-inf/${path}`
     if (fs.existsSync(filename)) {
       const rs = fs.createReadStream(filename)

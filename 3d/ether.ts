@@ -3,7 +3,7 @@ import { Body } from "./body.class"
 import { range } from "./utils"
 
 const GRAVITY_CONST = 6.67430 * 0.00001 // x 10 ^ -5
-const UNIT_OF_TIME = 400
+const UNIT_OF_TIME = 30
 const RENDER_PERIOD = 100
 const SECONDS_IN_A_DAY = 24 * 60 * 60
 const DAYS_PER_SECOND = RENDER_PERIOD * UNIT_OF_TIME / (60 * 24)
@@ -76,10 +76,16 @@ export class Ether {
     )
     this.bodies.push(b)
 
+    const rgba = [].map.call(b.inf.color, c => 0 ^ c * 255)
+
+    if (vec3.len(b.velocity) === 0) {
+      this.writeLine(`<span style="color: rgba(${rgba.join(',')})">${inf.name}</span>, the center body.`)
+      return
+    }
+
     const orbitalPeriod = this.computesOrbitalPeriod(inf.semiMajorAxis, b.inf.ref)
     const secBodyTakes = orbitalPeriod / DAYS_PER_SECOND
 
-    const rgba = [].map.call(b.inf.color, c => 0 ^ c * 255)
     this.writeLine(`<span style="color: rgba(${rgba.join(',')})">${inf.name}</span> takes ${this.duration(secBodyTakes)}. Actual orbital period is ${orbitalPeriod.toFixed(2)} days`)
   }
 
