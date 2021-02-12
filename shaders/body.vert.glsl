@@ -1,7 +1,6 @@
 attribute vec3 aVertex;
 attribute vec2 aVertexTexCoord;
 attribute vec3 aVertexNormal;
-attribute vec4 aVertexColor;
 
 uniform mat4 local;
 uniform mat4 model;
@@ -14,7 +13,6 @@ uniform vec3 uLightDirection;
 
 varying highp vec2 vTexCoord;
 varying highp vec3 vLighting;
-varying lowp vec4 vColor;
 
 void main() {
   gl_PointSize = 1.0;
@@ -29,5 +27,4 @@ void main() {
   ) * uDirectionalLightColor;
   
   vTexCoord = aVertexTexCoord;
-  vColor = aVertexColor;
 }

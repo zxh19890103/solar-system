@@ -1,5 +1,5 @@
+import { RenderBodyAs } from "./body.class"
 import { ObjectProgram } from "./program.class"
-import { isPowerOfTwo } from "./utils"
 
 export class BodyProgram extends ObjectProgram {
 
@@ -24,13 +24,7 @@ export class BodyProgram extends ObjectProgram {
 
     gl.useProgram(this.program)
 
-    body.make()
-
-    const setColors = this.setFloat32Attrib(
-      "aVertexColor",
-      body.colors,
-      4
-    )
+    body.make(RenderBodyAs.Body)
 
     const setVertices = this.setFloat32Attrib(
       "aVertex",
@@ -70,10 +64,8 @@ export class BodyProgram extends ObjectProgram {
     const setSampler = this.setUniformTexSampler()
     const setIndices = this.bufferUInt16Array(body.indices)
 
-    const { TRIANGLES, LINE_LOOP, UNSIGNED_SHORT } = gl
+    const { TRIANGLES, UNSIGNED_SHORT } = gl
     const indicesCount = body.indices.length
-    const { ringsVertexIndexOffset } = body
-    const ringsVertexIndicesCount = indicesCount - ringsVertexIndexOffset
 
     const frame01 = () => {
       body.rotates(.01)
@@ -85,7 +77,6 @@ export class BodyProgram extends ObjectProgram {
       setTexCoords()
       ether.move(body)
       uniform()
-      setColors()
       gl.drawElements(TRIANGLES, indicesCount, UNSIGNED_SHORT, 0)
     }
 

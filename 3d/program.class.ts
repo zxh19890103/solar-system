@@ -18,10 +18,14 @@ export abstract class ObjectProgram {
   abstract boot(): () => void
 
   protected tex: WebGLTexture
+  cam: Camera
+  ether: Ether
+  body: Body
 
-  constructor(gl: WebGLRenderingContext, body: Body) {
+  constructor(gl: WebGLRenderingContext, cam: Camera, ether: Ether) {
     this.gl = gl
-    this.body = body
+    this.ether = ether
+    this.cam = cam
   }
 
   protected log(...data: unknown[]) {
@@ -146,8 +150,15 @@ export abstract class ObjectProgram {
     gl.bindBuffer(gl.ARRAY_BUFFER, buf)
     gl.bufferData(gl.ARRAY_BUFFER, farray, gl.STATIC_DRAW)
     const loc = gl.getAttribLocation(program, attribName)
-    return () => {
+    return (data?: number[]) => {
       gl.bindBuffer(gl.ARRAY_BUFFER, buf)
+      if (data !== undefined) {
+        gl.bufferData(
+          gl.ARRAY_BUFFER,
+          new Float32Array(data),
+          gl.STATIC_DRAW
+        )
+      }
       gl.enableVertexAttribArray(loc)
       gl.vertexAttribPointer(
         loc, pointerSize, gl.FLOAT, false, 0, 0
@@ -200,17 +211,6 @@ export abstract class ObjectProgram {
     }
   }
 
-  cam: Camera
-  setCam(cam: Camera) {
-    this.cam = cam
-  }
-
-  ether: Ether
-  setEther(ether: Ether) {
-    this.ether = ether
-  }
-
-  body: Body
   setBody(body: Body) {
     this.body = body
   }
@@ -219,13 +219,11 @@ export abstract class ObjectProgram {
     const { cam, body } = this
     const l = this.setUniformMatrix4fv("local", body.localMat)
     const m = this.setUniformMatrix4fv("model", body.modelMat)
-    const v = this.setUniformMatrix4fv("view", cam.viewMat)
+    this.setUniformMatrix4fv("view", cam.viewMat)()
     this.setUniformMatrix4fv("projection", cam.projectionMat)()
-    m()
-    return () => {
-      l()
-      m()
-      v()
+    return (_l: boolean = true, _m: boolean = true) => {
+      _l && l()
+      _m && m()
     }
   }
 }

@@ -2,13 +2,13 @@ import { RenderBodyAs } from "./body.class"
 import { ObjectProgram } from "./program.class"
 import { range } from "./utils"
 
-export class PointProgram extends ObjectProgram {
+export class OrbitProgram extends ObjectProgram {
 
   get vertexShaderSource(): string {
-    return "/shaders/point.vert.glsl"
+    return "/shaders/orbit.vert.glsl"
   }
   get fragmentShaderSource(): string {
-    return "/shaders/point.frag.glsl"
+    return "/shaders/orbit.frag.glsl"
   }
 
   boot(): () => void {
@@ -18,31 +18,28 @@ export class PointProgram extends ObjectProgram {
 
     gl.useProgram(program)
 
-    body.make(RenderBodyAs.Point)
+    body.make(RenderBodyAs.Orbit)
 
     const color = [...inf.color]
     const setColor = this.setUniform4fv("uVertexColor", color)
+    this.setUniform1f("uVertexSize", inf.radius)()
 
-    const setVertex = this.setFloat32Attrib(
-      "aVertex",
-      body.vertices,
+    const setOrbit = this.setFloat32Attrib(
+      'aVertex',
+      [],
       3
     )
 
-    let alpha = 0 ^ range(0, PI) * 100
-
-    const uniform = this.setUniformLMVP()
+    this.setUniformLMVP()()
 
     return () => {
       gl.useProgram(program)
-      color[3] = sin((alpha % 314) * .01)
-      setVertex()
       setColor()
-      uniform()
       ether.move(body)
-      alpha += 3
+      body.collectOrbitalCoords(body.coordinates)
+      setOrbit(body.orbitalCoordinates)
       gl.drawArrays(
-        gl.POINTS, 0, 1
+        gl.POINTS, 0, body.orbitalCoordinateCount
       )
     }
   }

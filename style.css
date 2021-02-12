@@ -17,3 +17,16 @@ canvas {
   width: 100%;
   height: 100%;
 }
+
+.ether-text-panel {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  color: white;
+  display: block;
+  font-size: 14px;
+  font-family: Papyrus;
+}

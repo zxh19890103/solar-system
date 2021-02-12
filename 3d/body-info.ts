@@ -1,5 +1,5 @@
 import { AU, RAD_PER_DEGREE } from "./constants"
-import { approximates } from "./utils"
+import { approximates, parseColor } from "./utils"
 
 export interface BodyInfo {
   /**
@@ -30,7 +30,7 @@ export interface BodyInfo {
   /**
    * the color of the planet.
    */
-  color: Iterable<number>
+  color: vec4
   /**
    * image url relative to path ./planets-inf
    */
@@ -44,7 +44,8 @@ export interface BodyInfo {
    * the reference system.
    * default is the the solar
    */
-  ref?: BodyInfo
+  ref?: BodyInfo,
+  rings?: [string, number][]
 }
 
 const COLORS = {
@@ -61,18 +62,19 @@ const COLORS = {
   black: [0, 0, 0]
 }
 
-const composeColors = (...colors: Array<number[]>) => {
-  return colors.reduce(
+const composeColors = (...colors: Array<number[]>): vec4 => {
+  const color: vec4 = [0, 0, 0, 0]
+  colors.forEach(
     (c, i) => {
-      return [
-        c[0] + i[0],
-        c[1] + i[1],
-        c[2] + i[2]
-      ]
-    }
-    , [0, 0, 0]).map(c => {
-      return (c / colors.length) / 255
-    }).concat([1])
+      color[0] += c[0]
+      color[1] += c[1]
+      color[2] += c[2]
+    })
+  color.forEach((c, ix) => {
+    color[ix] = color[ix] / 255
+  })
+  color[3] = 1
+  return color
 }
 
 export const Sun: BodyInfo = {
@@ -160,10 +162,33 @@ export const Saturn: BodyInfo = {
   semiMajorAxis: 1433530,
   avatar: "/nineplanets-org/saturn.png",
   map: "/maps/saturn-1024x512.jpg",
-  color: composeColors(COLORS.orange),
+  color: parseColor("#e0cdbc"),
   mass: 568.34,
   radius: 58.232,
-  inclination: 5.51 * RAD_PER_DEGREE
+  inclination: 5.51 * RAD_PER_DEGREE,
+  /**
+   * D Ring	66,900   –  74,510	7,500	
+   * C Ring	74,658   –   92,000	17,500	
+   * B Ring	92,000   –  117,580	25,500	
+   * Cassini Division	117,580   –   122,170	4,700
+   * A ring	122,170   –   136,775	14,600	
+   * Roche Division	136,775   –   139,380	2,600
+   * F Ring	140,180 (3)	30   –  500
+   * 
+   * total width: 73283
+   */
+  rings: [
+    ['#000000', 66900],
+    ['#1c1c1c', 74510],
+    ['#000000', 74658],
+    ['#5d564f', 92000],
+    ['#aa9983', 117580],
+    ['#4f4539', 122170],
+    ['#292625', 136775],
+    ['#c8b7a5', 139380],
+    ['#000000', 140180],
+    ['#fffbe7', 140580],
+  ]
 }
 
 export const Uranus: BodyInfo = {
@@ -240,7 +265,7 @@ export const Halley: BodyInfo = {
   semiMajorAxis: 17.834 * AU,
   avatar: "/nineplanets-org/ceres.png",
   map: "/maps/moon-1024x512.jpg",
-  color: composeColors(COLORS.white),
+  color: composeColors(COLORS.orange),
   mass: 2.2 * Math.pow(10, -10),
   radius: 11 * .001,
   inclination: 0
@@ -253,7 +278,7 @@ export const Tempel1: BodyInfo = {
   semiMajorAxis: 3.145 * AU,
   avatar: "/nineplanets-org/PIA02142_Tempel_1_bottom_sharped.jpg",
   map: "/maps/moon-1024x512.jpg",
-  color: composeColors(COLORS.white),
+  color: composeColors(COLORS.golden, COLORS.tan),
   mass: 2.2 * Math.pow(10, -10),
   radius: 5 * .001,
   inclination: 10.474 * RAD_PER_DEGREE
@@ -266,7 +291,7 @@ export const Holmes: BodyInfo = {
   semiMajorAxis: 3.618414 * AU,
   avatar: "/nineplanets-org/asteroid.png",
   map: "/maps/moon-1024x512.jpg",
-  color: composeColors(COLORS.white),
+  color: composeColors(COLORS.white, COLORS.brown, COLORS.blue),
   mass: 2.2 * Math.pow(10, -10),
   radius: 5 * .001,
   inclination: 19.1126 * RAD_PER_DEGREE
@@ -279,7 +304,7 @@ export const HaleBopp: BodyInfo = {
   semiMajorAxis: 186 * AU,
   avatar: "/nineplanets-org/asteroid.png",
   map: "/maps/moon-1024x512.jpg",
-  color: composeColors(COLORS.white),
+  color: composeColors(COLORS.grey, COLORS.brown, COLORS.red),
   mass: 2.2 * Math.pow(10, -10),
   radius: approximates(60, 20) * .001,
   inclination: 89.4 * RAD_PER_DEGREE
@@ -382,5 +407,75 @@ export const Rhea: BodyInfo = {
   mass: 2.306518 * .001, // 	(2.306518±0.000353)×1021 kg
   radius: approximates(763.8, 1) * .001, // 763.8±1.0 km 
   inclination: 0.345 * RAD_PER_DEGREE,
+  ref: Saturn
+}
+
+export const Enceladus: BodyInfo = {
+  name: "Enceladus",
+  aphelion: 237.948,
+  peribelion: 237.948,
+  semiMajorAxis: 237.948,
+  avatar: "/nineplanets-org/PIA17202_-_Approaching_Enceladus.jpg",
+  map: "",
+  color: composeColors(COLORS.grey, COLORS.blue, COLORS.red),
+  mass: approximates(1.08022, 0.00101) * .0001, // 	(1.08022±0.00101)×1020 kg
+  radius: approximates(252.1, 0.2) * .001, // 252.1±0.2 km 
+  inclination: 0.009 * RAD_PER_DEGREE,
+  ref: Saturn
+}
+
+export const Mimas: BodyInfo = {
+  name: "Mimas",
+  aphelion: 189.176,
+  peribelion: 181.902,
+  semiMajorAxis: 185.539,
+  avatar: "/nineplanets-org/PIA17202_-_Approaching_Enceladus.jpg",
+  map: "",
+  color: composeColors(COLORS.green, COLORS.blue, COLORS.red),
+  mass: 3.7493 * .00001,
+  radius: .198, // 198.2±0.4 km
+  inclination: 1.574 * RAD_PER_DEGREE,
+  ref: Saturn
+}
+
+export const Tethys: BodyInfo = {
+  name: "Tethys",
+  aphelion: 294.619,
+  peribelion: 294.619,
+  semiMajorAxis: 294.619,
+  avatar: "/nineplanets-org/PIA17202_-_Approaching_Enceladus.jpg",
+  map: "",
+  color: composeColors(COLORS.golden, COLORS.tan),
+  mass: 6.17449 * .0001,
+  radius: 531.1 * .001, // 531.1±0.6 km
+  inclination: 1.574 * RAD_PER_DEGREE,
+  ref: Saturn
+}
+
+export const Dione: BodyInfo = {
+  name: "Dione",
+  aphelion: 377.396,
+  peribelion: 377.396,
+  semiMajorAxis: 377.396,
+  avatar: "/nineplanets-org/PIA17202_-_Approaching_Enceladus.jpg",
+  map: "",
+  color: composeColors(COLORS.black, COLORS.blue, COLORS.brown),
+  mass: 1.095452 * .001, // (1.095452±0.000168)×1021 kg
+  radius: 561.4 * .001, // 561.4±0.4 km
+  inclination: 0.019 * RAD_PER_DEGREE,
+  ref: Saturn
+}
+
+export const Iapetus: BodyInfo = {
+  name: "Iapetus",
+  aphelion: 3560.820,
+  peribelion: 3560.820,
+  semiMajorAxis: 3560.820,
+  avatar: "/nineplanets-org/PIA17202_-_Approaching_Enceladus.jpg",
+  map: "",
+  color: composeColors(COLORS.orange, COLORS.blue, COLORS.brown),
+  mass: 1.805635 * .001, // (1.805635±0.000375)×1021 kg
+  radius: 734.5 * .001, // 734.5±2.8 km
+  inclination: 15.47 * RAD_PER_DEGREE,
   ref: Saturn
 }

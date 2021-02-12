@@ -1,18 +1,13 @@
-import { Body } from "./body.class"
+import { RenderBodyAs } from "./body.class"
 import { ObjectProgram } from "./program.class"
-import { parseColor } from "./utils"
 
 export class BallProgram extends ObjectProgram {
 
-  constructor(gl: WebGLRenderingContext, body: Body) {
-    super(gl, body)
-  }
-
   get vertexShaderSource(): string {
-    return "/shaders/point.vert.glsl"
+    return "/shaders/ball.vert.glsl"
   }
   get fragmentShaderSource(): string {
-    return "/shaders/point.frag.glsl"
+    return "/shaders/ball.frag.glsl"
   }
 
   boot(): () => void {
@@ -21,29 +16,34 @@ export class BallProgram extends ObjectProgram {
 
     gl.useProgram(program)
 
-    body.make()
+    body.make(RenderBodyAs.Ball)
 
-    const color = [...inf.color]
-    this.setUniform4fv("uVertexColor", color)()
-
-    const setAttrib = this.setFloat32Attrib(
+    const setVertices = this.setFloat32Attrib(
       "aVertex",
       body.vertices,
       3
     )
 
+    const setColors = this.setFloat32Attrib(
+      "aVertexColor",
+      body.colors,
+      4
+    )
+
     const uniform = this.setUniformLMVP()
 
-    const pointsCount = body.vertices.length / 3
+    this.bufferUInt16Array(body.indices)
+    const indicesCount = body.indices.length
 
     return () => {
       body.rotates(.01)
       gl.useProgram(program)
-      setAttrib()
+      setVertices()
+      setColors()
       uniform()
       ether.move(body)
-      gl.drawArrays(
-        gl.LINES, 0, pointsCount
+      gl.drawElements(
+        gl.TRIANGLES, indicesCount, gl.UNSIGNED_SHORT, 0
       )
     }
   }

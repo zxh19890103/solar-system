@@ -1,6 +1,7 @@
 import { BodyInfo } from "./body-info"
-import { CIRCLE_RAD, RADIUS_K } from "./constants"
-import { parseColor } from "./utils"
+import { CIRCLE_RAD, RADIUS_SCALE } from "./constants"
+import { ObjectProgram } from "./program.class"
+import { parseColor, randColor, range } from "./utils"
 
 const { PI, cos, sin } = Math
 const HALF_PI = PI / 2
@@ -11,11 +12,13 @@ const {
   mat4
 } = glMatrix
 
-export enum BodyLooksLike {
+export enum RenderBodyAs {
   Point = 10,
   Circle = 20,
   Ball = 30,
-  Body = 40
+  Body = 40,
+  Orbit = 50,
+  Rings = 60
 }
 
 export class Body {
@@ -26,6 +29,9 @@ export class Body {
   texCoords: number[]
   colors: number[] = []
   indices: number[]
+  orbitalCoordinates: number[]
+  orbitalCoordinateCount: number = 0
+  framesCountOfOrbitFin: number = 0
 
   readonly localMat: mat4
   readonly modelMat: mat4
@@ -41,7 +47,7 @@ export class Body {
 
   readonly inf: BodyInfo
 
-  blk: BodyLooksLike = BodyLooksLike.Body
+  programs: ObjectProgram[] = []
 
   constructor(inf: BodyInfo, at?: vec3, velocity?: vec3) {
     this.M = 60
@@ -52,6 +58,11 @@ export class Body {
 
     this.localMat = mat4.create()
     this.modelMat = mat4.create()
+  }
+
+  useProgram(prog: ObjectProgram) {
+    prog.setBody(this)
+    this.programs.push(prog)
   }
 
   center() {
@@ -83,6 +94,7 @@ export class Body {
    */
   private makePoint() {
     // just one vertex
+    // more points
     this.vertices = [0, 0, 0]
   }
 
@@ -91,7 +103,7 @@ export class Body {
     const vertices = []
     const texCoords = []
     const indices = []
-    const r = this.inf.radius * RADIUS_K
+    const r = this.inf.radius * RADIUS_SCALE
 
     const makeVertex = (a: number) => {
       return [
@@ -132,27 +144,49 @@ export class Body {
   }
 
   private makeBall() {
-    // just one vertex
     const vertices = []
-    const R = this.inf.radius * RADIUS_K
-    let z = 0
-    for (z = - PI / 2; z <= PI / 2; z += .1) {
+    const colors = []
+    const R = this.inf.radius * RADIUS_SCALE
+    let z = 0, a = 0
+    let m = 50, n = 50
+    for (let y = 0; y <= m; y++) {
+      z = PI / 2 - y * (PI / 50)
       const r = R * cos(z)
       const h = R * sin(z)
-      for (let a = 0, end = PI * 2; a < end; a += .1) {
+      const color = randColor(this.inf.color)
+      for (let x = 0; x <= n; x++) {
+        a = x * (CIRCLE_RAD / n)
         vertices.push(
           r * cos(a),
           r * sin(a),
           h
         )
+        colors.push(
+          ...color
+        )
       }
     }
+
+    const indices = []
+    for (let y = 0; y < m; y++) {
+      for (let x = 0; x < n; x++) {
+        const i = n * y + x
+        const j = n * (y + 1) + x
+        indices.push(
+          i, j, i + 1,
+          j, i + 1, j + 1
+        )
+      }
+    }
+
+    this.colors = colors
+    this.indices = indices
     this.vertices = vertices
   }
 
   private makeBody() {
     const { M, N } = this
-    const r = this.inf.radius * RADIUS_K
+    const r = this.inf.radius * RADIUS_SCALE
 
     const makeVertex = (lat: number, lon: number): vec3 => {
       const alpha = PI * (.5 - lat / this.M)
@@ -220,123 +254,95 @@ export class Body {
     this.texCoords = texCoords
     this.indices = indices
     this.colors = colors
-
-    if (this.hasRings) this.makeRings()
   }
 
-  withRings() {
-    this.hasRings = true
-    return this
+  collectOrbitalCoords(coords: vec3) {
+    if (this.orbitalCoordinateCount > this.framesCountOfOrbitFin) {
+      this.orbitalCoordinates.shift()
+      this.orbitalCoordinates.shift()
+      this.orbitalCoordinates.shift()
+    } else {
+      this.orbitalCoordinateCount += 1
+    }
+    this.orbitalCoordinates.push(...coords)
   }
 
-  hasRings = false
-  ringsVertexIndexOffset = 0
-  makeRings() {
-    const {
-      vertices,
-      texCoords,
-      colors,
-      normals,
-      indices,
-      inf,
-    } = this
-
-    let index = vertices.length / 3
-    // ring
-    this.ringsVertexIndexOffset = indices.length
-    // for saturn
-    let ringR = (inf.radius * 1.2) * RADIUS_K
-    const D_R = 10
-    const MAX = 0 ^ (inf.radius * 1.3) * RADIUS_K / D_R
-    let n = 0
-
-    const bodyColor = inf.color
-
-    const ringColors = [
-      [44, 34, 28, 0],// 0
-      [66, 53, 41, .15], // 1
-      [104, 88, 71, .2], // 2
-      [227, 198, 144, .36], // 3
-      [83, 71, 57, .7], // 4
-      [136, 118, 86, 1], // 5
-    ].map(rgb => {
-      const color = glMatrix.vec3.mul(
-        [0, 0, 0],
-        [rgb[0], rgb[1], rgb[2]],
-        [bodyColor[0], bodyColor[1], bodyColor[2]]
-      )
-      // glMatrix.vec3.scale(color, color, 1 / 255)
-      return [color[0], color[1], color[2], rgb[3]]
+  private makeRings() {
+    const vertices: number[] = []
+    const colors: number[] = []
+    const { radius: R, rings } = this.inf
+    const r0 = R + 10
+    const r1 = R + 80
+    const min = rings[0][1]
+    const span = rings[rings.length - 1][1] - min
+    const colorbands = rings.map(([color, r]) => {
+      const v4 = parseColor(color)
+      v4[3] = (r - min) / span
+      return v4
     })
 
-    const getRingColor = (n) => {
-      const range = n / MAX
-      const index = ringColors.findIndex(x => {
-        return x[3] > range
+    const getColor = () => {
+      const ratio = (r - r0) / (r1 - r0)
+      const colorIndex = colorbands.findIndex(x => x[3] > ratio) - 1
+      const floorColor = colorbands[colorIndex]
+      const ceilColor = colorbands[colorIndex + 1]
+      const aspect = (ratio - floorColor[3]) / (ceilColor[3] - floorColor[3])
+      const color = floorColor.map((c, ix) => {
+        return c + (ceilColor[ix] - c) * aspect
       })
-      const start = ringColors[index - 1]
-      const end = ringColors[index]
-
-      const rgba = [0, 0, 0, 1 - range * .04]
-      const span = end[3] - start[3]
-      const ratio = (range - start[3]) / span
-      Array(3).fill(0).forEach((c, ix) => {
-        rgba[ix] = (start[ix] + (end[ix] - start[ix]) * ratio) / 255
-      })
-      return rgba
+      color[3] = .6 + Math.random() * .4
+      return color
     }
 
-    const makeVertex = (a: number, r: number) => {
-      return [r * cos(a), r * sin(a), 0]
-    }
-
-    while (n < MAX) {
-      const color = getRingColor(n)
-      for (let a = 0; a < CIRCLE_RAD; a += .1) {
-        indices.push(
-          index, index + 2, index + 1,
-          index, index + 2, index + 3
-        )
-        index += 4
-        vertices.push(
-          ...makeVertex(a, ringR), // index
-          ...makeVertex(a + .2, ringR), // index + 1
-          ...makeVertex(a + .2, ringR + 10), // index + 2
-          ...makeVertex(a, ringR + 10) // index + 3
-        )
-        normals.push(
-          0, 0, 1,
-          0, 0, 1,
-          0, 0, 1,
-          0, 0, 1
-        )
-        texCoords.push(
-          2, 2,
-          2, 2,
-          2, 2,
-          2, 2)
-        colors.push(...color, ...color, ...color, ...color)
+    let r = r0
+    for (; r < r1; r += 1) {
+      const color = getColor()
+      for (let a = 0; a < CIRCLE_RAD; a += .17) {
+        let n = 0 ^ Math.random() * 2
+        while (n--) {
+          const rr = r + Math.random() * 1.2
+          const ra = a + Math.random() * .3
+          const z = range(- R * .05, R * .05)
+          vertices.push(
+            rr * RADIUS_SCALE * cos(ra),
+            rr * RADIUS_SCALE * sin(ra),
+            z * RADIUS_SCALE,
+            range(.5, 2)
+          )
+          colors.push(
+            ...color
+          )
+        }
       }
-      ringR += D_R
-      n += 1
     }
+    this.vertices = vertices
+    this.colors = colors
   }
 
-  make() {
-    switch (this.blk) {
-      case BodyLooksLike.Point: {
+  make(renderAs: RenderBodyAs = RenderBodyAs.Point) {
+    switch (renderAs) {
+      case RenderBodyAs.Point: {
         this.makePoint()
         break
       }
-      case BodyLooksLike.Circle: {
+      case RenderBodyAs.Circle: {
         this.makeCircle()
         break
       }
-      case BodyLooksLike.Ball: {
+      case RenderBodyAs.Ball: {
         this.makeBall()
         break
       }
-      case BodyLooksLike.Point:
+      case RenderBodyAs.Orbit: {
+        // it's special cuz only one vertex  [0,0,0] is meaningless to show the orbit.
+        this.orbitalCoordinates = []
+        break
+      }
+      case RenderBodyAs.Rings: {
+        this.makeRings()
+        break
+      }
+      case RenderBodyAs.Body:
       default: {
         this.makeBody()
         break

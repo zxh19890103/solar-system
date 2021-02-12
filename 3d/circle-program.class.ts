@@ -1,3 +1,4 @@
+import { RenderBodyAs } from "./body.class"
 import { ObjectProgram } from "./program.class"
 
 export class CircleProgram extends ObjectProgram {
@@ -23,7 +24,7 @@ export class CircleProgram extends ObjectProgram {
 
     gl.useProgram(program)
 
-    body.make()
+    body.make(RenderBodyAs.Circle)
 
     const setAttrib = this.setFloat32Attrib(
       "aVertex",

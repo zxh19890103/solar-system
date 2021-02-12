@@ -15,25 +15,24 @@
  * 1. N vertices
  * 2. the center.
  */
-import { Ceres, Earth, Jupiter, Mars, Mercury, Neptune, Saturn, Sun, Uranus, Venus, Eris, Pluto, Halley, Tempel1, Holmes, HaleBopp, Luna, Lo, Europa, Ganymede, Callisto, Titan, Rhea } from "./body-info"
+import { Ceres, Earth, Jupiter, Mars, Mercury, Neptune, Saturn, Sun, Uranus, Venus, Eris, Pluto, Halley, Tempel1, Holmes, HaleBopp, Luna, Lo, Europa, Ganymede, Callisto, Titan, Rhea, BodyInfo, Enceladus, Mimas, Tethys, Dione, Iapetus } from "./body-info"
 import { BodyProgram } from "./body-program.class"
-import { Body, BodyLooksLike } from "./body.class"
+import { Body, RenderBodyAs } from "./body.class"
 import { Camera } from "./camera.class"
 import { CircleProgram } from "./circle-program.class"
 import { Ether } from "./ether"
 import { PointProgram } from "./point-program.class"
 import { ObjectProgram } from "./program.class"
 import { BallProgram } from "./ball-program.class"
+import { OrbitProgram } from "./orbit-program.class"
+import { RingsProgram } from "./rings-program.class"
 import { AU } from "./constants"
-import { debounce } from "./utils"
 
 let W: number = 0
 let H: number = 0
 let gl: WebGLRenderingContext
 let cam: Camera
 let ether: Ether
-const programs: ObjectProgram[] = []
-const frames = []
 
 const setupGLContext = () => {
   const canvasElement = document.createElement("canvas")
@@ -45,34 +44,69 @@ const setupGLContext = () => {
   gl = canvasElement.getContext("webgl")
 }
 
-const createProgram = async (body: Body, bodyShape = BodyLooksLike.Point) => {
+const createProgram = (rba = RenderBodyAs.Point) => {
   let program: ObjectProgram = null
   {
-    switch (bodyShape) {
-      case BodyLooksLike.Point:
-        program = new PointProgram(gl, body)
+    switch (rba) {
+      case RenderBodyAs.Point:
+        program = new PointProgram(gl, cam, ether)
         break
-      case BodyLooksLike.Circle:
-        program = new CircleProgram(gl, body)
+      case RenderBodyAs.Circle:
+        program = new CircleProgram(gl, cam, ether)
         break
-      case BodyLooksLike.Ball:
-        program = new BallProgram(gl, body)
+      case RenderBodyAs.Ball:
+        program = new BallProgram(gl, cam, ether)
         break
-      case BodyLooksLike.Body:
-        program = new BodyProgram(gl, body)
+      case RenderBodyAs.Body:
+        program = new BodyProgram(gl, cam, ether)
+        break
+      case RenderBodyAs.Orbit:
+        program = new OrbitProgram(gl, cam, ether)
+        break
+      case RenderBodyAs.Rings:
+        program = new RingsProgram(gl, cam, ether)
         break
     }
   }
-  body.blk = bodyShape
-  program.setCam(cam)
-  program.setEther(ether)
+  return program
+}
+
+const createBody = (inf: BodyInfo | Body, rba: RenderBodyAs = RenderBodyAs.Point) => {
+  const body = inf instanceof Body ? inf : new Body(inf)
   ether.put(body)
-  await program.setup()
-  programs.push(program)
+  const prog = createProgram(rba)
+  body.useProgram(prog)
   return body
 }
 
-const run = () => {
+const createBodies = (...items: (BodyInfo | Body | RenderBodyAs)[]) => {
+  let body: Body = null
+  let created = false
+  for (const item of items) {
+    if (typeof item === "number") {
+      if (body !== null) {
+        createBody(body, item)
+        created = true
+      }
+    } else {
+      if (body !== null && !created)
+        createBody(body)
+      body = item instanceof Body ? item : new Body(item)
+      created = false
+    }
+  }
+  if (body !== null && !created)
+    createBody(body)
+}
+
+const run = async () => {
+
+  const distance = glMatrix.vec3.len(cam.coord)
+  if (distance / AU > .099) {
+    ether.writeLine(`You're ${(distance / AU).toFixed(6)} AU far from the center body.`)
+  } else {
+    ether.writeLine(`You're ${(distance * 1000).toFixed(2)} km far from the center body.`)
+  }
 
   gl.enable(gl.BLEND)
   gl.blendFunc(
@@ -83,21 +117,18 @@ const run = () => {
   gl.enable(gl.DEPTH_TEST)           // Enable depth testing
   gl.depthFunc(gl.LEQUAL)
 
-  frames.push(
-    ...programs.map(prog => prog.boot())
-  )
+  const frames = await ether.boot()
 
   const loop = () => {
     gl.clearColor(0.0, 0.0, 0.0, 1.0)  // Clear to black, fully opaque
     gl.clearDepth(1.0)                 // Clear everything
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
-    for (const frame of frames) {
-      frame()
-    }
+    frames.forEach(f => f())
 
     requestAnimationFrame(loop)
   }
+
   loop()
 }
 
@@ -105,27 +136,43 @@ const solar = async () => {
   setupGLContext()
 
   cam = new Camera(W / H)
-  ether = new Ether()
-  const sun = await createProgram(new Body(Sun).withRings(), BodyLooksLike.Body)
-  // await createProgram(new Body(Mercury))
-  // await createProgram(new Body(Venus))
-  // await createProgram(new Body(Earth))
-  // await createProgram(new Body(Mars))
-  // await createProgram(new Body(Jupiter))
-  // await createProgram(new Body(Saturn))
-  // await createProgram(new Body(Uranus))
-  // await createProgram(new Body(Neptune))
-  // await createProgram(new Body(Ceres))
-  // await createProgram(new Body(Eris))
-  // await createProgram(new Body(Pluto))
+  ether = new Ether(3000, 100)
 
-  await createProgram(new Body(Halley))
-  await createProgram(new Body(Tempel1))
-  await createProgram(new Body(Holmes))
-  await createProgram(new Body(HaleBopp))
+  const sun = new Body(Sun)
+
+  createBodies(
+    sun,
+    RenderBodyAs.Point,
+    // Mercury,
+    // RenderBodyAs.Orbit,
+    // Venus,
+    // RenderBodyAs.Orbit,
+    // Earth,
+    // RenderBodyAs.Orbit,
+    // Mars,
+    // RenderBodyAs.Orbit,
+    // Jupiter,
+    // RenderBodyAs.Orbit,
+    // Saturn,
+    // Uranus,
+    // Neptune,
+
+    // Ceres,
+    // Eris,
+    // Pluto,
+
+    Halley,
+    RenderBodyAs.Orbit,
+    Tempel1,
+    RenderBodyAs.Orbit,
+    Holmes,
+    RenderBodyAs.Orbit,
+    HaleBopp,
+    RenderBodyAs.Orbit,
+  )
 
   cam.put([
-    0, - Mercury.aphelion, 100000
+    0, - Holmes.aphelion, Earth.aphelion
   ])
     .lookAt(sun)
     .adjust(
@@ -133,9 +180,6 @@ const solar = async () => {
       100,
       Infinity
     )
-  const distance = glMatrix.vec3.len(cam.coord)
-  ether.writeLine(`You're ${(distance / AU).toFixed(6)} AU far from the origin.`)
-
   run()
 }
 
@@ -144,20 +188,23 @@ const earthSys = async () => {
 
   cam = new Camera(W / H)
   ether = new Ether()
-  const earth = await createProgram(new Body(Earth).center(), BodyLooksLike.Body)
-  await createProgram(new Body(Luna), BodyLooksLike.Body)
+
+  const earth = new Body(Earth).center()
+  createBodies(
+    earth,
+    RenderBodyAs.Body,
+    // Luna
+  )
 
   cam.put([
-    0, -384, 1
+    0, -8, 1
   ])
     .lookAt(earth)
     .adjust(
       Math.PI * (120 / 180), // human naked eyes.
-      100,
+      .1,
       Infinity
     )
-  const distance = glMatrix.vec3.len(cam.coord)
-  ether.writeLine(`You're ${(distance / AU).toFixed(6)} AU far from the origin.`)
 
   run()
 }
@@ -167,21 +214,27 @@ const jupiterSys = async () => {
 
   cam = new Camera(W / H)
   ether = new Ether()
-  const jupiter = await createProgram(new Body(Jupiter).center(), BodyLooksLike.Body)
-
-  const lo = await createProgram(new Body(Lo), BodyLooksLike.Circle)
-  const europa = await createProgram(new Body(Europa), BodyLooksLike.Circle)
-  const ganymede = await createProgram(new Body(Ganymede), BodyLooksLike.Circle)
-  const callisto = await createProgram(new Body(Callisto), BodyLooksLike.Circle)
+  const jupiter = new Body(Jupiter).center()
+  createBodies(
+    jupiter,
+    RenderBodyAs.Ball,
+    Lo,
+    Europa,
+    RenderBodyAs.Orbit,
+    Ganymede,
+    RenderBodyAs.Orbit,
+    Callisto,
+    RenderBodyAs.Ball,
+  )
 
   const cameraCoords: vec3 = [
     0, -1297, 900
   ]
 
-  lo.face(cameraCoords)
-  europa.face(cameraCoords)
-  ganymede.face(cameraCoords)
-  callisto.face(cameraCoords)
+  // lo.face(cameraCoords)
+  // europa.face(cameraCoords)
+  // ganymede.face(cameraCoords)
+  // callisto.face(cameraCoords)
 
   cam.put(cameraCoords)
     .lookAt(jupiter)
@@ -190,9 +243,6 @@ const jupiterSys = async () => {
       100,
       Infinity
     )
-  const distance = glMatrix.vec3.len(cam.coord)
-  ether.writeLine(`You're ${(distance / AU).toFixed(6)} AU far from the origin.`)
-
   run()
 }
 
@@ -201,49 +251,65 @@ const saturnSys = async () => {
 
   cam = new Camera(W / H)
   ether = new Ether()
-  const jupiter = await createProgram(new Body(Saturn).center().withRings(), BodyLooksLike.Body)
-  const titan = await createProgram(new Body(Titan), BodyLooksLike.Circle)
-  const rhea = await createProgram(new Body(Rhea), BodyLooksLike.Circle)
+  const saturn = new Body(Saturn).center()
+  const tian = new Body(Titan)
+  const rhea = new Body(Rhea)
+  const enceladus = new Body(Enceladus)
+  createBodies(
+    saturn,
+    RenderBodyAs.Body,
+    RenderBodyAs.Rings,
+    Mimas,
+    RenderBodyAs.Orbit,
+    Tethys,
+    RenderBodyAs.Orbit,
+    Dione,
+    RenderBodyAs.Orbit,
+    tian,
+    RenderBodyAs.Orbit,
+    rhea,
+    RenderBodyAs.Orbit,
+    enceladus,
+    RenderBodyAs.Orbit,
+    Iapetus,
+    RenderBodyAs.Orbit,
+  )
 
-  const cameraCoords: vec3 = [0, -1257, 600]
-  titan.face(cameraCoords)
-  rhea.face(cameraCoords)
-  cam.put(cameraCoords)
-    .lookAt(jupiter)
+  cam.put([0, -Rhea.aphelion, 300])
+    .lookAt(saturn)
     .adjust(
       Math.PI * (120 / 180), // human naked eyes.
       100,
       Infinity
     )
-  const distance = glMatrix.vec3.len(cam.coord)
-  ether.writeLine(`You're ${(distance / AU).toFixed(6)} AU far from the origin.`)
 
   run()
 }
 
-const dev = async () => {
+const pluto = async () => {
   setupGLContext()
 
   cam = new Camera(W / H)
   ether = new Ether()
-  const body = await createProgram(new Body(Rhea).center(), BodyLooksLike.Circle)
+  const pluto = new Body(Pluto).center()
+  createBodies(
+    pluto,
+    RenderBodyAs.Body,
+  )
 
-  cam.put([
-    0, -0, 80
-  ])
-    .lookAt(body)
+  cam.put([0, -2, .4])
+    .lookAt(pluto)
     .adjust(
       Math.PI * (120 / 180), // human naked eyes.
-      .01,
+      .1,
       Infinity
     )
-  const distance = glMatrix.vec3.len(cam.coord)
-  ether.writeLine(`You're ${(distance / AU).toFixed(6)} AU far from the origin.`)
 
   run()
 }
 
-solar()
+// solar()
 // jupiterSys()
 // saturnSys()
 // earthSys()
+pluto()

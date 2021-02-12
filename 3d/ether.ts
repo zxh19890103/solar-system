@@ -1,12 +1,13 @@
+import { SECONDS_IN_A_DAY } from "../canvas-uni-constants"
 import { BodyInfo, Sun } from "./body-info"
 import { Body } from "./body.class"
 import { range } from "./utils"
 
 const GRAVITY_CONST = 6.67430 * 0.00001 // x 10 ^ -5
-const UNIT_OF_TIME = 30
-const RENDER_PERIOD = 100
-const SECONDS_IN_A_DAY = 24 * 60 * 60
-const DAYS_PER_SECOND = RENDER_PERIOD * UNIT_OF_TIME / (60 * 24)
+// const UNIT_OF_TIME = 10
+// const RENDER_PERIOD = 100
+// 
+// const DAYS_PER_SECOND = RENDER_PERIOD * UNIT_OF_TIME / (60 * 24)
 
 const { mat4, vec3 } = glMatrix
 const { cos, sin, PI, sqrt } = Math
@@ -18,32 +19,29 @@ export class Ether {
   bodies: Body[] = []
   $textPanel: HTMLUListElement = null
 
-  constructor() {
-    const styleNode = document.createElement("style")
-    styleNode.innerHTML = `
-    .ether-text-panel {
-      padding: 0;
-      margin: 0;
-      position: fixed;
-      top: 0;
-      left: 0;
-      color: white;
-      display: block;
-      font-size: 14px;
-      font-family: Papyrus;
-    }
-    `
-    document.head.appendChild(styleNode)
+  readonly unitOfTime: number
+  readonly renderPeriod: number
+
+  get daysPerSec() {
+    // raq req = 60?
+    return this.unitOfTime * this.renderPeriod * 60 / (60 * 60 * 24)
+  }
+
+  constructor(uft: number = 10, rp: number = 100) {
+
+    this.unitOfTime = uft
+    this.renderPeriod = rp
 
     this.$textPanel = document.createElement("ul")
     this.$textPanel.className = "ether-text-panel"
     document.body.appendChild(this.$textPanel)
 
-    this.writeLine(`<h3>Welcome to the real solar!</h3>`)
-    this.writeLine(`Here 1 second = ${DAYS_PER_SECOND.toFixed(2)} days.`)
+    this.writeLine(`<h2>Welcome to the real solar!</h2>`)
+    this.writeLine(`Here 1 second = ${this.daysPerSec.toFixed(2)} days. And orbital period listed bellow.`)
   }
 
   put(b: Body) {
+    if (this.bodies.includes(b)) return
     const inf = b.inf
     const angleOnXY = range(0, PI * 2)
 
@@ -69,24 +67,32 @@ export class Ether {
       ]
     }
 
-    vec3.transformMat4(
-      b.coordinates,
-      b.coordinates,
-      b.modelMat
-    )
     this.bodies.push(b)
 
     const rgba = [].map.call(b.inf.color, c => 0 ^ c * 255)
 
     if (vec3.len(b.velocity) === 0) {
-      this.writeLine(`<span style="color: rgba(${rgba.join(',')})">${inf.name}</span>, the center body.`)
-      return
+      this.writeLine(`<span style="color: rgba(${rgba.join(',')})">${inf.name}</span>, the center, no period.`)
+      return b
     }
 
     const orbitalPeriod = this.computesOrbitalPeriod(inf.semiMajorAxis, b.inf.ref)
-    const secBodyTakes = orbitalPeriod / DAYS_PER_SECOND
+    const secBodyTakes = orbitalPeriod / this.daysPerSec
+    b.framesCountOfOrbitFin = 0 ^ secBodyTakes * 60
 
-    this.writeLine(`<span style="color: rgba(${rgba.join(',')})">${inf.name}</span> takes ${this.duration(secBodyTakes)}. Actual orbital period is ${orbitalPeriod.toFixed(2)} days`)
+    this.writeLine(`<span style="color: rgba(${rgba.join(',')})">${inf.name}</span> ${this.duration(secBodyTakes)}, ${orbitalPeriod.toFixed(2)} days.`)
+
+    return b
+  }
+
+  async boot() {
+    const frames = []
+    const programs = this.bodies.map(b => b.programs).flat()
+    for (const prog of programs) {
+      await prog.setup()
+      frames.push(prog.boot())
+    }
+    return frames
   }
 
   computesFieldIntensityFromBody(target: Body, from: Body) {
@@ -120,7 +126,7 @@ export class Ether {
   }
 
   move(b: Body) {
-    let n = RENDER_PERIOD
+    let n = this.renderPeriod
     while (n--) {
       this._move(b)
     }
@@ -135,7 +141,7 @@ export class Ether {
     const ds = vec3.scale(
       [0, 0, 0],
       b.velocity,
-      UNIT_OF_TIME
+      this.unitOfTime
     )
 
     const fi = this.computesFieldIntensity(b)
@@ -143,7 +149,7 @@ export class Ether {
     const dv = vec3.scale(
       [0, 0, 0],
       fi,
-      UNIT_OF_TIME
+      this.unitOfTime
     )
     // velocity changes
     vec3.add(
@@ -155,7 +161,7 @@ export class Ether {
     const ds1 = vec3.scale(
       [0, 0, 0],
       dv,
-      .5 * UNIT_OF_TIME
+      .5 * this.unitOfTime
     )
 
     vec3.add(
