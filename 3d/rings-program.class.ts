@@ -39,7 +39,6 @@ export class RingsProgram extends ObjectProgram {
       gl.useProgram(this.program)
       setVertices()
       setColors()
-      ether.move(body)
       uniform()
       gl.drawArrays(gl.POINTS, 0, indicesCount)
     }

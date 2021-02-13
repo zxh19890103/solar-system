@@ -1,5 +1,5 @@
 import { AU, RAD_PER_DEGREE } from "./constants"
-import { approximates, parseColor } from "./utils"
+import { approximates, parseColor, randColor, range } from "./utils"
 
 export interface BodyInfo {
   /**
@@ -123,7 +123,7 @@ export const Earth: BodyInfo = {
   semiMajorAxis: 149598.023,
   avatar: "/nineplanets-org/earth.png",
   map: "/maps/earth-4096x2048.jpg",
-  color: composeColors(COLORS.blue, COLORS.green, COLORS.white),
+  color: composeColors(COLORS.blue, COLORS.green),
   mass: 5.97237,
   radius: 6.371,
   inclination: 7.155 * RAD_PER_DEGREE
@@ -311,7 +311,7 @@ export const HaleBopp: BodyInfo = {
 }
 
 // natural satellites
-
+// earth's
 export const Luna: BodyInfo = {
   name: "Luna",
   aphelion: 405.400,
@@ -319,13 +319,14 @@ export const Luna: BodyInfo = {
   semiMajorAxis: 384.399,
   avatar: "/nineplanets-org/moon.png",
   map: "/maps/moon-1024x512.jpg",
-  color: composeColors(COLORS.grey),
+  color: composeColors(COLORS.white),
   mass: .07342,
   radius: 1.7374,
-  inclination: 5.145 * RAD_PER_DEGREE,
+  inclination: 0 * RAD_PER_DEGREE,
   ref: Earth
 }
 
+// juptier's
 export const Lo: BodyInfo = {
   name: "Lo",
   aphelion: 423.400,
@@ -382,6 +383,7 @@ export const Callisto: BodyInfo = {
   ref: Jupiter
 }
 
+// saturn's
 export const Titan: BodyInfo = {
   name: "Titan",
   aphelion: 1257.060,
@@ -478,4 +480,64 @@ export const Iapetus: BodyInfo = {
   radius: 734.5 * .001, // 734.5±2.8 km
   inclination: 15.47 * RAD_PER_DEGREE,
   ref: Saturn
+}
+
+// neptune's
+/**
+ * - Periapsis	117584±10 km
+ * - Apoapsis	117709±10 km
+ * - Semi-major axis	117647±1 km (4.75 RN)
+ * - Mass 4.4×1019 kg
+ * - Mean radius	210±7 km
+ */
+export const Proteus: BodyInfo = {
+  name: "Proteus",
+  aphelion: 117.584,
+  peribelion: 117.709,
+  semiMajorAxis: 117.647,
+  avatar: "/nineplanets-org/Proteus_(Voyager_2).jpg",
+  map: "",
+  color: composeColors(COLORS.orange, COLORS.blue, COLORS.brown),
+  mass: 4.4 * .00001,
+  radius: 210 * .001,
+  inclination: 0.524 * RAD_PER_DEGREE,
+  ref: Neptune
+}
+
+/**
+ * Semi-major axis	354,759 km
+ * mass (2.1390±0.0028)×1022 kg
+ * inclination 156.885
+ * r:  ,353.4±0.9 km
+ */
+export const Triton: BodyInfo = {
+  name: "Triton",
+  aphelion: 354.759,
+  peribelion: 354.759,
+  semiMajorAxis: 354.759,
+  avatar: "/nineplanets-org/1024px-Triton_moon_mosaic_Voyager_2_(large).jpg",
+  map: "",
+  color: composeColors(COLORS.orange, COLORS.brown, COLORS.brown),
+  mass: approximates(2.1390, 0.0028) * .01,
+  radius: approximates(353.4, 0.9) * .001,
+  inclination: 156.885 * RAD_PER_DEGREE,
+  ref: Neptune
+}
+
+/**
+ * sma 5,513,940 km
+ * r: 357±13 km / 2
+ */
+export const Nereid: BodyInfo = {
+  name: "Nereid",
+  aphelion: 5513.940 * 1.4,
+  peribelion: 5513.940 * .3,
+  semiMajorAxis: 5513.940,
+  avatar: "/nineplanets-org/Nereid-Voyager2.jpg",
+  map: "",
+  color: composeColors(COLORS.golden, COLORS.red),
+  mass: approximates(2.1390, 0.0028) * .01,
+  radius: approximates(357, 13) / 2 * .001,
+  inclination: 0 * RAD_PER_DEGREE,
+  ref: Neptune
 }

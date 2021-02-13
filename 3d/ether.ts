@@ -1,6 +1,8 @@
 import { SECONDS_IN_A_DAY } from "../canvas-uni-constants"
 import { BodyInfo, Sun } from "./body-info"
 import { Body } from "./body.class"
+import { Camera } from "./camera.class"
+import { AU } from "./constants"
 import { range } from "./utils"
 
 const GRAVITY_CONST = 6.67430 * 0.00001 // x 10 ^ -5
@@ -21,23 +23,34 @@ export class Ether {
 
   readonly unitOfTime: number
   readonly renderPeriod: number
+  readonly moveOff: boolean
+
+  private cam: Camera
+  set Cam(cam: Camera) {
+    this.cam = cam
+  }
 
   get daysPerSec() {
     // raq req = 60?
     return this.unitOfTime * this.renderPeriod * 60 / (60 * 60 * 24)
   }
 
-  constructor(uft: number = 10, rp: number = 100) {
+  constructor(uft: number = 10, rp: number = 100, moveOff: boolean = false) {
 
     this.unitOfTime = uft
     this.renderPeriod = rp
+    this.moveOff = moveOff
 
+    this.initHTMLPanel()
+
+    this.writeLine(`<h2>Welcome to the real solar!</h2>`)
+    this.writeLine(`Here 1 second = ${this.daysPerSec.toFixed(2)} days.`)
+  }
+
+  private initHTMLPanel() {
     this.$textPanel = document.createElement("ul")
     this.$textPanel.className = "ether-text-panel"
     document.body.appendChild(this.$textPanel)
-
-    this.writeLine(`<h2>Welcome to the real solar!</h2>`)
-    this.writeLine(`Here 1 second = ${this.daysPerSec.toFixed(2)} days. And orbital period listed bellow.`)
   }
 
   put(b: Body) {
@@ -71,6 +84,12 @@ export class Ether {
 
     const rgba = [].map.call(b.inf.color, c => 0 ^ c * 255)
 
+    if (this.moveOff) {
+      b.translates()
+      this.writeLine(`<span style="color: rgba(${rgba.join(',')})">${inf.name}</span> ${(b.inf.aphelion / AU).toFixed(2)} AU`)
+      return b
+    }
+
     if (vec3.len(b.velocity) === 0) {
       this.writeLine(`<span style="color: rgba(${rgba.join(',')})">${inf.name}</span>, the center, no period.`)
       return b
@@ -78,7 +97,7 @@ export class Ether {
 
     const orbitalPeriod = this.computesOrbitalPeriod(inf.semiMajorAxis, b.inf.ref)
     const secBodyTakes = orbitalPeriod / this.daysPerSec
-    b.framesCountOfOrbitFin = 0 ^ secBodyTakes * 60
+    b.framesCountOfOrbitFin = 0 ^ secBodyTakes * 60 * 3
 
     this.writeLine(`<span style="color: rgba(${rgba.join(',')})">${inf.name}</span> ${this.duration(secBodyTakes)}, ${orbitalPeriod.toFixed(2)} days.`)
 
@@ -125,16 +144,20 @@ export class Ether {
     return fi
   }
 
+  moveCam(scale: number = 200) {
+    if (this.cam.far < 40) return
+    const tow = this.cam.towards
+    const changes = vec3.scale([0, 0, 0], tow, scale)
+    this.cam.moveBy(changes, true)
+  }
+
   move(b: Body) {
+    if (this.moveOff) return
     let n = this.renderPeriod
     while (n--) {
       this._move(b)
     }
-    mat4.translate(
-      b.modelMat,
-      mat4.create(),
-      b.coordinates
-    )
+    b.translates()
   }
 
   private _move(b: Body) {

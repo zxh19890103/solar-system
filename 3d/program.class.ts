@@ -215,15 +215,24 @@ export abstract class ObjectProgram {
     this.body = body
   }
 
-  protected setUniformLMVP() {
+  protected setUniformLMVP(needLocal = true, needModel = true) {
     const { cam, body } = this
-    const l = this.setUniformMatrix4fv("local", body.localMat)
-    const m = this.setUniformMatrix4fv("model", body.modelMat)
+    let l = null, m = null
+
+    if (needLocal) {
+      l = this.setUniformMatrix4fv("local", body.localMat)
+    }
+
+    if (needModel) {
+      m = this.setUniformMatrix4fv("model", body.modelMat)
+    }
+
     this.setUniformMatrix4fv("view", cam.viewMat)()
     this.setUniformMatrix4fv("projection", cam.projectionMat)()
-    return (_l: boolean = true, _m: boolean = true) => {
-      _l && l()
-      _m && m()
+
+    return () => {
+      l && l()
+      m && m()
     }
   }
 }

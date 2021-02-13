@@ -1,5 +1,5 @@
 import { BodyInfo } from "./body-info"
-import { CIRCLE_RAD, RADIUS_SCALE } from "./constants"
+import { AU, CIRCLE_RAD, RADIUS_SCALE } from "./constants"
 import { ObjectProgram } from "./program.class"
 import { parseColor, randColor, range } from "./utils"
 
@@ -18,7 +18,8 @@ export enum RenderBodyAs {
   Ball = 30,
   Body = 40,
   Orbit = 50,
-  Rings = 60
+  Rings = 60,
+  Tails = 70
 }
 
 export class Body {
@@ -77,6 +78,14 @@ export class Body {
       this.localMat,
       rad,
       [0, 0, 1]
+    )
+  }
+
+  translates() {
+    mat4.translate(
+      this.modelMat,
+      mat4.create(),
+      this.coordinates
     )
   }
 
@@ -319,6 +328,53 @@ export class Body {
     this.colors = colors
   }
 
+  /**
+   * - colors: white, blur, yellow.
+   * - wider and wider.
+   * - dust tail & ion tail: 
+   *  - ion tail points straight away from the sun, with color blue.
+   *  - dust tail curves towards the orbital path, with color yellow.
+   * - the closer to the sun, the longer the tail is.
+   */
+  private makeTails() {
+    const length = 3.8 //  * AU function of coordinates
+
+    // image coordinates only has Z component for building model
+    const vertices: number[] = []
+    const colors: number[] = []
+
+    let size = 0 // changes by the length
+    // builds ion tail
+    const color = [.1, .5, .8]
+    const color2 = [.8, .6, .1]
+    for (let z = .001; z < length; z += .001) {
+      let n = 0 ^ 3 * (1 - z / length)
+      const k = z * z * .07
+      const h = z * AU
+      while (n--) {
+        const a = CIRCLE_RAD * Math.random()
+        const alpha = Math.random()
+        const r = size * alpha
+        for (let x = 0; x < 2; x++) {
+          vertices.push(
+            (r * cos(a) + (x === 0 ? 0 : k)) * AU,
+            (r * sin(a) + (x === 0 ? 0 : k)) * AU,
+            h
+          )
+          colors.push(
+            ...(x === 0 ? color : color2),
+            (.01 / k)
+          )
+        }
+      }
+      size += .00007
+    }
+
+    this.vertices = vertices
+    this.colors = colors
+    console.log(vertices.length / 3)
+  }
+
   make(renderAs: RenderBodyAs = RenderBodyAs.Point) {
     switch (renderAs) {
       case RenderBodyAs.Point: {
@@ -340,6 +396,10 @@ export class Body {
       }
       case RenderBodyAs.Rings: {
         this.makeRings()
+        break
+      }
+      case RenderBodyAs.Tails: {
+        this.makeTails()
         break
       }
       case RenderBodyAs.Body:
