@@ -56,7 +56,7 @@ export class TailProgram extends ObjectProgram {
       setVertexColors()
       changeRotation()
       uni()
-      setFar(AU * AU * AU * 5 / (far * far * far))
+      setFar(AU * AU * AU * 10 / (far * far * far))
       gl.drawArrays(
         gl.POINTS, 0, verticesCount
       )

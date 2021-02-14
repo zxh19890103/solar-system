@@ -337,7 +337,7 @@ export class Body {
    * - the closer to the sun, the longer the tail is.
    */
   private makeTails() {
-    const length = 9.8 //  * AU function of coordinates
+    const length = 3.8 //  * AU function of coordinates
 
     // image coordinates only has Z component for building model
     const vertices: number[] = []
@@ -363,7 +363,7 @@ export class Body {
           )
           colors.push(
             ...(x === 0 ? color : color2),
-            (.01 / k)
+            (1 - alpha) * .01 / k
           )
         }
       }
