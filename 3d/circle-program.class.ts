@@ -53,8 +53,6 @@ export class CircleProgram extends ObjectProgram {
       setSampler()
       setTexCoords()
       uniform()
-      ether.move(body)
-      gl.lineWidth(10)
       gl.drawElements(TRIANGLES, indicesCount, UNSIGNED_SHORT, 0)
     }
   }

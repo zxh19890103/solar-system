@@ -39,7 +39,6 @@ export class PointProgram extends ObjectProgram {
       setVertex()
       setColor()
       uniform()
-      ether.move(body)
       alpha += 3
       gl.drawArrays(
         gl.POINTS, 0, 1

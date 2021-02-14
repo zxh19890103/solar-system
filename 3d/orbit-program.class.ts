@@ -35,7 +35,6 @@ export class OrbitProgram extends ObjectProgram {
     return () => {
       gl.useProgram(program)
       setColor()
-      ether.move(body)
       body.collectOrbitalCoords(body.coordinates)
       setOrbit(body.orbitalCoordinates)
       gl.drawArrays(

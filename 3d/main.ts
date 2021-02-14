@@ -138,9 +138,12 @@ const run = async () => {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
     frames.forEach(f => f())
+    ether.move()
 
     requestAnimationFrame(loop)
   }
+
+  ether.connectsWithWorker(worker)
 
   loop()
 }
@@ -149,43 +152,43 @@ const solar = async () => {
   setupGLContext()
 
   cam = new Camera(W / H)
-  ether = new Ether(10000, 500)
+  ether = new Ether(1000, 50)
 
   const sun = new Body(Sun)
 
   createBodies(
     sun,
     RenderBodyAs.Point,
-    // Mercury,
-    // RenderBodyAs.Orbit,
-    // Venus,
-    // RenderBodyAs.Orbit,
-    // Earth,
-    // RenderBodyAs.Orbit,
-    // Mars,
-    // RenderBodyAs.Orbit,
-    // Jupiter,
-    // RenderBodyAs.Orbit,
-    // Saturn,
-    // Uranus,
-    // Neptune,
+    Mercury,
+    RenderBodyAs.Orbit,
+    Venus,
+    RenderBodyAs.Orbit,
+    Earth,
+    RenderBodyAs.Orbit,
+    Mars,
+    RenderBodyAs.Orbit,
+    Jupiter,
+    RenderBodyAs.Point,
+    RenderBodyAs.Orbit,
+    Saturn,
+    RenderBodyAs.Point,
+    RenderBodyAs.Orbit,
+    Uranus,
+    RenderBodyAs.Orbit,
+    Neptune,
+    RenderBodyAs.Point,
+    RenderBodyAs.Orbit,
 
-    // Ceres,
-    // Eris,
-    // Pluto,
-
-    Halley,
+    Ceres,
     RenderBodyAs.Orbit,
-    Tempel1,
+    Eris,
     RenderBodyAs.Orbit,
-    Holmes,
-    RenderBodyAs.Orbit,
-    HaleBopp,
+    Pluto,
     RenderBodyAs.Orbit,
   )
 
   cam.put([
-    0, - Holmes.aphelion, Earth.aphelion
+    0, - Mars.aphelion, Mercury.aphelion
   ])
     .lookAt(sun)
     .adjust(
@@ -200,29 +203,37 @@ const comets = async () => {
   setupGLContext()
 
   cam = new Camera(W / H)
-  ether = new Ether(1000, 100)
+  ether = new Ether(7000, 30)
 
   const sun = new Body(Sun).center()
   const tempel1 = new Body(Tempel1)
   const homes = new Body(Holmes)
+  const halley = new Body(Halley)
+  const haleBopp = new Body(HaleBopp)
 
   createBodies(
     sun,
     RenderBodyAs.Point,
 
     tempel1,
-    RenderBodyAs.Point,
     RenderBodyAs.Orbit,
     RenderBodyAs.Tails,
 
     homes,
-    RenderBodyAs.Point,
+    RenderBodyAs.Orbit,
+    RenderBodyAs.Tails,
+
+    halley,
+    RenderBodyAs.Orbit,
+    RenderBodyAs.Tails,
+
+    haleBopp,
     RenderBodyAs.Orbit,
     RenderBodyAs.Tails
   )
 
   cam.put([
-    .2, .2 * AU, AU * 5
+    .2, - 6 * AU, 3
   ]).lookAt(sun)
     .adjust(
       Math.PI * (120 / 180), // human naked eyes.
@@ -236,22 +247,25 @@ const earthSys = async () => {
   setupGLContext()
 
   cam = new Camera(W / H)
-  ether = new Ether(1, 100)
+  ether = new Ether(100, 10)
 
   const earth = new Body(Earth).center()
+  const luna = new Body(Luna)
+
   createBodies(
     earth,
     RenderBodyAs.Body,
-    Luna,
+    luna,
+    RenderBodyAs.Body,
     RenderBodyAs.Orbit
   )
 
   cam.put([
-    0, -8, 1
+    0, -384, 1
   ])
     .lookAt(earth)
     .adjust(
-      Math.PI * (120 / 180), // human naked eyes.
+      Math.PI * (10 / 180), // human naked eyes.
       .1,
       Infinity
     )
@@ -337,50 +351,6 @@ const saturnSys = async () => {
   run()
 }
 
-const pluto = async () => {
-  setupGLContext()
-
-  cam = new Camera(W / H)
-  ether = new Ether()
-  const pluto = new Body(Pluto).center()
-  createBodies(
-    pluto,
-    RenderBodyAs.Body,
-  )
-
-  cam.put([0, -2, .4])
-    .lookAt(pluto)
-    .adjust(
-      Math.PI * (120 / 180), // human naked eyes.
-      .1,
-      Infinity
-    )
-
-  run()
-}
-
-const mercury = async () => {
-  setupGLContext()
-
-  cam = new Camera(W / H)
-  ether = new Ether()
-  const pluto = new Body(Venus).center()
-  createBodies(
-    pluto,
-    RenderBodyAs.Body,
-  )
-
-  cam.put([0, -5, 7])
-    .lookAt(pluto)
-    .adjust(
-      Math.PI * (120 / 180), // human naked eyes.
-      .1,
-      Infinity
-    )
-
-  run()
-}
-
 const neptuneSys = async () => {
   setupGLContext()
 
@@ -392,11 +362,10 @@ const neptuneSys = async () => {
     RenderBodyAs.Body,
     Proteus,
     RenderBodyAs.Orbit,
-    RenderBodyAs.Ball
-    // Triton,
-    // RenderBodyAs.Orbit,
-    // Nereid,
-    // RenderBodyAs.Orbit,
+    Triton,
+    RenderBodyAs.Orbit,
+    Nereid,
+    RenderBodyAs.Orbit,
   )
 
   cam.put([0, -Proteus.semiMajorAxis, 10])
@@ -410,11 +379,71 @@ const neptuneSys = async () => {
   run()
 }
 
-// solar()
-// jupiterSys()
-// saturnSys()
-// earthSys()
-// pluto()
-// mercury()
-// neptuneSys()
-comets()
+const single = async (name: string) => {
+  setupGLContext()
+
+  let inf: BodyInfo = [
+    Ceres, Earth, Jupiter, Mars, Mercury, Neptune,
+    Saturn, Sun, Uranus, Venus, Eris, Pluto, Ceres
+  ].find(x => x.name === name)
+
+  if (inf === undefined || inf === null)
+    inf = Earth
+
+  cam = new Camera(W / H)
+  ether = new Ether()
+  const pluto = new Body(inf).center()
+  if (inf.rings) {
+    createBodies(
+      pluto,
+      RenderBodyAs.Body,
+      RenderBodyAs.Rings
+    )
+  } else {
+    createBodies(
+      pluto,
+      RenderBodyAs.Body
+    )
+  }
+
+  cam.put([0, -inf.radius * 3, inf.radius * .68])
+    .lookAt(pluto)
+    .adjust(
+      Math.PI * (120 / 180), // human naked eyes.
+      .1,
+      Infinity
+    )
+
+  run()
+}
+
+const worker = new Worker("/3d/loop.ts")
+const match = location.search.match(/\?sys=([a-zA-Z]+)/)
+if (match === null) {
+  single("Earth")
+} else {
+  const [, sys] = match
+  switch (sys) {
+    case "solar":
+      solar()
+      break
+    case "jupiter":
+      jupiterSys()
+      break
+    case "saturn":
+      saturnSys()
+      break
+    case "earth":
+      earthSys()
+      break
+    case "neptune":
+      neptuneSys()
+      break
+    case "comets":
+      comets()
+      break
+    default:
+      single(sys)
+      break
+  }
+}

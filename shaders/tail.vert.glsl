@@ -8,7 +8,7 @@ uniform mat4 projection;
 varying lowp vec4 vColor;
 
 void main() {
-  gl_PointSize = 1.0;
+  gl_PointSize = 2.0;
   gl_Position = projection * view * rotation * vec4(aVertex, 1.0);
   vColor = aVertexColor;
 }

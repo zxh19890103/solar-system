@@ -304,10 +304,10 @@ export class Body {
     }
 
     let r = r0
-    for (; r < r1; r += 1) {
+    for (; r < r1; r += .1) {
       const color = getColor()
       for (let a = 0; a < CIRCLE_RAD; a += .17) {
-        let n = 0 ^ Math.random() * 2
+        let n = 0 ^ Math.random() * 5
         while (n--) {
           const rr = r + Math.random() * 1.2
           const ra = a + Math.random() * .3
@@ -337,7 +337,7 @@ export class Body {
    * - the closer to the sun, the longer the tail is.
    */
   private makeTails() {
-    const length = 3.8 //  * AU function of coordinates
+    const length = 9.8 //  * AU function of coordinates
 
     // image coordinates only has Z component for building model
     const vertices: number[] = []
@@ -372,7 +372,6 @@ export class Body {
 
     this.vertices = vertices
     this.colors = colors
-    console.log(vertices.length / 3)
   }
 
   make(renderAs: RenderBodyAs = RenderBodyAs.Point) {

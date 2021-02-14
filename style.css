@@ -8,6 +8,7 @@ body {
   margin: 0;
   padding: 0;
   height: 100%;
+  font-family: Papyrus;
 }
 
 canvas {
@@ -28,5 +29,18 @@ canvas {
   color: white;
   display: block;
   font-size: 14px;
-  font-family: Papyrus;
+}
+
+.buttons {
+  position: fixed;
+  top: 0;
+  left: right;
+  width: 100%;
+  text-align: right;
+  margin: 3px 0;
+}
+
+.buttons a {
+  color: white;
+  margin: 0 8px 0 0;
 }

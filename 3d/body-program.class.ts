@@ -75,7 +75,6 @@ export class BodyProgram extends ObjectProgram {
       setVertices()
       setNormals()
       setTexCoords()
-      ether.move(body)
       uniform()
       gl.drawElements(TRIANGLES, indicesCount, UNSIGNED_SHORT, 0)
     }

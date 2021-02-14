@@ -1,8 +1,7 @@
-import { SECONDS_IN_A_DAY } from "../canvas-uni-constants"
 import { BodyInfo, Sun } from "./body-info"
 import { Body } from "./body.class"
 import { Camera } from "./camera.class"
-import { AU } from "./constants"
+import { AU, SECONDS_IN_A_DAY } from "./constants"
 import { range } from "./utils"
 
 const GRAVITY_CONST = 6.67430 * 0.00001 // x 10 ^ -5
@@ -51,6 +50,20 @@ export class Ether {
     this.$textPanel = document.createElement("ul")
     this.$textPanel.className = "ether-text-panel"
     document.body.appendChild(this.$textPanel)
+
+    const buttons = document.createElement("div")
+    buttons.className = "buttons"
+    Array(
+      "solar", "earth", "jupiter", "saturn", "neptune", "comets",
+      "Mercury", "Venus", "Earth", "Mars", "Jupiter", "Saturn", "Uranus", "Neptune",
+      "Ceres", "Eris", "Pluto"
+    ).forEach((text, i) => {
+      const a = document.createElement("a")
+      a.href = `/?sys=${text}`
+      a.innerText = i < 6 ? (text + " sys") : text
+      buttons.appendChild(a)
+    })
+    document.body.appendChild(buttons)
   }
 
   put(b: Body) {
@@ -144,14 +157,35 @@ export class Ether {
     return fi
   }
 
-  moveCam(scale: number = 200) {
-    if (this.cam.far < 40) return
-    const tow = this.cam.towards
-    const changes = vec3.scale([0, 0, 0], tow, scale)
-    this.cam.moveBy(changes, true)
+  private animationDataReaderOffset: number = 0
+  private waitingNewBundle: boolean = true
+  move() {
+    if (this.waitingNewBundle) return
+    if (this.animationDataReaderOffset >= this.animationDataReader.byteLength) {
+      if (this.waitingNewBundle) return
+      this.worker.postMessage("next")
+      this.waitingNewBundle = true
+      console.log("requests new bundle!")
+      return
+    }
+
+    const reader = this.animationDataReader
+
+    for (const b of this.bodies) {
+      const { coordinates, velocity } = b
+      for (let i = 0; i < 3; i++) {
+        coordinates[i] = reader.getFloat32(this.animationDataReaderOffset)
+        this.animationDataReaderOffset += 4
+      }
+      for (let i = 0; i < 3; i++) {
+        velocity[i] = reader.getFloat32(this.animationDataReaderOffset)
+        this.animationDataReaderOffset += 4
+      }
+      b.translates()
+    }
   }
 
-  move(b: Body) {
+  private move_legacy(b: Body) {
     if (this.moveOff) return
     let n = this.renderPeriod
     while (n--) {
@@ -235,5 +269,51 @@ export class Ether {
     const li = document.createElement("li")
     li.innerHTML = text
     this.$textPanel.appendChild(li)
+  }
+
+  private animationDataReader: DataView = null
+  private worker: Worker = null
+  // only once!!!!
+  connectsWithWorker(worker: Worker) {
+    this.worker = worker
+    const bodies = this.bodies
+    const n = bodies.length
+    const buffer = new Float32Array(n * 7 + 2)
+    const writer = new DataView(buffer.buffer)
+    let offset = 0
+
+    writer.setFloat32(
+      offset,
+      this.renderPeriod
+    )
+    offset += 4
+
+    writer.setFloat32(
+      offset,
+      this.unitOfTime
+    )
+    offset += 4
+
+    for (const body of bodies) {
+      const data = [
+        ...body.coordinates, // 3
+        ...body.velocity, // 3
+        body.inf.mass // 1
+      ]
+      for (const num of data) {
+        writer.setFloat32(
+          offset,
+          num
+        )
+        offset += 4
+      }
+    }
+    worker.postMessage(buffer)
+
+    worker.onmessage = ({ data }) => {
+      this.waitingNewBundle = false
+      this.animationDataReaderOffset = 0
+      this.animationDataReader = new DataView(data.buffer)
+    }
   }
 }

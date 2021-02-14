@@ -41,7 +41,6 @@ export class BallProgram extends ObjectProgram {
       setVertices()
       setColors()
       uniform()
-      ether.move(body)
       gl.drawElements(
         gl.TRIANGLES, indicesCount, gl.UNSIGNED_SHORT, 0
       )

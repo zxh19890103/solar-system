@@ -1,4 +1,5 @@
 import { RenderBodyAs } from "./body.class"
+import { AU } from "./constants"
 import { ObjectProgram } from "./program.class"
 import { range } from "./utils"
 
@@ -12,9 +13,7 @@ export class TailProgram extends ObjectProgram {
   }
 
   boot(): () => void {
-    const { gl, program, body, cam } = this
-    const inf = body.inf
-    const { PI, sin } = Math
+    const { gl, program, body } = this
 
     gl.useProgram(program)
 
@@ -31,6 +30,8 @@ export class TailProgram extends ObjectProgram {
       body.colors,
       4
     )
+
+    const setFar = this.setUniform1f("far", glMatrix.vec3.len(body.coordinates))
 
     this.setUniformLMVP(false, false)
 
@@ -49,11 +50,13 @@ export class TailProgram extends ObjectProgram {
     const verticesCount = body.vertices.length / 3
 
     return () => {
+      const far = glMatrix.vec3.len(body.coordinates)
       gl.useProgram(program)
       setVertices()
       setVertexColors()
       changeRotation()
       uni()
+      setFar(AU * AU * AU * 5 / (far * far * far))
       gl.drawArrays(
         gl.POINTS, 0, verticesCount
       )

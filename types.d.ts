@@ -11,4 +11,7 @@ declare global {
   type ReadonlyVec3 = GLMatrix.ReadonlyVec3
   type ReadonlyMat4 = GLMatrix.ReadonlyMat4
   type voidFn = () => void
+
+  function postMessage(message: any): void
+  function importScripts(...urls: string[]): void
 }

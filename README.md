@@ -7,3 +7,7 @@
 3. body's self-rotation.
 4. earth-moon, saturn & jupiter's moons.
 5. fill performance. done!
+
+## Todos: (since 2021/02/14)
+
+1. webWorker to run loop to computes bodies' orbits.
