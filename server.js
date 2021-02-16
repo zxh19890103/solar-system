@@ -48,7 +48,13 @@ data: ${JSON.stringify(payload)}
   }
 }
 
-fs.watch("./3d", (event, name) => {
+fs.watch("./huanghelou", (event, name) => {
+  if (event !== "change") return
+  if (!name.endsWith(".ts")) return
+  eventSource.emit({ reload: true })
+})
+
+fs.watch("./common", (event, name) => {
   if (event !== "change") return
   if (!name.endsWith(".ts")) return
   eventSource.emit({ reload: true })
@@ -58,7 +64,6 @@ fs.watch("./shaders", (event) => {
   if (event !== "change") return
   eventSource.emit({ reload: true })
 })
-
 
 const compileTs = (tsFile, saveAs) => {
   const source = fs.readFileSync(tsFile, "utf-8")
@@ -81,7 +86,18 @@ http.createServer((req, res) => {
       const rs = fs.createReadStream("./planets-inf/Earth.jpg")
       rs.pipe(res)
     }
-  } else if (/canvas-uni|3d/.test(url)) {
+  } else if (/\.glsl$/.test(url)) {
+    res.setHeader("Content-Type", "text/plain")
+    const [, name] = /^\/(.+)\.glsl$/.exec(url)
+    const rs = fs.createReadStream(`./${name}.glsl`)
+    rs.pipe(res)
+  } else if (/\.(css|json|html)$/.test(url)) {
+    const [, name, ext] = /^\/(.*?)\.([a-z]+)$/.exec(url)
+    const oriRresouce = `./${name}.${ext}`
+    res.setHeader("Content-Type", getContentType(oriRresouce))
+    const rs = fs.createReadStream(oriRresouce)
+    rs.pipe(res)
+  } else if (/canvas-uni|3d|huanghelou|common/.test(url)) {
     const [, name] = /^\/(.*?)(\.ts)?$/.exec(url)
     const oriRresouce = `${name}.ts`
     res.setHeader("Content-Type", "text/javascript")
@@ -97,12 +113,6 @@ http.createServer((req, res) => {
       compileTs(oriRresouce, asJsResource)
     }
     const rs = fs.createReadStream(asJsResource)
-    rs.pipe(res)
-  } else if (/\.(css|json|html)$/.test(url)) {
-    const [, name, ext] = /^\/(.*?)\.([a-z]+)$/.exec(url)
-    const oriRresouce = `./${name}.${ext}`
-    res.setHeader("Content-Type", getContentType(oriRresouce))
-    const rs = fs.createReadStream(oriRresouce)
     rs.pipe(res)
   } else if (/^\/sse/.test(url)) {
     // event source
@@ -124,11 +134,6 @@ http.createServer((req, res) => {
       res.setHeader("Content-Type", "text/javascript")
       res.end(`console.error('file "${name}" is not found.')`)
     }
-  } else if (/\.glsl$/.test(url)) {
-    res.setHeader("Content-Type", "text/plain")
-    const [, name] = /^\/(.+)\.glsl$/.exec(url)
-    const rs = fs.createReadStream(`./${name}.glsl`)
-    rs.pipe(res)
   } else {
     // fallback
     const rs = fs.createReadStream("./index.html")

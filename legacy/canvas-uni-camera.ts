@@ -1,5 +1,5 @@
-import { Matrix } from "./canvas-uni-matrix";
-import { Vector } from "./canvas-uni-vector";
+import { Matrix } from "./canvas-uni-matrix"
+import { Vector } from "./canvas-uni-vector"
 
 const { PI, cos, sin, round } = Math
 

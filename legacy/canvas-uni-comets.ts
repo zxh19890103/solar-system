@@ -1,6 +1,6 @@
-import { BodyInfo } from "./canvas-uni-8";
-import { AU, RAD_PER_DEGREE } from "./canvas-uni-constants";
-import { rand } from "./canvas-uni-utils";
+import { BodyInfo } from "./canvas-uni-8"
+import { AU, RAD_PER_DEGREE } from "./canvas-uni-constants"
+import { rand } from "./canvas-uni-utils"
 
 export const Halley: BodyInfo = {
   name: "Halley",

@@ -36,7 +36,6 @@ import { OrbitProgram } from "./orbit-program.class"
 import { RingsProgram } from "./rings-program.class"
 import { AU } from "./constants"
 import { TailProgram } from "./tail-program.class"
-import { RENDER_PERIOD } from "../canvas-uni-constants"
 
 let W: number = 0
 let H: number = 0
