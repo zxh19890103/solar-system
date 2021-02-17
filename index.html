@@ -3,12 +3,14 @@
 
 <head>
   <title>Solar System</title>
+  <link rel="icon" href="/nineplanets-org/neptune-150x150.png" type="image/png">
   <link rel="stylesheet" type="text/css" href="/style.css">
 </head>
 
 <body>
   <script src="npm/gl-matrix/gl-matrix.js"></script>
-  <script type="module" referrerpolicy="unsafe-url" src="/huanghelou/main.ts"></script>
+  <!-- <script type="module" referrerpolicy="unsafe-url" src="/huanghelou/main.ts"></script> -->
+  <script type="module" referrerpolicy="unsafe-url" src="/3d/main.ts"></script>
   <script>
     const es = new EventSource("/sse-open")
     es.onmessage = (evt) => {

@@ -224,7 +224,7 @@ export const Pluto: BodyInfo = {
   semiMajorAxis: 39.482 * AU,
   avatar: "/nineplanets-org/pluto.png",
   map: "/maps/pluto-2048x1024.jpg",
-  color: composeColors(COLORS.white),
+  color: randColor(),
   mass: approximates(1.303, .003) * .01, // (1.303±0.003)×1022
   radius: approximates(1188.3, .8) * .001,
   inclination: 11.88 * RAD_PER_DEGREE
@@ -237,7 +237,7 @@ export const Ceres: BodyInfo = {
   semiMajorAxis: 2.7691651545 * AU,
   avatar: "/nineplanets-org/ceres.png",
   map: "/maps/ceres-1024x512.jpg",
-  color: composeColors(COLORS.white),
+  color: randColor(),
   mass: approximates(9.3835, .0001) * .0001,
   radius: .46973,
   inclination: 0 * RAD_PER_DEGREE
@@ -250,7 +250,7 @@ export const Eris: BodyInfo = {
   semiMajorAxis: 67.864 * AU,
   avatar: "/nineplanets-org/eris.png",
   map: "/maps/eris-960x480.jpg",
-  color: composeColors(COLORS.white),
+  color: randColor(),
   mass: approximates(1.6466, .0085) * .01,
   radius: approximates(1163, 6) * .001,
   inclination: 44.040 * RAD_PER_DEGREE
@@ -319,7 +319,7 @@ export const Luna: BodyInfo = {
   semiMajorAxis: 384.399,
   avatar: "/nineplanets-org/moon.png",
   map: "/maps/moon-1024x512.jpg",
-  color: composeColors(COLORS.white),
+  color: randColor(),
   mass: .07342,
   radius: 1.7374,
   inclination: 0 * RAD_PER_DEGREE,
@@ -376,7 +376,7 @@ export const Callisto: BodyInfo = {
   semiMajorAxis: 1882.700,
   avatar: "/nineplanets-org/Callisto.jpg",
   map: "",
-  color: composeColors(COLORS.white),
+  color: randColor(),
   mass: 1.075938 * .1, // (1.075938±0.000137)×1023 kg
   radius: approximates(2410.3, 1.5) * .001, // 2410.3±1.5 km 
   inclination: 2.017 * RAD_PER_DEGREE,
@@ -405,7 +405,7 @@ export const Rhea: BodyInfo = {
   semiMajorAxis: 527.108,
   avatar: "/nineplanets-org/1920px-PIA07763_Rhea_full_globe5.jpg",
   map: "",
-  color: composeColors(COLORS.white),
+  color: randColor(),
   mass: 2.306518 * .001, // 	(2.306518±0.000353)×1021 kg
   radius: approximates(763.8, 1) * .001, // 763.8±1.0 km 
   inclination: 0.345 * RAD_PER_DEGREE,
@@ -540,4 +540,20 @@ export const Nereid: BodyInfo = {
   radius: approximates(357, 13) / 2 * .001,
   inclination: 0 * RAD_PER_DEGREE,
   ref: Neptune
+}
+
+export const Bodies13 = {
+  Sun,
+  Mercury,
+  Venus,
+  Earth,
+  Luna,
+  Mars,
+  Jupiter,
+  Saturn,
+  Uranus,
+  Neptune,
+  Ceres,
+  Eris,
+  Pluto
 }

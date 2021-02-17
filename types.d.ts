@@ -12,6 +12,9 @@ declare global {
   type ReadonlyMat4 = GLMatrix.ReadonlyMat4
   type voidFn = () => void
 
+  var WORKER_SCRIPT_URL: string
+  var GLMATRIX_SCRIPT_URL: string
+
   function postMessage(message: any): void
   function importScripts(...urls: string[]): void
 }

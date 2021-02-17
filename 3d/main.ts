@@ -22,7 +22,7 @@ import {
   Lo, Europa, Ganymede, Callisto, Titan, Rhea,
   BodyInfo,
   Enceladus, Mimas, Tethys,
-  Dione, Iapetus, Proteus, Triton, Nereid
+  Dione, Iapetus, Proteus, Triton, Nereid, Bodies13
 } from "./body-info"
 import { BodyProgram } from "./body-program.class"
 import { Body, RenderBodyAs } from "./body.class"
@@ -34,14 +34,18 @@ import { ObjectProgram } from "./program.class"
 import { BallProgram } from "./ball-program.class"
 import { OrbitProgram } from "./orbit-program.class"
 import { RingsProgram } from "./rings-program.class"
-import { AU } from "./constants"
+import { AU, RAD_PER_DEGREE } from "./constants"
 import { TailProgram } from "./tail-program.class"
+
+import "../env.js"
 
 let W: number = 0
 let H: number = 0
 let gl: WebGLRenderingContext
 let cam: Camera
 let ether: Ether
+
+let DEFAULT_RENDER_AS = RenderBodyAs.Point
 
 const setupGLContext = () => {
   const canvasElement = document.createElement("canvas")
@@ -53,7 +57,7 @@ const setupGLContext = () => {
   gl = canvasElement.getContext("webgl")
 }
 
-const createProgram = (rba = RenderBodyAs.Point) => {
+const createProgram = (rba) => {
   let program: ObjectProgram = null
   {
     switch (rba) {
@@ -83,7 +87,7 @@ const createProgram = (rba = RenderBodyAs.Point) => {
   return program
 }
 
-const createBody = (inf: BodyInfo | Body, rba: RenderBodyAs = RenderBodyAs.Point) => {
+const createBody = (inf: BodyInfo | Body, rba: RenderBodyAs = DEFAULT_RENDER_AS) => {
   const body = inf instanceof Body ? inf : new Body(inf)
   ether.put(body)
   const prog = createProgram(rba)
@@ -381,10 +385,7 @@ const neptuneSys = async () => {
 const single = async (name: string) => {
   setupGLContext()
 
-  let inf: BodyInfo = [
-    Ceres, Earth, Jupiter, Mars, Mercury, Neptune,
-    Saturn, Sun, Uranus, Venus, Eris, Pluto, Ceres
-  ].find(x => x.name === name)
+  let inf: BodyInfo = Bodies13[name]
 
   if (inf === undefined || inf === null)
     inf = Earth
@@ -416,33 +417,159 @@ const single = async (name: string) => {
   run()
 }
 
-const worker = new Worker("/3d/loop.ts")
-const match = location.search.match(/\?sys=([a-zA-Z]+)/)
-if (match === null) {
-  single("Earth")
-} else {
-  const [, sys] = match
-  switch (sys) {
-    case "solar":
-      solar()
-      break
-    case "jupiter":
-      jupiterSys()
-      break
-    case "saturn":
-      saturnSys()
-      break
-    case "earth":
-      earthSys()
-      break
-    case "neptune":
-      neptuneSys()
-      break
-    case "comets":
-      comets()
-      break
-    default:
-      single(sys)
-      break
+const compare = (...infs: BodyInfo[]) => {
+  setupGLContext()
+  cam = new Camera(W / H)
+  ether = new Ether(100, 100, true)
+
+  DEFAULT_RENDER_AS = RenderBodyAs.Body
+
+  infs.sort((inf0, inf1) => inf1.radius - inf0.radius)
+
+  const bodies = infs.map(inf => new Body(inf))
+  const Rt = infs.reduce((r, inf) => inf.radius + r, 0)
+
+  const X_FOV = 28
+  const FAR = Rt / Math.tan(X_FOV * RAD_PER_DEGREE)
+  const FAR_OF_ONE_DEGREE = Rt / X_FOV
+
+  let x = 0, z = 0
+  bodies.forEach((body, i) => {
+    body.coordinates = [x, 0, i && z]
+    if (infs[i + 1] === undefined) return
+    x += Math.max(infs[i].radius, FAR_OF_ONE_DEGREE) + Math.max(1.5 * infs[i + 1].radius, 10 * FAR_OF_ONE_DEGREE)
+  })
+
+  createBodies(
+    ...bodies
+  )
+
+  cam.put([0, - FAR, .1])
+    .lookAt([0, 0, 0])
+    .adjust(
+      Math.PI * (120 / 180), // human naked eyes.
+      .1,
+      Infinity
+    )
+  run()
+}
+
+const planets01 = () => {
+  const SELECTED_BODIES_KEY = "SELECTED_BODIES"
+  const selectedBodies: Set<string> = new Set()
+  const SELECTED_BODIES = localStorage.getItem(SELECTED_BODIES_KEY)
+  if (SELECTED_BODIES) {
+    const arr = JSON.parse(SELECTED_BODIES)
+    arr.forEach(n => selectedBodies.add(n))
+  } else {
+    selectedBodies.add("Earth")
+    selectedBodies.add("Luna")
+  }
+
+  const checkboxGroup = document.createElement("div")
+
+  checkboxGroup.style.cssText = `
+    position: fixed;
+    z-index: 1;
+    bottom: 10px;
+    left: 0;
+    height: 50px;
+    line-height: 50px;
+  `
+
+  checkboxGroup.addEventListener("click", (evt: any) => {
+    const target = evt.target
+    if (target.tagName === "A") {
+      const bodyname = target.dataset["bodyname"]
+      if (selectedBodies.has(bodyname)) {
+        selectedBodies.delete(bodyname)
+        target.style.color = "white"
+      } else {
+        selectedBodies.add(bodyname)
+        target.style.color = "green"
+      }
+    }
+  })
+
+  for (const [name, inf] of Object.entries(Bodies13)) {
+    const a = document.createElement("a")
+    a.textContent = name
+    a.style.color = selectedBodies.has(name) ? `green` : "white"
+    a.style.marginRight = "5px"
+    a.style.textDecoration = "none"
+    a.style.borderBottom = `1px dashed rgba(${inf.color.map(c => 0 ^ c * 255)})`
+    a.href = "javascript:void(0);"
+    a.dataset["bodyname"] = name
+
+    checkboxGroup.appendChild(a)
+  }
+
+  const button = document.createElement("a")
+  button.href = "javascript:void(0);"
+  button.style.cssText = `
+  display: block;
+  float: right;
+  color: white;
+  width: 50px;
+  height: 50px;
+  line-height: 50px;
+  text-align: center;
+  background-image: url(/nineplanets-org/neptune-150x150.png);
+  background-size: 100% 100%;
+  -webkit-background-size: 100% 100%;
+  background-repeat: no-repeat;
+  `
+  button.textContent = "OK"
+  button.addEventListener("click", () => {
+    localStorage.setItem(SELECTED_BODIES_KEY, JSON.stringify([...selectedBodies]))
+    location.reload()
+  })
+  checkboxGroup.appendChild(button)
+
+  document.body.appendChild(checkboxGroup)
+
+  const bodies = []
+  for (const [name, value] of selectedBodies.entries()) {
+    bodies.push(Bodies13[name])
+  }
+  compare(...bodies)
+}
+
+const main = () => {
+  const match = location.search.match(/\?sys=([a-zA-Z]+)/)
+  if (match === null) {
+    single("Earth")
+  } else {
+    const [, sys] = match
+    switch (sys) {
+      case "compare":
+        planets01()
+        break
+      case "solar":
+        solar()
+        break
+      case "jupiter":
+        jupiterSys()
+        break
+      case "saturn":
+        saturnSys()
+        break
+      case "earth":
+        earthSys()
+        break
+      case "neptune":
+        neptuneSys()
+        break
+      case "comets":
+        comets()
+        break
+      default:
+        single(sys)
+        break
+    }
   }
 }
+
+const worker = new Worker(WORKER_SCRIPT_URL)
+
+main()

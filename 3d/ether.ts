@@ -1,16 +1,12 @@
-import { BodyInfo, Sun } from "./body-info"
+import { Bodies13, BodyInfo, Sun } from "./body-info"
 import { Body } from "./body.class"
 import { Camera } from "./camera.class"
 import { AU, SECONDS_IN_A_DAY } from "./constants"
 import { range } from "./utils"
 
 const GRAVITY_CONST = 6.67430 * 0.00001 // x 10 ^ -5
-// const UNIT_OF_TIME = 10
-// const RENDER_PERIOD = 100
-// 
-// const DAYS_PER_SECOND = RENDER_PERIOD * UNIT_OF_TIME / (60 * 24)
 
-const { mat4, vec3 } = glMatrix
+const { vec3 } = glMatrix
 const { cos, sin, PI, sqrt } = Math
 
 // x10 ^ 6 passed.
@@ -54,9 +50,10 @@ export class Ether {
     const buttons = document.createElement("div")
     buttons.className = "buttons"
     Array(
-      "solar", "earth", "jupiter", "saturn", "neptune", "comets",
-      "Mercury", "Venus", "Earth", "Mars", "Jupiter", "Saturn", "Uranus", "Neptune",
-      "Ceres", "Eris", "Pluto"
+      "solar", "earth", "jupiter", "saturn", "neptune",
+      "comets",
+      "compare",
+      ...Object.keys(Bodies13)
     ).forEach((text, i) => {
       const a = document.createElement("a")
       a.href = `/?sys=${text}`
@@ -99,12 +96,12 @@ export class Ether {
 
     if (this.moveOff) {
       b.translates()
-      this.writeLine(`<span style="color: rgba(${rgba.join(',')})">${inf.name}</span> ${(b.inf.aphelion / AU).toFixed(2)} AU`)
+      this.writeLine(`<span style="color: rgba(${rgba.join(',')})">${inf.name}</span> aphelion: ${(b.inf.aphelion / AU).toFixed(2)} AU; size: ${(b.inf.radius * 2).toFixed(2)} (e3 km)`)
       return b
     }
 
     if (vec3.len(b.velocity) === 0) {
-      this.writeLine(`<span style="color: rgba(${rgba.join(',')})">${inf.name}</span>, the center, no period.`)
+      this.writeLine(`<span style="color: rgba(${rgba.join(',')})">${inf.name}</span>, the center, no orbital period.`)
       return b
     }
 
@@ -160,6 +157,7 @@ export class Ether {
   private animationDataReaderOffset: number = 0
   private waitingNewBundle: boolean = true
   move() {
+    if (this.moveOff) return
     if (this.waitingNewBundle) return
     if (this.animationDataReaderOffset >= this.animationDataReader.byteLength) {
       if (this.waitingNewBundle) return

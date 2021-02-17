@@ -48,6 +48,12 @@ data: ${JSON.stringify(payload)}
   }
 }
 
+fs.watch("./3d", (event, name) => {
+  if (event !== "change") return
+  if (!name.endsWith(".ts")) return
+  eventSource.emit({ reload: true })
+})
+
 fs.watch("./huanghelou", (event, name) => {
   if (event !== "change") return
   if (!name.endsWith(".ts")) return
@@ -91,7 +97,18 @@ http.createServer((req, res) => {
     const [, name] = /^\/(.+)\.glsl$/.exec(url)
     const rs = fs.createReadStream(`./${name}.glsl`)
     rs.pipe(res)
-  } else if (/\.(css|json|html)$/.test(url)) {
+  } else if (/^\/npm\//.test(url)) {
+    const [, name] = /^\/npm\/(.+)$/.exec(url)
+    const resource = `../node_modules/${name}`
+    if (fs.existsSync(resource)) {
+      res.setHeader("Content-Type", getContentType(name))
+      const rs = fs.createReadStream(resource)
+      rs.pipe(res)
+    } else {
+      res.setHeader("Content-Type", "text/javascript")
+      res.end(`console.error('file "${name}" is not found.')`)
+    }
+  } else if (/\.(js|css|json|html)$/.test(url)) {
     const [, name, ext] = /^\/(.*?)\.([a-z]+)$/.exec(url)
     const oriRresouce = `./${name}.${ext}`
     res.setHeader("Content-Type", getContentType(oriRresouce))
@@ -122,17 +139,6 @@ http.createServer((req, res) => {
     } else {
       eventSource.emit({ reload: true })
       res.end("sent!")
-    }
-  } else if (/^\/npm\//.test(url)) {
-    const [, name] = /^\/npm\/(.+)$/.exec(url)
-    const resource = `../node_modules/${name}`
-    if (fs.existsSync(resource)) {
-      res.setHeader("Content-Type", getContentType(name))
-      const rs = fs.createReadStream(resource)
-      rs.pipe(res)
-    } else {
-      res.setHeader("Content-Type", "text/javascript")
-      res.end(`console.error('file "${name}" is not found.')`)
     }
   } else {
     // fallback

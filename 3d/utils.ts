@@ -40,7 +40,9 @@ export const randColor = (basis?: vec4): vec4 => {
     color[3] = 1
     return color as vec4
   }
-  return Array(4)
+  const color = Array(4)
     .fill(0)
     .map(Math.random) as vec4
+  color[3] = 1
+  return color
 }
