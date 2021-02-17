@@ -15,7 +15,7 @@ varying lowp vec4 vVertexColor;
 varying highp vec3 vLighting;
 
 void main() {
-  gl_PointSize = 2.0;
+  gl_PointSize = 5.0;
   gl_Position = uProjectionMat * uViewMat * uModelMat * uRotationMat * vec4(aVertex, 1.0);
   
   // vLighting = uAmbientLight + max(

@@ -20,9 +20,8 @@ export class HornThing extends Thing {
   static LEFT_VERTEX_INDEX = 1
   static RIGHT_VERTEX_INDEX = 0
   static HEAD_VERTEX_INDEX = 2
-  static ORIGIN_VERTEX_INDEX = 4
 
-  static KEY_VERTEX_COUNT = 5
+  static KEY_VERTEX_COUNT = 4
 
   make() {
     const color = parseColor("#795548")
@@ -30,10 +29,9 @@ export class HornThing extends Thing {
       this.width / 2, 0, 0, // 0
       - this.width / 2, 0, 0, // 1
       0, -.3, this.height, // 2
-      0, -.3, 0, //3
-      0, 0, 0, // 4
+      0, 0, 0, //3
     )
-    this.colors.push(...color, ...color, ...color, ...color, ...color)
+    this.colors.push(...color, ...color, ...color, ...color)
     // curve from tail to head
     const k = .1
     const a = this.height
@@ -70,7 +68,7 @@ export class HornThing extends Thing {
         index, index + 3
       )
       this.indices.push(
-        index - 1, index + 3
+        index - 2, index + 3
       )
       index += 4
       this.colors.push(...color, ...color, ...color, ...color)

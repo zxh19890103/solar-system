@@ -2,7 +2,7 @@ import { Camera } from "../common/camera.class"
 import { RAD_PER_DEGREE } from "../common/constants"
 import { ObjectProgram } from "../common/program.class"
 import { randColor, parseColor } from "../common/utils"
-import { CeilThing } from "./ceil.class"
+import { FloorThing } from "./floor.class"
 import { HornThing } from "./horn.class"
 import { PillarThing } from "./pillar.class"
 
@@ -24,10 +24,12 @@ export class HuanghelouProgram extends ObjectProgram {
 
     const { gl, program } = this
 
-    const ceil0 = new CeilThing(4, Math.PI * .2)
+    const ceil0 = new FloorThing(5, Math.PI * .32)
     ceil0.make()
     const { vertices, colors, indices } = ceil0
     const renderer = ceil0.render(gl)
+
+    console.log("Total Vertex:", ceil0.VertexCount)
 
     const setVertices = this.setFloat32Attrib("aVertex", vertices, 3)
     const setVertexCorlours = this.setFloat32Attrib("aVertexColor", colors, 4)

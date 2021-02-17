@@ -1,3 +1,10 @@
+import { randColor } from "./utils"
+
+const { cos, sin } = Math
+const {
+  vec3
+} = glMatrix
+
 export abstract class Thing {
   readonly vertices: number[]
   readonly colors: number[]
@@ -8,6 +15,8 @@ export abstract class Thing {
   protected indexOffset: number = 0
   protected readonly things: Thing[]
 
+  protected color: vec4 = [1, 1, 1, 1]
+
   abstract make(): void
   abstract render(gl: WebGLRenderingContext): () => void
 
@@ -16,7 +25,6 @@ export abstract class Thing {
     this.colors = []
     this.normals = []
     this.indices = []
-
     this.things = []
   }
 
@@ -54,7 +62,35 @@ export abstract class Thing {
     )
   }
 
+  /**
+   * with color
+   * you can push multiple.
+   */
+  pushVertex(...xyz: number[]) {
+    const count = xyz.length / 3
+    this.vertices.push(...xyz)
+    this.colors.push(...Array(count).fill(this.color).flat())
+  }
 
+  pushPolarVertexOnXY(...rd: number[]) {
+    let i = 0
+    while (rd[i] !== undefined) {
+      this.pushVertex(
+        rd[i] * cos(rd[i + 1]),
+        rd[i] * sin(rd[i + 1]),
+        0
+      )
+      i += 2
+    }
+  }
+
+  pushPolarVertex(r: number, rad: number, z: number) {
+    this.pushVertex(
+      r * cos(rad),
+      r * sin(rad),
+      z
+    )
+  }
 
   acceptTransformation(mat: mat4) {
     let index = 0
@@ -126,6 +162,40 @@ export abstract class Thing {
       selfVertexCount,
       selfIndexCount
     ]
+  }
+
+  protected mesh(o: vec3, v1: vec3, v2: vec3, n1: number, n2: number) {
+    const v1o = vec3.sub([0, 0, 0], v1, o)
+    const v2o = vec3.sub([0, 0, 0], v2, o)
+    const norm1 = vec3.normalize([0, 0, 0], v1o)
+    const norm2 = vec3.normalize([0, 0, 0], v2o)
+    const len1 = vec3.len(v1o)
+    const len2 = vec3.len(v2o)
+    const d1 = len1 / (n1 - 1)
+    const d2 = len2 / (n2 - 1)
+    const vertices: vec3[] = []
+
+    const arr1 = Array(n1 - 1).fill(0).map((x, i) => i * d1)
+    arr1.push(len1)
+    const arr2 = Array(n2 - 1).fill(0).map((x, i) => i * d2)
+    arr2.push(len2)
+
+    for (let i = 0; i < n1; i++) {
+      for (let j = 0; j < n2; j++) {
+        vertices.push(
+          vec3.add(
+            [0, 0, 0],
+            o,
+            vec3.add(
+              [0, 0, 0],
+              vec3.scale([0, 0, 0], norm1, arr1[i]),
+              vec3.scale([0, 0, 0], norm2, arr2[j])
+            )
+          )
+        )
+      }
+    }
+    return vertices
   }
 
   private _pipe(thing: Thing) {

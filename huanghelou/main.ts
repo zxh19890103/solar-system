@@ -37,7 +37,7 @@ const run = async () => {
   const drawcalls = programs.map(prog => prog.getTick())
 
   const loop = () => {
-    gl.clearColor(0.0, 0.0, 0.0, 1.0)  // Clear to black, fully opaque
+    gl.clearColor(0.0, 0.1, 0.2, 1.0)  // Clear to black, fully opaque
     gl.clearDepth(1.0)                 // Clear everything
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
     for (const drawcall of drawcalls) drawcall()
@@ -51,7 +51,7 @@ const main = async () => {
   setupGLContext()
   cam = new Camera(W / H)
   cam.put([
-    0, -10, .2
+    0, -10, 2
   ]).lookAt([0, 0, 0])
     .adjust(
       Math.PI * (100 / 180),

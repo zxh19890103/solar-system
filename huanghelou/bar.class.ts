@@ -37,9 +37,7 @@ export class BarThing extends Thing {
       0, this.length * .2, this.length - down
     )
 
-    const color2 = parseColor("#ff5548")
-
-    this.colors.push(...color2, ...color2, ...color2)
+    this.colors.push(...color, ...color, ...color)
   }
 
   render(gl: WebGLRenderingContext): () => void {

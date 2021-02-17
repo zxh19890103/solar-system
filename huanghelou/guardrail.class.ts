@@ -4,38 +4,56 @@ import { HornThing } from "./horn.class"
 
 export class GuardtailThing extends Thing {
 
-  readonly horns: HornThing[]
-  readonly height: number
-  readonly barHeight: number
+  readonly lt: vec3 // left top
+  readonly rt: vec3 // right top
+  readonly rb: vec3 // right bottom
+  readonly lb: vec3 // left bottom
 
-  constructor(h: number, barH: number, ...horns12: HornThing[]) {
+  constructor(...four: vec3[]) {
     super()
-    this.horns = horns12
-    this.height = h
-    this.barHeight = barH
+    console.assert(four.length === 4, "must be 4")
+    this.lt = four[0]
+    this.rt = four[1]
+    this.rb = four[2]
+    this.lb = four[3]
   }
 
   make(): void {
-    const color = parseColor("#373430")
-    color[3] = 1
-    for (let i = 0; i < 13; i++) {
-      const horn = this.horns[i % 12]
-      const origin = horn.getVertex(HornThing.ORIGIN_VERTEX_INDEX)
-      this.vertices.push(
-        origin[0], origin[1], origin[2] - this.barHeight,
-        origin[0], origin[1], origin[2] - this.barHeight - this.height
+    this.pushVertex(
+      ...this.lt,
+      ...this.rt,
+      ...this.rb,
+      ...this.lb
+    )
+
+    this.indices.push(
+      0, 1,
+      1, 2,
+      2, 3,
+      3, 0
+    )
+
+    let offset = this.VertexCount
+
+    const grid = this.mesh(this.lt, this.lb, this.rt, 6, 10)
+    const nums = grid.flat() as number[]
+    this.pushVertex(...nums)
+    for (let i = 0; i < 6; i++) {
+      this.indices.push(
+        offset + i * 10 + 9,
+        offset + i * 10
       )
-      this.colors.push(...color, ...color)
     }
   }
 
   render(gl: WebGLRenderingContext): () => void {
-    const { offset, VertexCount } = this
+    const { IndexCount, indexOffset } = this
     return () => {
-      gl.drawArrays(
-        gl.TRIANGLE_STRIP,
-        offset,
-        VertexCount
+      gl.drawElements(
+        gl.LINES,
+        IndexCount,
+        gl.UNSIGNED_SHORT,
+        indexOffset * 2
       )
     }
   }
