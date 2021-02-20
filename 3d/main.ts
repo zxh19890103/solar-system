@@ -43,6 +43,7 @@ import { parseColor } from "./utils"
 let W: number = 0
 let H: number = 0
 let gl: WebGLRenderingContext
+let canvas: HTMLCanvasElement
 let cam: Camera
 let ether: Ether
 
@@ -55,7 +56,9 @@ const setupGLContext = () => {
   canvasElement.width = W
   canvasElement.height = H
   document.body.appendChild(canvasElement)
+  canvas = canvasElement
   gl = canvasElement.getContext("webgl")
+  gl.viewport(0, 0, W, H)
 }
 
 const createProgram = (rba) => {
@@ -116,6 +119,26 @@ const createBodies = (...items: (BodyInfo | Body | RenderBodyAs)[]) => {
     createBody(body)
 }
 
+const resizeCanvasToDisplaySize = () => {
+  // Lookup the size the browser is displaying the canvas in CSS pixels.
+  const displayWidth = canvas.clientWidth
+  const displayHeight = canvas.clientHeight
+
+  // Check if the canvas is not the same size.
+  const needResize = canvas.width !== displayWidth ||
+    canvas.height !== displayHeight
+
+  if (needResize) {
+    // Make the canvas the same size
+    canvas.width = displayWidth
+    canvas.height = displayHeight
+
+    gl.viewport(0, 0, displayWidth, displayHeight)
+  }
+
+  return needResize
+}
+
 const run = async () => {
 
   const distance = cam.far
@@ -137,6 +160,7 @@ const run = async () => {
   const frames = await ether.boot()
 
   const loop = () => {
+
     gl.clearColor(0.0, 0.0, 0.0, 1.0)  // Clear to black, fully opaque
     gl.clearDepth(1.0)                 // Clear everything
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
@@ -146,6 +170,8 @@ const run = async () => {
 
     requestAnimationFrame(loop)
   }
+
+  // window.addEventListener("resize", resizeCanvasToDisplaySize)
 
   ether.connectsWithWorker(worker)
 
@@ -417,7 +443,7 @@ const single = async (name: string) => {
     inf = Earth
 
   cam = new Camera(W / H)
-  ether = new Ether()
+  ether = new Ether(10, 1)
   const pluto = new Body(inf).center()
   if (inf.rings) {
     createBodies(
@@ -432,7 +458,7 @@ const single = async (name: string) => {
     )
   }
 
-  cam.put([0, -inf.radius * 3, inf.radius * .68])
+  cam.put([0, -inf.radius * 4, inf.radius * .68])
     .lookAt(pluto)
     .adjust(
       Math.PI * (45 / 180), // human naked eyes.
@@ -505,10 +531,14 @@ const planets01 = () => {
   checkboxGroup.style.cssText = `
     position: fixed;
     z-index: 1;
-    bottom: 10px;
+    bottom: 0;
     left: 0;
+    width: 100%;
     height: 50px;
     line-height: 50px;
+    background: #345;
+    padding: 0 10px;
+    box-sizing: border-box;
   `
 
   checkboxGroup.addEventListener("click", (evt: any) => {
@@ -527,9 +557,11 @@ const planets01 = () => {
 
   for (const [name, inf] of Object.entries(Bodies13)) {
     const a = document.createElement("a")
-    a.textContent = name
+    a.textContent = name.substr(0, 2).toUpperCase()
+
     a.style.color = selectedBodies.has(name) ? `green` : "white"
-    a.style.marginRight = "5px"
+    a.style.marginRight = "14px"
+    a.style.fontSize = "1.5rem"
     a.style.textDecoration = "none"
     a.style.borderBottom = `1px dashed rgba(${inf.color.map(c => 0 ^ c * 255)})`
     a.href = "javascript:void(0);"

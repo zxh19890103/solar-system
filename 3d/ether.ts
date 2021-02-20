@@ -39,7 +39,7 @@ export class Ether {
     this.initHTMLPanel()
 
     this.writeLine(`<h2>Welcome to the real solar!</h2>`)
-    this.writeLine(`Here 1 second = ${this.daysPerSec.toFixed(2)} days.`)
+    this.writeLine(`Here 1 second = ${this.duration(this.daysPerSec * 24 * 60 * 60)}.`)
   }
 
   private initHTMLPanel() {
@@ -49,6 +49,7 @@ export class Ether {
 
     const buttons = document.createElement("div")
     buttons.className = "buttons"
+    buttons.style.display = "none"
     Array(
       "solar", "earth", "jupiter", "saturn", "neptune",
       "comets",
@@ -60,6 +61,18 @@ export class Ether {
       a.innerText = i < 6 ? (text + " sys") : text
       buttons.appendChild(a)
     })
+
+    const trigger = document.createElement("a")
+    trigger.href = "javascript:void(0);"
+    trigger.textContent = "#"
+    trigger.className = "trigger"
+    trigger.onclick = () => {
+      if (buttons.style.display)
+        buttons.style.display = ""
+      else
+        buttons.style.display = "none"
+    }
+    document.body.appendChild(trigger)
     document.body.appendChild(buttons)
   }
 

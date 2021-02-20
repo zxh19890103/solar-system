@@ -145,6 +145,6 @@ http.createServer((req, res) => {
     const rs = fs.createReadStream("./index.html")
     rs.pipe(res)
   }
-}).listen(9001, ["localhost", "192.168.0.102"], () => {
+}).listen(9001, "0.0.0.0", () => {
   console.log("application is running on port 9001")
 })

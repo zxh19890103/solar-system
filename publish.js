@@ -5,7 +5,7 @@ const map = {
   "./dist/3d/.*.js": "../solar-system-site/scripts/",
   // "./shaders/.*.glsl": "../solar-system-site/shaders/",
   // "../node_modules/gl-matrix/gl-matrix-min.js": "../solar-system-site/scripts/",
-  // "./style.css": "../solar-system-site/",
+  "./style.css": "../solar-system-site/",
   // "./planets-inf/maps/.*.jpg": "../solar-system-site/maps/",
   // "./planets-inf/nineplanets-org/.*.(jpe?g|png)": "../solar-system-site/nineplanets-org"
 }
