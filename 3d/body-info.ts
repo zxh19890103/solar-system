@@ -45,7 +45,9 @@ export interface BodyInfo {
    * default is the the solar
    */
   ref?: BodyInfo,
-  rings?: [string, number][]
+  rings?: [string, number][],
+  // d
+  rotationPeriod?: number
 }
 
 const COLORS = {
@@ -100,7 +102,8 @@ export const Mercury: BodyInfo = {
   color: composeColors(COLORS.grey),
   mass: .33011,
   radius: 2.4397,
-  inclination: 3.38 * RAD_PER_DEGREE
+  inclination: 3.38 * RAD_PER_DEGREE,
+  rotationPeriod: 58.646
 }
 
 export const Venus: BodyInfo = {
@@ -113,7 +116,8 @@ export const Venus: BodyInfo = {
   color: composeColors(COLORS.grey, COLORS.brown),
   mass: 4.8675,
   radius: 6.0518,
-  inclination: 3.86 * RAD_PER_DEGREE
+  inclination: 3.86 * RAD_PER_DEGREE,
+  rotationPeriod: -243.025
 }
 
 export const Earth: BodyInfo = {
@@ -126,7 +130,8 @@ export const Earth: BodyInfo = {
   color: composeColors(COLORS.blue, COLORS.green),
   mass: 5.97237,
   radius: 6.371,
-  inclination: 7.155 * RAD_PER_DEGREE
+  inclination: 7.155 * RAD_PER_DEGREE,
+  rotationPeriod: .99
 }
 
 export const Mars: BodyInfo = {
@@ -139,7 +144,8 @@ export const Mars: BodyInfo = {
   color: composeColors(COLORS.red, COLORS.brown, COLORS.tan),
   mass: .64171,
   radius: 3.3895,
-  inclination: 5.65 * RAD_PER_DEGREE
+  inclination: 5.65 * RAD_PER_DEGREE,
+  rotationPeriod: 1.025957
 }
 
 export const Jupiter: BodyInfo = {
@@ -152,7 +158,8 @@ export const Jupiter: BodyInfo = {
   color: composeColors(COLORS.brown, COLORS.orange, COLORS.tan, COLORS.white),
   mass: 1.8982 * 1000,
   radius: 69.911,
-  inclination: 6.09 * RAD_PER_DEGREE
+  inclination: 6.09 * RAD_PER_DEGREE,
+  rotationPeriod: 9.925 / 24
 }
 
 export const Saturn: BodyInfo = {
@@ -166,6 +173,7 @@ export const Saturn: BodyInfo = {
   mass: 568.34,
   radius: 58.232,
   inclination: 5.51 * RAD_PER_DEGREE,
+  rotationPeriod: 10.5 / 24
   /**
    * D Ring	66,900   –  74,510	7,500	
    * C Ring	74,658   –   92,000	17,500	
@@ -197,11 +205,12 @@ export const Uranus: BodyInfo = {
   peribelion: 18.33 * AU,
   semiMajorAxis: 19.2184 * AU,
   avatar: "/nineplanets-org/uranus.png",
-  map: "/maps/uranus-1024x512.jpg",
+  map: "/maps/uranus-1024x512.png",
   color: composeColors(COLORS.blue, COLORS.green),
   mass: approximates(86.810, .013),
   radius: approximates(25362, 7) * .001,
-  inclination: 6.48 * RAD_PER_DEGREE
+  inclination: 6.48 * RAD_PER_DEGREE,
+  rotationPeriod: -17.2 / 24
 }
 
 export const Neptune: BodyInfo = {
@@ -214,7 +223,8 @@ export const Neptune: BodyInfo = {
   color: composeColors(COLORS.blue),
   mass: 102.413,
   radius: approximates(24.622, .019),
-  inclination: 6.43 * RAD_PER_DEGREE
+  inclination: 6.43 * RAD_PER_DEGREE,
+  rotationPeriod: 0.6713
 }
 
 export const Pluto: BodyInfo = {
@@ -227,7 +237,8 @@ export const Pluto: BodyInfo = {
   color: randColor(),
   mass: approximates(1.303, .003) * .01, // (1.303±0.003)×1022
   radius: approximates(1188.3, .8) * .001,
-  inclination: 11.88 * RAD_PER_DEGREE
+  inclination: 11.88 * RAD_PER_DEGREE,
+  rotationPeriod: 6.387230
 }
 
 export const Ceres: BodyInfo = {

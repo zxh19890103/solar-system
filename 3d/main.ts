@@ -38,6 +38,7 @@ import { AU, RAD_PER_DEGREE } from "./constants"
 import { TailProgram } from "./tail-program.class"
 
 import "../env.js"
+import { parseColor } from "./utils"
 
 let W: number = 0
 let H: number = 0
@@ -250,25 +251,50 @@ const earthSys = async () => {
   setupGLContext()
 
   cam = new Camera(W / H)
-  ether = new Ether(100, 10)
+  ether = new Ether(10, 5)
 
   const earth = new Body(Earth).center()
   const luna = new Body(Luna)
+  const satellite = new Body({
+    ...Luna,
+    name: "Satellite#1",
+    mass: 1 * Math.pow(10, -21),
+    aphelion: (Earth.radius + 2),
+    semiMajorAxis: (Earth.radius + 2),
+    color: parseColor("#ff8800"),
+    inclination: 30 * RAD_PER_DEGREE
+  })
+
+  const satellite2 = new Body({
+    ...Luna,
+    name: "Satellite#3",
+    mass: 1 * Math.pow(10, -21),
+    aphelion: (Earth.radius + 36),
+    semiMajorAxis: (Earth.radius + 36),
+    color: parseColor("#ffff00"),
+    inclination: 45 * RAD_PER_DEGREE
+  })
 
   createBodies(
     earth,
     RenderBodyAs.Body,
     luna,
     RenderBodyAs.Body,
+    RenderBodyAs.Orbit,
+    satellite,
+    RenderBodyAs.Point,
+    RenderBodyAs.Orbit,
+    satellite2,
+    RenderBodyAs.Point,
     RenderBodyAs.Orbit
   )
 
   cam.put([
-    0, -384, 1
+    0, -38, 1
   ])
     .lookAt(earth)
     .adjust(
-      Math.PI * (10 / 180), // human naked eyes.
+      Math.PI * (45 / 180), // human naked eyes.
       .1,
       Infinity
     )
@@ -409,7 +435,7 @@ const single = async (name: string) => {
   cam.put([0, -inf.radius * 3, inf.radius * .68])
     .lookAt(pluto)
     .adjust(
-      Math.PI * (120 / 180), // human naked eyes.
+      Math.PI * (45 / 180), // human naked eyes.
       .1,
       Infinity
     )
@@ -420,7 +446,7 @@ const single = async (name: string) => {
 const compare = (...infs: BodyInfo[]) => {
   setupGLContext()
   cam = new Camera(W / H)
-  ether = new Ether(100, 100, true)
+  ether = new Ether(10, 10, true)
 
   DEFAULT_RENDER_AS = RenderBodyAs.Body
 
@@ -429,25 +455,33 @@ const compare = (...infs: BodyInfo[]) => {
   const bodies = infs.map(inf => new Body(inf))
   const Rt = infs.reduce((r, inf) => inf.radius + r, 0)
 
-  const X_FOV = 28
+  const X_FOV = 30
   const FAR = Rt / Math.tan(X_FOV * RAD_PER_DEGREE)
-  const FAR_OF_ONE_DEGREE = Rt / X_FOV
 
-  let x = 0, z = 0
-  bodies.forEach((body, i) => {
-    body.coordinates = [x, 0, i && z]
-    if (infs[i + 1] === undefined) return
-    x += Math.max(infs[i].radius, FAR_OF_ONE_DEGREE) + Math.max(1.5 * infs[i + 1].radius, 10 * FAR_OF_ONE_DEGREE)
-  })
+  const xRad = (r0: number) => {
+    const angle = Math.asin(r0 / r)
+    return Math.max(RAD_PER_DEGREE, angle)
+  }
+
+  let r = FAR, z = -.1, a = 0, i = 0
+  for (const body of bodies) {
+    body.coordinates = [r * Math.sin(a), r * Math.cos(a) + FAR, z]
+    a += xRad(infs[i].radius)
+    i += 1
+    if (bodies[i] === undefined) break
+    a += xRad(infs[i].radius)
+    a += 2 * RAD_PER_DEGREE
+  }
 
   createBodies(
     ...bodies
   )
 
   cam.put([0, - FAR, .1])
+    .up([0, 0, 1])
     .lookAt([0, 0, 0])
     .adjust(
-      Math.PI * (120 / 180), // human naked eyes.
+      Math.PI * (45 / 180), // human naked eyes.
       .1,
       Infinity
     )

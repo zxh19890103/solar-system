@@ -48,6 +48,12 @@ export class Body {
 
   readonly inf: BodyInfo
 
+  private rotationSpeed: number = .01
+
+  set RotationSpeed(rs: number) {
+    this.rotationSpeed = rs
+  }
+
   programs: ObjectProgram[] = []
 
   constructor(inf: BodyInfo, at?: vec3, velocity?: vec3) {
@@ -76,7 +82,7 @@ export class Body {
     mat4.rotate(
       this.localMat,
       this.localMat,
-      rad,
+      this.rotationSpeed,
       [0, 0, 1]
     )
   }
