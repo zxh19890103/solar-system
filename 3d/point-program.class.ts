@@ -12,7 +12,7 @@ export class PointProgram extends ObjectProgram {
   }
 
   boot(): () => void {
-    const { gl, program, body, ether } = this
+    const { gl, program, body } = this
     const inf = body.inf
     const { PI, sin } = Math
 

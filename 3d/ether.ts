@@ -54,6 +54,8 @@ export class Ether {
       "solar", "earth", "jupiter", "saturn", "neptune",
       "comets",
       "compare",
+      "moving",
+      "moving2",
       ...Object.keys(Bodies13)
     ).forEach((text, i) => {
       const a = document.createElement("a")
@@ -88,6 +90,9 @@ export class Ether {
         xy * sin(angleOnXY),
         inf.aphelion * sin(inf.inclination)
       ]
+
+      b.rotates(angleOnXY, [0, 0, 1])
+      b.rotates(inf.inclination, [0, 1, 0])
     }
 
     if (b.velocity === undefined) {
@@ -107,13 +112,13 @@ export class Ether {
       b.RotationSpeed = Math.PI * 2 / (60 * inf.rotationPeriod / this.daysPerSec)
     }
 
+    b.translates()
     this.bodies.push(b)
 
     const rgba = [].map.call(b.inf.color, c => 0 ^ c * 255)
 
     if (this.moveOff) {
-      b.translates()
-      this.writeLine(`<span style="color: rgba(${rgba.join(',')})">${inf.name}</span> aphelion: ${(b.inf.aphelion / AU).toFixed(2)} AU; size: ${(b.inf.radius * 2).toFixed(2)} (e3 km)`)
+      this.writeLine(`<span style="color: rgba(${rgba.join(',')})">${inf.name}</span> aphelion: ${(b.inf.aphelion / AU).toFixed(2)} AU; size: ${(b.inf.radius * 2).toFixed(2)} (10^3 km); rotation period: ${b.inf.rotationPeriod} days`)
       return b
     }
 
@@ -124,7 +129,10 @@ export class Ether {
 
     const orbitalPeriod = this.computesOrbitalPeriod(inf.semiMajorAxis, b.inf.ref)
     const secBodyTakes = orbitalPeriod / this.daysPerSec
-    b.framesCountOfOrbitFin = 0 ^ secBodyTakes * 60 * 3
+
+    if (b.framesCountOfOrbitFin === 0) {
+      b.framesCountOfOrbitFin = 0 ^ secBodyTakes * 60 * 4
+    }
 
     this.writeLine(`<span style="color: rgba(${rgba.join(',')})">${inf.name}</span> ${this.duration(secBodyTakes)}, ${orbitalPeriod.toFixed(2)} days.`)
 

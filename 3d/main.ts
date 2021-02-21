@@ -40,6 +40,10 @@ import { TailProgram } from "./tail-program.class"
 import "../env.js"
 import { parseColor } from "./utils"
 
+const {
+  vec3
+} = glMatrix
+
 let W: number = 0
 let H: number = 0
 let gl: WebGLRenderingContext
@@ -277,7 +281,7 @@ const earthSys = async () => {
   setupGLContext()
 
   cam = new Camera(W / H)
-  ether = new Ether(10, 5)
+  ether = new Ether(80, 5)
 
   const earth = new Body(Earth).center()
   const luna = new Body(Luna)
@@ -316,7 +320,7 @@ const earthSys = async () => {
   )
 
   cam.put([
-    0, -38, 1
+    0, -80, 1
   ])
     .lookAt(earth)
     .adjust(
@@ -428,6 +432,100 @@ const neptuneSys = async () => {
     .adjust(
       Math.PI * (120 / 180), // human naked eyes.
       10,
+      Infinity
+    )
+
+  run()
+}
+
+const movingEarthWithSallites = () => {
+  setupGLContext()
+
+  cam = new Camera(W / H)
+  ether = new Ether(10, 5)
+
+  const earth = new Body(Earth, [0, 0, 0], [.0005, 0, .0005 * H / W])
+
+  const satellite = new Body({
+    ...Luna,
+    name: "Satellite#1",
+    mass: 1 * Math.pow(10, -21),
+    aphelion: (Earth.radius + 2),
+    semiMajorAxis: (Earth.radius + 2),
+    color: parseColor("#ff8800"),
+    inclination: 30 * RAD_PER_DEGREE
+  })
+  satellite.framesCountOfOrbitFin = Infinity
+
+  const satellite2 = new Body({
+    ...Luna,
+    name: "Satellite#3",
+    mass: 1 * Math.pow(10, -21),
+    aphelion: (Earth.radius + 36),
+    semiMajorAxis: (Earth.radius + 36),
+    color: parseColor("#ffff00"),
+    inclination: 45 * RAD_PER_DEGREE
+  })
+  satellite2.framesCountOfOrbitFin = Infinity
+
+  createBodies(
+    earth,
+    RenderBodyAs.Body,
+    satellite,
+    RenderBodyAs.Point,
+    RenderBodyAs.Orbit,
+    satellite2,
+    RenderBodyAs.Point,
+    RenderBodyAs.Orbit
+  )
+
+  cam.put([
+    0, -380, .1
+  ]).up([0, 1, 0])
+    .lookAt(earth)
+    .adjust(
+      Math.PI * (45 / 180), // human naked eyes.
+      .1,
+      Infinity
+    )
+
+  run()
+}
+
+const movingJupiterWithCallisto = () => {
+  setupGLContext()
+
+  cam = new Camera(W / H)
+  ether = new Ether(10, 400)
+
+  const sun = new Body(Sun).center()
+  const jupiter = new Body(Jupiter)
+  const callisto = new Body({
+    ...Callisto,
+    color: parseColor("#99af32")
+  })
+  callisto.framesCountOfOrbitFin = Infinity
+
+  createBodies(
+    sun,
+    RenderBodyAs.Point,
+    jupiter,
+    RenderBodyAs.Point,
+    callisto,
+    RenderBodyAs.Point
+  )
+
+  jupiter.addSatellite(callisto)
+
+  const at = [0, 0, 0] as vec3
+  const norm = vec3.normalize([0, 0, 0], jupiter.coordinates)
+  vec3.scale(at, norm, 4 * AU)
+
+  cam.put(at).up([0, 0, -1])
+    .lookAt(jupiter.coordinates)
+    .adjust(
+      Math.PI * (100 / 180), // human naked eyes.
+      .1,
       Infinity
     )
 
@@ -602,12 +700,18 @@ const planets01 = () => {
 }
 
 const main = () => {
-  const match = location.search.match(/\?sys=([a-zA-Z]+)/)
+  const match = location.search.match(/\?sys=([a-zA-Z0-9]+)/)
   if (match === null) {
     single("Earth")
   } else {
     const [, sys] = match
     switch (sys) {
+      case "moving":
+        movingEarthWithSallites()
+        break
+      case "moving2":
+        movingJupiterWithCallisto()
+        break
       case "compare":
         planets01()
         break

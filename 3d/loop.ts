@@ -11,7 +11,7 @@
   const GRAVITY_CONST = 6.67430 * 0.00001
   let UNIT_OF_TIME = 100000 // unit's second
   let LOOPS = 10
-  const BUNDLE_SIZE = 500 // mini seconds
+  const BUNDLE_SIZE = 1000 // mini seconds
 
   const {
     vec3,

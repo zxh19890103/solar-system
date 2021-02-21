@@ -78,7 +78,16 @@ export class Body {
     return this
   }
 
-  rotates(rad: number) {
+  rotates(rad: number, axis: vec3) {
+    mat4.rotate(
+      this.localMat,
+      this.localMat,
+      rad,
+      axis
+    )
+  }
+
+  selfRotates() {
     mat4.rotate(
       this.localMat,
       this.localMat,
@@ -101,6 +110,32 @@ export class Body {
       [0, 0, 0],
       v,
       [0, 1, 1]
+    )
+  }
+
+  addSatellite(satellite: Body) {
+
+    glMatrix.vec3.transformMat4(
+      satellite.coordinates,
+      satellite.coordinates,
+      this.localMat
+    )
+    glMatrix.vec3.transformMat4(
+      satellite.coordinates,
+      satellite.coordinates,
+      this.modelMat
+    )
+
+    glMatrix.vec3.transformMat4(
+      satellite.velocity,
+      satellite.velocity,
+      this.localMat
+    )
+
+    vec3.add(
+      satellite.velocity,
+      satellite.velocity,
+      this.velocity
     )
   }
 

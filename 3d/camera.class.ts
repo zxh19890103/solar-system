@@ -72,11 +72,6 @@ export class Camera {
   }
 
   private setViewMat() {
-    // glMatrix.mat4.translate(
-    //   this.viewMat,
-    //   this.viewMat,
-    //   this.coord
-    // )
     glMatrix.mat4.lookAt(
       this.viewMat,
       this.coord,

@@ -126,7 +126,7 @@ export const Earth: BodyInfo = {
   peribelion: 147095,
   semiMajorAxis: 149598.023,
   avatar: "/nineplanets-org/earth.png",
-  map: "/maps/earth-4096x2048.jpg",
+  map: "/maps/earth-1000x500.jpg",
   color: composeColors(COLORS.blue, COLORS.green),
   mass: 5.97237,
   radius: 6.371,
@@ -173,7 +173,7 @@ export const Saturn: BodyInfo = {
   mass: 568.34,
   radius: 58.232,
   inclination: 5.51 * RAD_PER_DEGREE,
-  rotationPeriod: 10.5 / 24
+  rotationPeriod: 10.5 / 24,
   /**
    * D Ring	66,900   –  74,510	7,500	
    * C Ring	74,658   –   92,000	17,500	
@@ -334,7 +334,8 @@ export const Luna: BodyInfo = {
   mass: .07342,
   radius: 1.7374,
   inclination: 0 * RAD_PER_DEGREE,
-  ref: Earth
+  ref: Earth,
+  rotationPeriod: 27.321661
 }
 
 // juptier's

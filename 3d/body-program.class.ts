@@ -68,8 +68,8 @@ export class BodyProgram extends ObjectProgram {
     const indicesCount = body.indices.length
 
     const frame01 = () => {
-      body.rotates(.01)
       gl.useProgram(this.program)
+      body.selfRotates()
       setIndices()
       setSampler()
       setVertices()

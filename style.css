@@ -41,7 +41,7 @@ canvas {
   background-color: rgba(0, 0, 0, 0.5);
   width: 100%;
   height: 100%;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
   justify-items: center;
   flex-wrap: wrap;
@@ -62,7 +62,7 @@ canvas {
 .trigger {
   display: block;
   position: fixed;
-  width: 100px;
+  width: 62px;
   height: 62px;
   top: 5px;
   right: 5px;

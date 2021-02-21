@@ -36,8 +36,8 @@ export class BallProgram extends ObjectProgram {
     const indicesCount = body.indices.length
 
     return () => {
-      body.rotates(.01)
       gl.useProgram(program)
+      body.selfRotates()
       setVertices()
       setColors()
       uniform()
