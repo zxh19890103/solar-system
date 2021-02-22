@@ -22,7 +22,7 @@ import {
   Lo, Europa, Ganymede, Callisto, Titan, Rhea,
   BodyInfo,
   Enceladus, Mimas, Tethys,
-  Dione, Iapetus, Proteus, Triton, Nereid, Bodies13
+  Dione, Iapetus, Proteus, Triton, Nereid, Bodies13, Phobos, Deimos
 } from "./body-info"
 import { BodyProgram } from "./body-program.class"
 import { Body, RenderBodyAs } from "./body.class"
@@ -224,8 +224,8 @@ const solar = async () => {
   cam.put([
     0, - Mars.aphelion, Mercury.aphelion
   ])
-    .lookAt(sun)
-    .adjust(
+    .see(sun)
+    .perspective(
       Math.PI * (120 / 180), // human naked eyes.
       100,
       Infinity
@@ -268,8 +268,8 @@ const comets = async () => {
 
   cam.put([
     .2, - 6 * AU, 3
-  ]).lookAt(sun)
-    .adjust(
+  ]).see(sun)
+    .perspective(
       Math.PI * (120 / 180), // human naked eyes.
       100,
       Infinity
@@ -281,7 +281,7 @@ const earthSys = async () => {
   setupGLContext()
 
   cam = new Camera(W / H)
-  ether = new Ether(80, 5)
+  ether = new Ether(10, 5)
 
   const earth = new Body(Earth).center()
   const luna = new Body(Luna)
@@ -320,15 +320,45 @@ const earthSys = async () => {
   )
 
   cam.put([
-    0, -80, 1
+    0, -200, 1
   ])
-    .lookAt(earth)
-    .adjust(
+    .see(earth)
+    .perspective(
       Math.PI * (45 / 180), // human naked eyes.
       .1,
       Infinity
     )
 
+  run()
+}
+
+const marsSys = async () => {
+  setupGLContext()
+
+  cam = new Camera(W / H)
+  ether = new Ether(10, 5)
+  const mars = new Body(Mars).center()
+
+  createBodies(
+    mars,
+    RenderBodyAs.Body,
+    Phobos,
+    RenderBodyAs.Point,
+    RenderBodyAs.Orbit,
+    Deimos,
+    RenderBodyAs.Point,
+    RenderBodyAs.Orbit
+  )
+
+  cam.put([
+    0, - 120, 90
+  ])
+    .see(mars)
+    .perspective(
+      Math.PI * (45 / 180), // human naked eyes.
+      .1,
+      Infinity
+    )
   run()
 }
 
@@ -351,18 +381,11 @@ const jupiterSys = async () => {
     RenderBodyAs.Orbit,
   )
 
-  const cameraCoords: vec3 = [
+  cam.put([
     0, -1297, 900
-  ]
-
-  // lo.face(cameraCoords)
-  // europa.face(cameraCoords)
-  // ganymede.face(cameraCoords)
-  // callisto.face(cameraCoords)
-
-  cam.put(cameraCoords)
-    .lookAt(jupiter)
-    .adjust(
+  ])
+    .see(jupiter)
+    .perspective(
       Math.PI * (120 / 180), // human naked eyes.
       100,
       Infinity
@@ -400,8 +423,8 @@ const saturnSys = async () => {
   )
 
   cam.put([0, -Rhea.aphelion, 300])
-    .lookAt(saturn)
-    .adjust(
+    .see(saturn)
+    .perspective(
       Math.PI * (120 / 180), // human naked eyes.
       100,
       Infinity
@@ -428,8 +451,8 @@ const neptuneSys = async () => {
   )
 
   cam.put([0, -Proteus.semiMajorAxis, 10])
-    .lookAt(neptune)
-    .adjust(
+    .see(neptune)
+    .perspective(
       Math.PI * (120 / 180), // human naked eyes.
       10,
       Infinity
@@ -482,8 +505,8 @@ const movingEarthWithSallites = () => {
   cam.put([
     0, -380, .1
   ]).up([0, 1, 0])
-    .lookAt(earth)
-    .adjust(
+    .see(earth)
+    .perspective(
       Math.PI * (45 / 180), // human naked eyes.
       .1,
       Infinity
@@ -496,7 +519,7 @@ const movingJupiterWithCallisto = () => {
   setupGLContext()
 
   cam = new Camera(W / H)
-  ether = new Ether(10, 400)
+  ether = new Ether(10, 60)
 
   const sun = new Body(Sun).center()
   const jupiter = new Body(Jupiter)
@@ -504,7 +527,12 @@ const movingJupiterWithCallisto = () => {
     ...Callisto,
     color: parseColor("#99af32")
   })
+  const ganymede = new Body({
+    ...Ganymede,
+    color: parseColor("#09fe10")
+  })
   callisto.framesCountOfOrbitFin = Infinity
+  ganymede.framesCountOfOrbitFin = Infinity
 
   createBodies(
     sun,
@@ -512,19 +540,27 @@ const movingJupiterWithCallisto = () => {
     jupiter,
     RenderBodyAs.Point,
     callisto,
-    RenderBodyAs.Point
+    RenderBodyAs.Point,
+    RenderBodyAs.Orbit,
+    ganymede,
+    RenderBodyAs.Point,
+    RenderBodyAs.Orbit,
   )
 
   jupiter.addSatellite(callisto)
+  jupiter.addSatellite(ganymede)
 
   const at = [0, 0, 0] as vec3
   const norm = vec3.normalize([0, 0, 0], jupiter.coordinates)
-  vec3.scale(at, norm, 4 * AU)
+  vec3.scale(at, norm, 5 * AU)
 
-  cam.put(at).up([0, 0, -1])
-    .lookAt(jupiter.coordinates)
-    .adjust(
-      Math.PI * (100 / 180), // human naked eyes.
+  cam.put(at)
+    .up([0, 0, 1])
+    .see(jupiter)
+    .offset([-40000, 40000 * H / W, 0])
+    .rotateAboutZ(-2 * RAD_PER_DEGREE)
+    .perspective(
+      Math.PI * (45 / 180), // human naked eyes.
       .1,
       Infinity
     )
@@ -557,8 +593,8 @@ const single = async (name: string) => {
   }
 
   cam.put([0, -inf.radius * 4, inf.radius * .68])
-    .lookAt(pluto)
-    .adjust(
+    .see(pluto)
+    .perspective(
       Math.PI * (45 / 180), // human naked eyes.
       .1,
       Infinity
@@ -603,8 +639,8 @@ const compare = (...infs: BodyInfo[]) => {
 
   cam.put([0, - FAR, .1])
     .up([0, 0, 1])
-    .lookAt([0, 0, 0])
-    .adjust(
+    .see([0, 0, 0])
+    .perspective(
       Math.PI * (45 / 180), // human naked eyes.
       .1,
       Infinity
@@ -726,6 +762,9 @@ const main = () => {
         break
       case "earth":
         earthSys()
+        break
+      case "mars":
+        marsSys()
         break
       case "neptune":
         neptuneSys()

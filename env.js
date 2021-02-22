@@ -1,4 +1,4 @@
-var WORKER_SCRIPT_URL = "/3d/loop.ts"
+var WORKER_SCRIPT_URL = "/sys/loop.ts"
 var GLMATRIX_SCRIPT_URL = "/npm/gl-matrix/gl-matrix.js"
 
 if (globalThis) {

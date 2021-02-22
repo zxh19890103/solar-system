@@ -9,9 +9,6 @@ const GRAVITY_CONST = 6.67430 * 0.00001 // x 10 ^ -5
 const { vec3 } = glMatrix
 const { cos, sin, PI, sqrt } = Math
 
-// x10 ^ 6 passed.
-// console.log(1000000 * GRAVITY_CONST * Earth.mass / (Earth.radius * Earth.radius))
-
 export class Ether {
   bodies: Body[] = []
   $textPanel: HTMLUListElement = null
@@ -51,7 +48,7 @@ export class Ether {
     buttons.className = "buttons"
     buttons.style.display = "none"
     Array(
-      "solar", "earth", "jupiter", "saturn", "neptune",
+      "solar", "earth", "mars", "jupiter", "saturn", "neptune",
       "comets",
       "compare",
       "moving",

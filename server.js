@@ -48,7 +48,7 @@ data: ${JSON.stringify(payload)}
   }
 }
 
-fs.watch("./3d", (event, name) => {
+fs.watch("./sys", (event, name) => {
   if (event !== "change") return
   if (!name.endsWith(".ts")) return
   eventSource.emit({ reload: true })
@@ -114,7 +114,7 @@ http.createServer((req, res) => {
     res.setHeader("Content-Type", getContentType(oriRresouce))
     const rs = fs.createReadStream(oriRresouce)
     rs.pipe(res)
-  } else if (/canvas-uni|3d|huanghelou|common/.test(url)) {
+  } else if (/^\/sys|huanghelou|common/.test(url)) {
     const [, name] = /^\/(.*?)(\.ts)?$/.exec(url)
     const oriRresouce = `${name}.ts`
     res.setHeader("Content-Type", "text/javascript")
