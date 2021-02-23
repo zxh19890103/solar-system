@@ -22,7 +22,7 @@ for (const [from, to] of Object.entries(map)) {
     if (!filenamepattern.test(dirent.name)) continue
     const frompath = path.join(dirname, dirent.name)
     const topath = path.join(to, dirent.name)
-    if (dirname.includes("3d")) {
+    if (dirname.includes("sys")) {
       const content = fs.readFileSync(frompath, "utf-8")
       fs.writeFileSync(topath, content.replace(
         /import\s(.+)\sfrom\s"([\w\.\-\/]+)";/g,

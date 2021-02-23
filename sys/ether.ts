@@ -53,6 +53,7 @@ export class Ether {
       "compare",
       "moving",
       "moving2",
+      "moving3",
       ...Object.keys(Bodies13)
     ).forEach((text, i) => {
       const a = document.createElement("a")

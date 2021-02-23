@@ -32,6 +32,7 @@ export class Camera {
   constructor(aspectRatio: number) {
     this.viewMat = glMatrix.mat4.create()
     this.projectionMat = glMatrix.mat4.create()
+    this.viewMat_t = glMatrix.mat4.create()
     this.aspectRatio = aspectRatio
   }
 
@@ -59,6 +60,10 @@ export class Camera {
       rad,
       this.z
     )
+    glMatrix.mat4.invert(
+      this.viewMat_t,
+      this.viewMat
+    )
     return this
   }
 
@@ -69,7 +74,6 @@ export class Camera {
       this.lookTo,
       this.upTo)
 
-    this.viewMat_t = glMatrix.mat4.create()
     glMatrix.mat4.invert(
       this.viewMat_t,
       this.viewMat

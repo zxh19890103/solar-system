@@ -519,7 +519,7 @@ const movingJupiterWithCallisto = () => {
   setupGLContext()
 
   cam = new Camera(W / H)
-  ether = new Ether(10, 60)
+  ether = new Ether(10, 100)
 
   const sun = new Body(Sun).center()
   const jupiter = new Body(Jupiter)
@@ -554,11 +554,52 @@ const movingJupiterWithCallisto = () => {
   const norm = vec3.normalize([0, 0, 0], jupiter.coordinates)
   vec3.scale(at, norm, 5 * AU)
 
+  const h = vec3.dist(at, jupiter.coordinates) * Math.tan((45 / 2) * RAD_PER_DEGREE)
+  const w = cam.aspectRatio * h
+
   cam.put(at)
     .up([0, 0, 1])
     .see(jupiter)
-    .offset([-40000, 40000 * H / W, 0])
-    .rotateAboutZ(-2 * RAD_PER_DEGREE)
+    .offset([-w, 0, 0])
+    .perspective(
+      Math.PI * (45 / 180), // human naked eyes.
+      .1,
+      Infinity
+    )
+
+  run()
+}
+
+const neptuneInSolar = () => {
+  setupGLContext()
+
+  cam = new Camera(W / H)
+  ether = new Ether(10, 100)
+
+  const sun = new Body(Sun).center()
+  const neptune = new Body(Neptune)
+  const moon = new Body(Nereid)
+  moon.framesCountOfOrbitFin = Infinity
+
+  createBodies(
+    sun,
+    RenderBodyAs.Point,
+    neptune,
+    RenderBodyAs.Point,
+    moon,
+    RenderBodyAs.Point,
+    RenderBodyAs.Orbit
+  )
+
+  neptune.addSatellite(moon)
+
+  cam.put(vec3.scale(
+    [0, 0, 0],
+    neptune.coordinates,
+    .98
+  ))
+    .up([0, 0, 1])
+    .see(neptune)
     .perspective(
       Math.PI * (45 / 180), // human naked eyes.
       .1,
@@ -747,6 +788,9 @@ const main = () => {
         break
       case "moving2":
         movingJupiterWithCallisto()
+        break
+      case "moving3":
+        neptuneInSolar()
         break
       case "compare":
         planets01()
