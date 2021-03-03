@@ -1,4 +1,6 @@
+import { Bodies13 } from "./body-info"
 import { Body } from "./body.class"
+import { RAD_PER_DEGREE } from "./constants"
 
 const { vec3 } = glMatrix
 
@@ -12,7 +14,7 @@ export class Camera {
   private lookTo: vec3 = [0, 0, 0]
   private upTo: vec3 = [0, 1, 0]
 
-  get far() {
+  get farFromTarget() {
     return vec3.distance(
       this.lookTo,
       this.coord
@@ -80,15 +82,25 @@ export class Camera {
     )
   }
 
+  private fovy: number = 45 * RAD_PER_DEGREE
+  private near: number = .1
+  private far: number = 1000
   perspective(fovy: number, near: number, far: number) {
+    this.fovy = fovy
+    this.near = near
+    this.far = far
+    this.setPerspectiveMat()
+    return this
+  }
+
+  private setPerspectiveMat() {
     glMatrix.mat4.perspective(
       this.projectionMat,
-      fovy,
+      this.fovy,
       this.aspectRatio,
-      near,
-      far
+      this.near,
+      this.far
     )
-    return this
   }
 
   /**
@@ -126,5 +138,63 @@ export class Camera {
       )
     }
     return v
+  }
+
+  render(bodies: Body[]) {
+    const body = document.body
+    const h = document.createElement.bind(document)
+    const camDiv = h("div")
+    camDiv.className = "camera"
+
+    const form = h("form")
+    form.className = "form"
+
+    const looktoInput: HTMLInputElement = h("input")
+    looktoInput.className = "form-control"
+    looktoInput.type = "text"
+    looktoInput.placeholder = "Look At"
+    looktoInput.value = this.lookTo.map(x => 0 ^ x).join(",")
+    looktoInput.addEventListener("change", (ev) => {
+      const target = ev.target as HTMLInputElement
+      if (!/^\\d+,\d+,\d+\$/.test(target.value)) return
+      const lookat = JSON.parse(target.value)
+      this.see(lookat)
+    })
+    form.appendChild(looktoInput)
+
+    const lookatOptions: HTMLDivElement = h("div")
+    lookatOptions.className = "lookat-options"
+    lookatOptions.innerHTML = Object.entries(Bodies13).filter(([k, x]) => x.name !== "Earth" && x.name !== "Sun").map(([k, b]) => `
+      <a href="?sys=observe&body=${b.name}" data-name="${b.name}">${b.name}</a>
+    `).join("")
+    // lookatOptions.addEventListener("click", (ev) => {
+    //   const target = ev.target as HTMLAnchorElement
+    //   if (target.tagName !== "A") return
+    //   const name = target.dataset.name
+    //   const body = bodies.find(x => x.inf.name === name)
+    //   if (!body) return
+    //   this.see(body)
+    // })
+
+    const perspectiveInput: HTMLInputElement = h("input")
+    perspectiveInput.className = "form-control"
+    perspectiveInput.type = "text"
+    perspectiveInput.placeholder = "FOV-Y"
+    perspectiveInput.value = (0 ^ (this.fovy / RAD_PER_DEGREE)).toString()
+    perspectiveInput.addEventListener("change", (ev) => {
+      const target = ev.target as HTMLInputElement
+      if (!/^[\.\d]+$/.test(target.value)) return
+      const fovy = Number(target.value)
+      this.fovy = fovy * RAD_PER_DEGREE
+      this.setPerspectiveMat()
+    })
+
+    form.appendChild(looktoInput)
+    form.appendChild(lookatOptions)
+    form.appendChild(perspectiveInput)
+
+    camDiv.appendChild(form)
+
+    body.appendChild(camDiv)
   }
 }

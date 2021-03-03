@@ -13,6 +13,8 @@ export abstract class Thing {
 
   protected offset: number = 0
   protected indexOffset: number = 0
+  protected selfVerticesCount = 0
+  protected selfIndicesCount = 0
   protected readonly things: Thing[]
 
   protected color: vec4 = [1, 1, 1, 1]
@@ -158,10 +160,8 @@ export abstract class Thing {
       offset += vertexCount
       indexOffset += indexCount
     }
-    return [
-      selfVertexCount,
-      selfIndexCount
-    ]
+    this.selfVerticesCount = selfVertexCount
+    this.selfIndicesCount = selfIndexCount
   }
 
   protected mesh(o: vec3, v1: vec3, v2: vec3, n1: number, n2: number) {

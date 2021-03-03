@@ -5,6 +5,7 @@ import { randColor, parseColor } from "../common/utils"
 import { FloorThing } from "./floor.class"
 import { HornThing } from "./horn.class"
 import { PillarThing } from "./pillar.class"
+import { Tower } from "./tower.class"
 
 export class HuanghelouProgram extends ObjectProgram {
   constructor(
@@ -24,12 +25,12 @@ export class HuanghelouProgram extends ObjectProgram {
 
     const { gl, program } = this
 
-    const ceil0 = new FloorThing(5, Math.PI * .32)
-    ceil0.make()
-    const { vertices, colors, indices } = ceil0
-    const renderer = ceil0.render(gl)
+    const tower = new Tower()
+    tower.make()
+    const { vertices, colors, indices } = tower
+    const renderer = tower.render(gl)
 
-    console.log("Total Vertex:", ceil0.VertexCount)
+    console.log("Total Vertex:", tower.VertexCount)
 
     const setVertices = this.setFloat32Attrib("aVertex", vertices, 3)
     const setVertexCorlours = this.setFloat32Attrib("aVertexColor", colors, 4)
@@ -49,7 +50,7 @@ export class HuanghelouProgram extends ObjectProgram {
       glMatrix.mat4.rotate(
         rotationMat,
         rotationMat,
-        .01,
+        .001,
         [0, 0, 1]
       )
       setRotationUniform()

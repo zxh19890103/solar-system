@@ -338,6 +338,20 @@ export const Luna: BodyInfo = {
   rotationPeriod: 27.321661
 }
 
+export const KamoOalewa: BodyInfo = {
+  name: "469219 Kamoʻoalewa",
+  aphelion: 1.1048 * AU,
+  peribelion: 0.8974 * AU,
+  semiMajorAxis: 1.0011 * AU,
+  avatar: "/nineplanets-org/2016_HO3_orbit_Jan2018.png",
+  map: "",
+  color: randColor(),
+  mass: .07342,
+  radius: 0.041 * .001,
+  inclination: 7.7816 * RAD_PER_DEGREE,
+  rotationPeriod: 0.467 / 24
+}
+
 // juptier's
 export const Lo: BodyInfo = {
   name: "Lo",

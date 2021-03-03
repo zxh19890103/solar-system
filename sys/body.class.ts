@@ -24,6 +24,7 @@ export enum RenderBodyAs {
 
 export class Body {
   coordinates: vec3 = [0, 0, 0]
+  angleOnXY: number = range(0, PI * 2)
   velocity: vec3 = [0, 0, 0]
   vertices: number[]
   normals: number[]
@@ -65,6 +66,10 @@ export class Body {
 
     this.localMat = mat4.create()
     this.modelMat = mat4.create()
+  }
+
+  setAngleOnXY(value: number) {
+    this.angleOnXY = value
   }
 
   useProgram(prog: ObjectProgram) {
@@ -348,7 +353,7 @@ export class Body {
     for (; r < r1; r += .1) {
       const color = getColor()
       for (let a = 0; a < CIRCLE_RAD; a += .17) {
-        let n = 0 ^ Math.random() * 5
+        let n = 0 ^ Math.random() * 3
         while (n--) {
           const rr = r + Math.random() * 1.2
           const ra = a + Math.random() * .3

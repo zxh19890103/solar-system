@@ -56,13 +56,6 @@ export class FloorThing extends Thing {
     this.things.push(bar)
   }
 
-  private addWindow() {
-    const horns = this.things.filter(thing => thing instanceof HornThing) as HornThing[]
-    const win = new WindowThing(.3, ...horns)
-    win.make()
-    this.things.push(win)
-  }
-
   private addGuardrail(...fourVetices: vec3[]) {
     const rail = new GuardtailThing(...fourVetices)
     rail.make()
@@ -108,7 +101,6 @@ export class FloorThing extends Thing {
       angles.push(angle)
     }
 
-    console.log(this.VertexCount)
     // offset = 24
     for (i = 0; i < 4; i += 1) {
       this.pushPolarVertex(r3, i * PI / 2 - this.angl0 / 2, - this.height + .4)
@@ -116,7 +108,6 @@ export class FloorThing extends Thing {
       this.pushPolarVertex(r3, i * PI / 2 + this.angl0 / 2, - this.height)
       this.pushPolarVertex(r3, i * PI / 2 - this.angl0 / 2, - this.height)
     }
-    console.log(this.VertexCount)
 
     for (i = 0; i < 4; i++) {
       const [v0, v1, v2] = this.getVertices(i * 6, i * 6 + 4, i * 6 + 5)
@@ -157,11 +148,12 @@ export class FloorThing extends Thing {
       this.addGuardrail(...vertices.slice(0, 4))
       this.addGuardrail(...vertices.slice(4, 8))
     }
+
+    this.pipeAllThings()
   }
 
   render(gl: WebGLRenderingContext) {
-    const [vertexCount] = this.pipeAllThings()
-
+    const vertexCount = this.selfVerticesCount
     const renderers = this.things.map(h => h.render(gl))
 
     return () => {

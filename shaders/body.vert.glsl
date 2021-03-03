@@ -20,7 +20,7 @@ void main() {
 
   vLighting = uAmbientLight + max(
     dot(
-      vec3(local * vec4(aVertexNormal, 1.0)),
+      -1.0 * vec3(local * vec4(aVertexNormal, 1.0)),
       uLightDirection
     ),
     0.0

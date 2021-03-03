@@ -75,3 +75,51 @@ canvas {
   text-decoration: none;
   background-color: rgba(12, 49, 26, 0.274);
 }
+
+.camera {
+  position: fixed;
+  top: 100px;
+  right: 0;
+  background: rgba(35, 12, 21, 0.9);
+  width: 200px;
+  min-height: 100px;
+  padding: 3px 4px;
+  z-index: 3;
+}
+
+.camera .form {
+  display: block;
+}
+
+.form-control {
+  display: block;
+  width: 100%;
+  outline: none;
+  line-height: 1.4rem;
+  background: rgba(255, 255, 255, 0.4);
+  border: 1px solid white;
+  box-sizing: border-box;
+  color: white;
+}
+
+.lookat-options a {
+  color: whitesmoke;
+}
+
+.form-control::placeholder {
+  /* Chrome, Firefox, Opera, Safari 10.1+ */
+  color: whitesmoke;
+  opacity: 0.6; /* Firefox */
+}
+
+.form-control:-ms-input-placeholder {
+  /* Internet Explorer 10-11 */
+  color: whitesmoke;
+  opacity: 0.6;
+}
+
+.form-control::-ms-input-placeholder {
+  /* Microsoft Edge */
+  color: whitesmoke;
+  opacity: 0.6;
+}

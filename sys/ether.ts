@@ -51,6 +51,7 @@ export class Ether {
       "solar", "earth", "mars", "jupiter", "saturn", "neptune",
       "comets",
       "compare",
+      "observe",
       "moving",
       "moving2",
       "moving3",
@@ -79,7 +80,7 @@ export class Ether {
   put(b: Body) {
     if (this.bodies.includes(b)) return
     const inf = b.inf
-    const angleOnXY = range(0, PI * 2)
+    const angleOnXY = b.angleOnXY
 
     if (b.coordinates === undefined) {
       const xy = inf.aphelion * cos(inf.inclination)
@@ -116,7 +117,7 @@ export class Ether {
     const rgba = [].map.call(b.inf.color, c => 0 ^ c * 255)
 
     if (this.moveOff) {
-      this.writeLine(`<span style="color: rgba(${rgba.join(',')})">${inf.name}</span> aphelion: ${(b.inf.aphelion / AU).toFixed(2)} AU; size: ${(b.inf.radius * 2).toFixed(2)} (10^3 km); rotation period: ${b.inf.rotationPeriod} days`)
+      this.writeLine(`<span style="color: rgba(${rgba.join(',')})">${inf.name}</span> aphelion: ${(b.inf.aphelion / AU).toFixed(2)} AU; size: ${(b.inf.radius * 2).toFixed(2)} (10^3 km); rotation period: ${b.inf.rotationPeriod.toFixed(3)} days`)
       return b
     }
 
@@ -279,7 +280,11 @@ export class Ether {
     let m = 0
     let exp = ""
     while (m = overs.shift()) {
-      exp = `${rem % m}${units.shift()}${exp}`
+      if (rem % m === 0) {
+        units.shift()
+      } else {
+        exp = `${rem % m}${units.shift()}${exp}`
+      }
       rem = 0 ^ (rem / m)
       if (rem === 0) break
     }

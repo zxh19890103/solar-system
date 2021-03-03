@@ -182,8 +182,8 @@ export abstract class ObjectProgram {
   protected setUniform3fv(name: string, value: Iterable<number>) {
     const { gl, program } = this
     const loc = gl.getUniformLocation(program, name)
-    return () => {
-      gl.uniform3fv(loc, value)
+    return (nextValue?: Iterable<number>) => {
+      gl.uniform3fv(loc, nextValue ?? value)
     }
   }
 
@@ -229,7 +229,6 @@ export abstract class ObjectProgram {
 
     this.setUniformMatrix4fv("view", cam.viewMat)()
     this.setUniformMatrix4fv("projection", cam.projectionMat)()
-
     return () => {
       l && l()
       m && m()

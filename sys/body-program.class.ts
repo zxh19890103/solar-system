@@ -1,5 +1,9 @@
-import { RenderBodyAs } from "./body.class"
+import { Body, RenderBodyAs } from "./body.class"
 import { ObjectProgram } from "./program.class"
+
+const {
+  vec3
+} = glMatrix
 
 export class BodyProgram extends ObjectProgram {
 
@@ -17,6 +21,28 @@ export class BodyProgram extends ObjectProgram {
     this.tex = await this.loadTexture(gl, this.body.inf.map)
     await super.setup()
     this.log("initialized")
+  }
+
+  private lightSource: Body = null
+  setLightingSource(body: Body) {
+    this.lightSource = body
+  }
+
+  setUniformLMVP() {
+    const { cam, body } = this
+
+    const l = this.setUniformMatrix4fv("local", body.localMat)
+    const m = this.setUniformMatrix4fv("model", body.modelMat)
+
+    const v = this.setUniformMatrix4fv("view", cam.viewMat)
+    const p = this.setUniformMatrix4fv("projection", cam.projectionMat)
+    p()
+    return () => {
+      l()
+      m()
+      v()
+      // p()
+    }
   }
 
   boot() {
@@ -46,7 +72,7 @@ export class BodyProgram extends ObjectProgram {
 
     this.setUniform3fv(
       "uAmbientLight",
-      [.4, .4, .5]
+      [.02, .02, .02]
     )()
 
     this.setUniform3fv(
@@ -54,10 +80,26 @@ export class BodyProgram extends ObjectProgram {
       [1, 1, 1]
     )()
 
-    this.setUniform3fv(
+    const lightDir: vec3 = [0, 0, 0]
+
+    const calculatesLightDir = () => {
+      vec3.normalize(
+        lightDir,
+        vec3.sub(
+          lightDir,
+          body.coordinates,
+          this.lightSource ? this.lightSource.coordinates : this.cam.coord
+        )
+      )
+    }
+
+    calculatesLightDir()
+    const setLightSource = this.setUniform3fv(
       "uLightDirection",
-      [0, 0, 1]
-    )()
+      lightDir
+    )
+
+    setLightSource()
 
     // just once.
     const uniform = this.setUniformLMVP()
@@ -75,6 +117,8 @@ export class BodyProgram extends ObjectProgram {
       setVertices()
       setNormals()
       setTexCoords()
+      calculatesLightDir()
+      // setLightSource()
       uniform()
       gl.drawElements(TRIANGLES, indicesCount, UNSIGNED_SHORT, 0)
     }
