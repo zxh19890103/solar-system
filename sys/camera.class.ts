@@ -29,6 +29,9 @@ export class Camera {
     )
   }
 
+  private vmChangeEventSubs: VoidFunction[] = []
+  private pmChangeEventSubs: VoidFunction[] = []
+
   readonly aspectRatio: number
 
   constructor(aspectRatio: number) {
@@ -80,6 +83,8 @@ export class Camera {
       this.viewMat_t,
       this.viewMat
     )
+
+    this.publish("v")
   }
 
   private fovy: number = 45 * RAD_PER_DEGREE
@@ -101,6 +106,29 @@ export class Camera {
       this.near,
       this.far
     )
+    this.publish("p")
+  }
+
+  subscribe(type: "v" | "p", handler: VoidFunction) {
+    if (type === "p") {
+      this.pmChangeEventSubs.push(handler)
+    } else if (type === "v") {
+      this.vmChangeEventSubs.push(handler)
+    }
+  }
+
+  publish(type: "v" | "p") {
+    let handlers: VoidFunction[] = null
+    if (type === "v") {
+      handlers = this.vmChangeEventSubs
+    } else if (type === "p") {
+      handlers = this.pmChangeEventSubs
+    }
+
+    if (handlers) {
+      console.log(handlers.length)
+      handlers.forEach(h => h())
+    }
   }
 
   /**
@@ -140,7 +168,7 @@ export class Camera {
     return v
   }
 
-  render(bodies: Body[]) {
+  render(...bodies: Body[]) {
     const body = document.body
     const h = document.createElement.bind(document)
     const camDiv = h("div")
@@ -149,32 +177,34 @@ export class Camera {
     const form = h("form")
     form.className = "form"
 
-    const looktoInput: HTMLInputElement = h("input")
-    looktoInput.className = "form-control"
-    looktoInput.type = "text"
-    looktoInput.placeholder = "Look At"
-    looktoInput.value = this.lookTo.map(x => 0 ^ x).join(",")
-    looktoInput.addEventListener("change", (ev) => {
-      const target = ev.target as HTMLInputElement
-      if (!/^\\d+,\d+,\d+\$/.test(target.value)) return
-      const lookat = JSON.parse(target.value)
-      this.see(lookat)
+    const atOptions: HTMLDivElement = h("div")
+    atOptions.className = "lookat-options"
+    atOptions.innerHTML = Object.entries(Bodies13).map(([k, b]) => `
+      <a href="javascript:void(0);" data-name="${b.name}">${b.name}</a>
+    `).join("")
+    atOptions.addEventListener("click", (ev) => {
+      const target = ev.target as HTMLAnchorElement
+      if (target.tagName !== "A") return
+      const name = target.dataset.name
+      const body = bodies.find(x => x.inf.name === name)
+      if (!body) return
+      this.put(body.coordinates)
+      this.setViewMat()
     })
-    form.appendChild(looktoInput)
 
     const lookatOptions: HTMLDivElement = h("div")
     lookatOptions.className = "lookat-options"
-    lookatOptions.innerHTML = Object.entries(Bodies13).filter(([k, x]) => x.name !== "Earth" && x.name !== "Sun").map(([k, b]) => `
-      <a href="?sys=observe&body=${b.name}" data-name="${b.name}">${b.name}</a>
+    lookatOptions.innerHTML = Object.entries(Bodies13).map(([k, b]) => `
+      <a href="javascript:void(0);" data-name="${b.name}">${b.name}</a>
     `).join("")
-    // lookatOptions.addEventListener("click", (ev) => {
-    //   const target = ev.target as HTMLAnchorElement
-    //   if (target.tagName !== "A") return
-    //   const name = target.dataset.name
-    //   const body = bodies.find(x => x.inf.name === name)
-    //   if (!body) return
-    //   this.see(body)
-    // })
+    lookatOptions.addEventListener("click", (ev) => {
+      const target = ev.target as HTMLAnchorElement
+      if (target.tagName !== "A") return
+      const name = target.dataset.name
+      const body = bodies.find(x => x.inf.name === name)
+      if (!body) return
+      this.see(body)
+    })
 
     const perspectiveInput: HTMLInputElement = h("input")
     perspectiveInput.className = "form-control"
@@ -189,7 +219,7 @@ export class Camera {
       this.setPerspectiveMat()
     })
 
-    form.appendChild(looktoInput)
+    form.appendChild(atOptions)
     form.appendChild(lookatOptions)
     form.appendChild(perspectiveInput)
 

@@ -131,6 +131,8 @@ export class Body {
       this.modelMat
     )
 
+    satellite.translates()
+
     glMatrix.vec3.transformMat4(
       satellite.velocity,
       satellite.velocity,
@@ -326,8 +328,8 @@ export class Body {
     const vertices: number[] = []
     const colors: number[] = []
     const { radius: R, rings } = this.inf
-    const r0 = R + 10
-    const r1 = R + 80
+    const r0 = R + rings[0][1] / 1000
+    const r1 = R + rings[rings.length - 1][1] / 1000
     const min = rings[0][1]
     const span = rings[rings.length - 1][1] - min
     const colorbands = rings.map(([color, r]) => {
@@ -353,7 +355,7 @@ export class Body {
     for (; r < r1; r += .1) {
       const color = getColor()
       for (let a = 0; a < CIRCLE_RAD; a += .17) {
-        let n = 0 ^ Math.random() * 3
+        let n = 0 ^ Math.random() * 2
         while (n--) {
           const rr = r + Math.random() * 1.2
           const ra = a + Math.random() * .3

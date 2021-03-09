@@ -123,33 +123,13 @@ const createBodies = (...items: (BodyInfo | Body | RenderBodyAs)[]) => {
     createBody(body)
 }
 
-const resizeCanvasToDisplaySize = () => {
-  // Lookup the size the browser is displaying the canvas in CSS pixels.
-  const displayWidth = canvas.clientWidth
-  const displayHeight = canvas.clientHeight
-
-  // Check if the canvas is not the same size.
-  const needResize = canvas.width !== displayWidth ||
-    canvas.height !== displayHeight
-
-  if (needResize) {
-    // Make the canvas the same size
-    canvas.width = displayWidth
-    canvas.height = displayHeight
-
-    gl.viewport(0, 0, displayWidth, displayHeight)
-  }
-
-  return needResize
-}
-
 const run = async () => {
 
   const distance = cam.farFromTarget
   if (distance / AU > .099) {
-    ether.writeLine(`You're ${(distance / AU).toFixed(6)} AU far from the target body.`)
+    ether.writeLine(`You're ${(distance / AU).toFixed(6)} au far.`)
   } else {
-    ether.writeLine(`You're ${(distance * 1000).toFixed(2)} km far from the target body.`)
+    ether.writeLine(`You're ${(distance * 1000).toFixed(2)} km far.`)
   }
 
   gl.enable(gl.BLEND)
@@ -174,8 +154,6 @@ const run = async () => {
 
     requestAnimationFrame(loop)
   }
-
-  // window.addEventListener("resize", resizeCanvasToDisplaySize)
 
   ether.connectsWithWorker(worker)
 
@@ -577,7 +555,7 @@ const movingJupiterWithCallisto = () => {
   run()
 }
 
-const neptuneInSolar = () => {
+const movingNeptuneWithMoon = () => {
   setupGLContext()
 
   cam = new Camera(W / H)
@@ -640,7 +618,7 @@ const single = async (name: string) => {
     )
   }
 
-  cam.put([0, -inf.radius * 5, inf.radius * .68])
+  cam.put([0, -inf.radius * 16, inf.radius * .68])
     .see(body)
     .perspective(
       Math.PI * (45 / 180), // human naked eyes.
@@ -651,7 +629,7 @@ const single = async (name: string) => {
   run()
 }
 
-const compare = (...infs: BodyInfo[]) => {
+const doCompare = (...infs: BodyInfo[]) => {
   setupGLContext()
   cam = new Camera(W / H)
   ether = new Ether(10, 10, true)
@@ -696,7 +674,7 @@ const compare = (...infs: BodyInfo[]) => {
   run()
 }
 
-const planets01 = () => {
+const compare = () => {
   const SELECTED_BODIES_KEY = "SELECTED_BODIES"
   const selectedBodies: Set<string> = new Set()
   const SELECTED_BODIES = localStorage.getItem(SELECTED_BODIES_KEY)
@@ -780,13 +758,13 @@ const planets01 = () => {
   for (const [name, value] of selectedBodies.entries()) {
     bodies.push(Bodies13[name])
   }
-  compare(...bodies)
+  doCompare(...bodies)
 }
 
 const seeBodyFromEarth = (lookatBody: string) => {
   setupGLContext()
   cam = new Camera(W / H)
-  ether = new Ether(1, 1)
+  ether = new Ether(1 / 20, 1)
 
   const sun = new Body(Sun)
   const earth = new Body(Earth)
@@ -814,11 +792,47 @@ const seeBodyFromEarth = (lookatBody: string) => {
     .up([0, 0, 1])
     .see(target)
     .perspective(
-      Math.PI * (.06 / 180), // human naked eyes.
+      Math.PI * (8 / 180), // human naked eyes.
       2 * Earth.radius,
       Infinity
     )
-    .render(ether.bodies)
+    .render()
+  run()
+}
+
+const LunarEclipse = () => {
+  setupGLContext()
+  cam = new Camera(W / H)
+  ether = new Ether(1 / 30, 1, false)
+  const sun = new Body(Sun).center()
+  const earth = new Body(Earth)
+  const moon = new Body(Luna)
+  moon.setAngleOnXY(0)
+
+  createBodies(
+    sun,
+    RenderBodyAs.Point,
+    earth,
+    RenderBodyAs.Body,
+    moon,
+    RenderBodyAs.Body
+  )
+
+  earth.addSatellite(moon)
+
+  const progs = ether.bodies.map(b => b.programs).flat().filter(f => f instanceof BodyProgram) as BodyProgram[]
+  progs.forEach(prog => {
+    prog.setLightingSource(sun)
+  })
+
+  cam.put(earth.coordinates)
+    .up([0, 0, 1])
+    .see(moon)
+    .perspective(
+      Math.PI * (45 / 180), // human naked eyes.
+      2 * Earth.radius,
+      Infinity
+    ).render(...ether.bodies)
   run()
 }
 
@@ -829,6 +843,9 @@ const main = () => {
   } else {
     const sys = match.get("sys")
     switch (sys) {
+      case "eclipse":
+        LunarEclipse()
+        break
       case "observe":
         const targetBody = match.get("body")
         seeBodyFromEarth(targetBody || "Luna")
@@ -840,10 +857,10 @@ const main = () => {
         movingJupiterWithCallisto()
         break
       case "moving3":
-        neptuneInSolar()
+        movingNeptuneWithMoon()
         break
       case "compare":
-        planets01()
+        compare()
         break
       case "solar":
         solar()

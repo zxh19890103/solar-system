@@ -47,7 +47,7 @@
 
     LOOPS = 0 ^ dataView.getFloat32(offset)
     offset += 4
-    UNIT_OF_TIME = 0 ^ dataView.getFloat32(offset)
+    UNIT_OF_TIME = dataView.getFloat32(offset)
     offset += 4
 
     for (let c = 0; c < N; c += 1) {

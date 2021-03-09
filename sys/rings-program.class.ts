@@ -12,7 +12,7 @@ export class RingsProgram extends ObjectProgram {
   }
 
   boot() {
-    const { gl, body, ether } = this
+    const { gl, body } = this
 
     gl.useProgram(this.program)
 

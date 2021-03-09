@@ -1,8 +1,11 @@
+import { Earth } from "./body-info"
 import { Body, RenderBodyAs } from "./body.class"
+import { RAD_PER_DEGREE } from "./constants"
 import { ObjectProgram } from "./program.class"
 
 const {
-  vec3
+  vec3,
+  mat4
 } = glMatrix
 
 export class BodyProgram extends ObjectProgram {
@@ -16,11 +19,9 @@ export class BodyProgram extends ObjectProgram {
   }
 
   async setup() {
-    this.log("initializing...")
     const gl = this.gl
     this.tex = await this.loadTexture(gl, this.body.inf.map)
     await super.setup()
-    this.log("initialized")
   }
 
   private lightSource: Body = null
@@ -36,21 +37,47 @@ export class BodyProgram extends ObjectProgram {
 
     const v = this.setUniformMatrix4fv("view", cam.viewMat)
     const p = this.setUniformMatrix4fv("projection", cam.projectionMat)
+
+    cam.subscribe("v", () => {
+      this.gl.useProgram(this.program)
+      v()
+    })
+
+    cam.subscribe("p", () => {
+      this.gl.useProgram(this.program)
+      p()
+    })
+
+    v()
     p()
+
     return () => {
       l()
       m()
-      v()
-      // p()
     }
   }
 
   boot() {
-    const { gl, body, ether } = this
+    const { gl, body } = this
 
     gl.useProgram(this.program)
 
     body.make(RenderBodyAs.Body)
+
+    const { axialTilt, inclination } = body.inf
+    glMatrix.mat4.rotate(
+      body.localMat,
+      body.localMat,
+      inclination,
+      [Math.cos(body.angleOnXY), Math.sin(body.angleOnXY), 0]
+    )
+
+    glMatrix.mat4.rotate(
+      body.localMat,
+      body.localMat,
+      axialTilt,
+      [1, 0, 0]
+    )
 
     const setVertices = this.setFloat32Attrib(
       "aVertex",
@@ -72,7 +99,7 @@ export class BodyProgram extends ObjectProgram {
 
     this.setUniform3fv(
       "uAmbientLight",
-      [.02, .02, .02]
+      [.04, .04, .04]
     )()
 
     this.setUniform3fv(
@@ -99,8 +126,6 @@ export class BodyProgram extends ObjectProgram {
       lightDir
     )
 
-    setLightSource()
-
     // just once.
     const uniform = this.setUniformLMVP()
     const setSampler = this.setUniformTexSampler()
@@ -118,7 +143,7 @@ export class BodyProgram extends ObjectProgram {
       setNormals()
       setTexCoords()
       calculatesLightDir()
-      // setLightSource()
+      setLightSource()
       uniform()
       gl.drawElements(TRIANGLES, indicesCount, UNSIGNED_SHORT, 0)
     }
