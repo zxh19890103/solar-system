@@ -5,6 +5,9 @@ declare global {
     type Point = [number, number, number]
   }
   var glMatrix: typeof GLMatrix
+  var m4: typeof GLMatrix.mat4
+  var v3: typeof GLMatrix.vec3
+
   type mat4 = GLMatrix.mat4
   type vec3 = GLMatrix.vec3
   type vec4 = GLMatrix.vec4

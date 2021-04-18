@@ -17,6 +17,8 @@ export enum RenderBodyAs {
   Circle = 20,
   Ball = 30,
   Body = 40,
+  BodyColor = 41,
+  BodyShadow = 42,
   Orbit = 50,
   Rings = 60,
   Tails = 70
@@ -286,7 +288,7 @@ export class Body {
         vertices.push(...makeVertex(lat + 1, lon + 1))
 
         const normal = vec3.create()
-        vec3.normalize(normal, makeVertex(lat + .5, lon + .5))
+        vec3.normalize(normal, makeVertex(lat, lon))
         normals.push(
           ...normal,
           ...normal,

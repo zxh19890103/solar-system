@@ -39,6 +39,8 @@ import { TailProgram } from "./tail-program.class"
 
 import "../env.js"
 import { parseColor } from "./utils"
+import { BodyColorProgram } from "./body-color-program.class"
+import { BodyShadowProgram } from "./body-shadow-program.class"
 
 const {
   vec3
@@ -80,6 +82,12 @@ const createProgram = (rba) => {
         break
       case RenderBodyAs.Body:
         program = new BodyProgram(gl, cam, ether)
+        break
+      case RenderBodyAs.BodyColor:
+        program = new BodyColorProgram(gl, cam, ether)
+        break
+      case RenderBodyAs.BodyShadow:
+        program = new BodyShadowProgram(gl, cam, ether)
         break
       case RenderBodyAs.Orbit:
         program = new OrbitProgram(gl, cam, ether)
@@ -236,19 +244,19 @@ const comets = async () => {
     RenderBodyAs.Point,
 
     tempel1,
-    RenderBodyAs.Orbit,
+    RenderBodyAs.Point,
     RenderBodyAs.Tails,
 
     homes,
-    RenderBodyAs.Orbit,
+    RenderBodyAs.Point,
     RenderBodyAs.Tails,
 
     halley,
-    RenderBodyAs.Orbit,
+    RenderBodyAs.Point,
     RenderBodyAs.Tails,
 
     haleBopp,
-    RenderBodyAs.Orbit,
+    RenderBodyAs.Point,
     RenderBodyAs.Tails
   )
 
@@ -800,42 +808,6 @@ const seeBodyFromEarth = (lookatBody: string) => {
   run()
 }
 
-const LunarEclipse = () => {
-  setupGLContext()
-  cam = new Camera(W / H)
-  ether = new Ether(1 / 30, 1, false)
-  const sun = new Body(Sun).center()
-  const earth = new Body(Earth)
-  const moon = new Body(Luna)
-  moon.setAngleOnXY(0)
-
-  createBodies(
-    sun,
-    RenderBodyAs.Point,
-    earth,
-    RenderBodyAs.Body,
-    moon,
-    RenderBodyAs.Body
-  )
-
-  earth.addSatellite(moon)
-
-  const progs = ether.bodies.map(b => b.programs).flat().filter(f => f instanceof BodyProgram) as BodyProgram[]
-  progs.forEach(prog => {
-    prog.setLightingSource(sun)
-  })
-
-  cam.put(earth.coordinates)
-    .up([0, 0, 1])
-    .see(moon)
-    .perspective(
-      Math.PI * (45 / 180), // human naked eyes.
-      2 * Earth.radius,
-      Infinity
-    ).render(...ether.bodies)
-  run()
-}
-
 const main = () => {
   const match = new URLSearchParams(location.search)
   if (!match.get("sys")) {
@@ -843,9 +815,6 @@ const main = () => {
   } else {
     const sys = match.get("sys")
     switch (sys) {
-      case "eclipse":
-        LunarEclipse()
-        break
       case "observe":
         const targetBody = match.get("body")
         seeBodyFromEarth(targetBody || "Luna")

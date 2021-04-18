@@ -12,6 +12,10 @@
   <!-- <script type="module" referrerpolicy="unsafe-url" src="/huanghelou/main.ts"></script> -->
   <script type="module" referrerpolicy="unsafe-url" src="/sys/main.ts"></script>
   <script>
+    window.m4 = glMatrix.mat4
+    window.mat4 = glMatrix.mat4
+    window.v3 = glMatrix.vec3
+    window.vec3 = glMatrix.vec3
     const es = new EventSource("/sse-open")
     es.onmessage = (evt) => {
       location.reload()

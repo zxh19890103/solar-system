@@ -75,7 +75,7 @@ const compileTs = (tsFile, saveAs) => {
   const source = fs.readFileSync(tsFile, "utf-8")
   const output = require("typescript").transpileModule(source, require("./tsconfig.json"))
   fs.writeFileSync(saveAs, output.outputText)
-  console.log("gen", saveAs)
+  console.log("->", saveAs)
 }
 
 http.createServer((req, res) => {

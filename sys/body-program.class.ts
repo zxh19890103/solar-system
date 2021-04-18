@@ -29,34 +29,6 @@ export class BodyProgram extends ObjectProgram {
     this.lightSource = body
   }
 
-  setUniformLMVP() {
-    const { cam, body } = this
-
-    const l = this.setUniformMatrix4fv("local", body.localMat)
-    const m = this.setUniformMatrix4fv("model", body.modelMat)
-
-    const v = this.setUniformMatrix4fv("view", cam.viewMat)
-    const p = this.setUniformMatrix4fv("projection", cam.projectionMat)
-
-    cam.subscribe("v", () => {
-      this.gl.useProgram(this.program)
-      v()
-    })
-
-    cam.subscribe("p", () => {
-      this.gl.useProgram(this.program)
-      p()
-    })
-
-    v()
-    p()
-
-    return () => {
-      l()
-      m()
-    }
-  }
-
   boot() {
     const { gl, body } = this
 
@@ -112,11 +84,12 @@ export class BodyProgram extends ObjectProgram {
     const calculatesLightDir = () => {
       vec3.normalize(
         lightDir,
-        vec3.sub(
-          lightDir,
-          body.coordinates,
-          this.lightSource ? this.lightSource.coordinates : this.cam.coord
-        )
+        [0, 0, 1]
+        // vec3.sub(
+        //   lightDir,
+        //   body.coordinates,
+        //   this.lightSource ? this.lightSource.coordinates : this.cam.coord
+        // )
       )
     }
 
@@ -124,6 +97,36 @@ export class BodyProgram extends ObjectProgram {
     const setLightSource = this.setUniform3fv(
       "uLightDirection",
       lightDir
+    )
+
+    const normMatrix = m4.create()
+
+    const createNormMatrix = () => {
+      const mvMatrix = m4.create()
+      m4.multiply(
+        mvMatrix,
+        this.body.modelMat,
+        this.body.localMat,
+      )
+
+      m4.multiply(
+        mvMatrix,
+        this.cam.viewMat,
+        mvMatrix,
+      )
+
+      m4.invert(
+        normMatrix,
+        mvMatrix
+      )
+      m4.transpose(
+        normMatrix,
+        normMatrix
+      )
+    }
+    const setNormMatrix = this.setUniformMatrix4fv(
+      "norm_matrix",
+      normMatrix
     )
 
     // just once.
@@ -144,6 +147,8 @@ export class BodyProgram extends ObjectProgram {
       setTexCoords()
       calculatesLightDir()
       setLightSource()
+      createNormMatrix()
+      setNormMatrix()
       uniform()
       gl.drawElements(TRIANGLES, indicesCount, UNSIGNED_SHORT, 0)
     }

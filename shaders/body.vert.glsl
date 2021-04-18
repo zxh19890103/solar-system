@@ -6,6 +6,7 @@ uniform mat4 local;
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
+uniform mat4 norm_matrix;
 
 uniform vec3 uAmbientLight;
 uniform vec3 uDirectionalLightColor;
@@ -20,7 +21,7 @@ void main() {
 
   vLighting = uAmbientLight + max(
     dot(
-      -1.0 * vec3(local * vec4(aVertexNormal, 1.0)),
+      1.0 * vec3(norm_matrix * vec4(aVertexNormal, 1.0)),
       uLightDirection
     ),
     0.0
