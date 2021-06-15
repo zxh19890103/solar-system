@@ -46,7 +46,9 @@ export interface BodyInfo {
    */
   ref?: BodyInfo,
   rings?: [string, number][],
-  // unit: d
+  /**
+   * self-rotation period: unit of earth day.
+   */
   rotationPeriod?: number,
   /**
    * In astronomy, axial tilt, also known as obliquity, 
@@ -92,7 +94,7 @@ export const Sun: BodyInfo = {
   peribelion: 0,
   semiMajorAxis: 0,
   avatar: "/nineplanets-org/sun.png",
-  map: "/maps/sun-4096x2048.jpg",
+  map: "/maps/sun-1024x512.jpg",
   color: composeColors(COLORS.red),
   mass: 1.9885 * 1000000,
   radius: 696.342,

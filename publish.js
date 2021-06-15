@@ -3,7 +3,7 @@ const fs = require("fs")
 
 const map = {
   "./dist/sys/.*.js": "../solar-system-site/scripts/",
-  "./shaders/.*.glsl": "../solar-system-site/shaders/",
+  // "./shaders/.*.glsl": "../solar-system-site/shaders/",
   // "../node_modules/gl-matrix/gl-matrix-min.js": "../solar-system-site/scripts/",
   "./style.css": "../solar-system-site/",
   // "./planets-inf/maps/.*.jpg": "../solar-system-site/maps/",

@@ -1,0 +1,21 @@
+{
+  "name": "sys-n",
+  "version": "1.0.0",
+  "description": "a package for a solar system display based on three.js",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "solar",
+    "singhi"
+  ],
+  "author": "singhi",
+  "license": "ISC",
+  "dependencies": {
+    "three": "^0.128.0"
+  },
+  "devDependencies": {
+    "@types/three": "^0.128.0"
+  }
+}

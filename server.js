@@ -48,28 +48,34 @@ data: ${JSON.stringify(payload)}
   }
 }
 
-fs.watch("./sys", (event, name) => {
+fs.watch("./sys-n", (event, name) => {
   if (event !== "change") return
   if (!name.endsWith(".ts")) return
   eventSource.emit({ reload: true })
 })
 
-fs.watch("./huanghelou", (event, name) => {
-  if (event !== "change") return
-  if (!name.endsWith(".ts")) return
-  eventSource.emit({ reload: true })
-})
+// fs.watch("./sys", (event, name) => {
+//   if (event !== "change") return
+//   if (!name.endsWith(".ts")) return
+//   eventSource.emit({ reload: true })
+// })
 
-fs.watch("./common", (event, name) => {
-  if (event !== "change") return
-  if (!name.endsWith(".ts")) return
-  eventSource.emit({ reload: true })
-})
+// fs.watch("./huanghelou", (event, name) => {
+//   if (event !== "change") return
+//   if (!name.endsWith(".ts")) return
+//   eventSource.emit({ reload: true })
+// })
 
-fs.watch("./shaders", (event) => {
-  if (event !== "change") return
-  eventSource.emit({ reload: true })
-})
+// fs.watch("./common", (event, name) => {
+//   if (event !== "change") return
+//   if (!name.endsWith(".ts")) return
+//   eventSource.emit({ reload: true })
+// })
+
+// fs.watch("./shaders", (event) => {
+//   if (event !== "change") return
+//   eventSource.emit({ reload: true })
+// })
 
 const compileTs = (tsFile, saveAs) => {
   const source = fs.readFileSync(tsFile, "utf-8")
@@ -80,8 +86,8 @@ const compileTs = (tsFile, saveAs) => {
 
 http.createServer((req, res) => {
   const url = req.url
-  if (/\.(jpg|png|gif)$/.test(url)) {
-    const [path, , ext] = /^\/(.+?)\.(jpg|png|gif)$/.exec(url)
+  if (/\.(jpg|png|gif|webp)$/.test(url)) {
+    const [path, , ext] = /^\/(.+?)\.(jpg|png|gif|webp)$/.exec(url)
     res.setHeader("Content-Type", `image/${ext}`)
     res.setHeader("Cache-Control", `private, max-age=2592000`)
     const filename = `./planets-inf/${path}`
