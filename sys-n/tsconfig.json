@@ -1,1 +1,6 @@
-{}
+{
+  "include": [
+    "**/*.ts",
+    "gravity.js"
+  ]
+}

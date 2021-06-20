@@ -1,5 +1,4 @@
-import * as T from "three"
-
+import * as t from "three"
 declare global {
-  var THREE: typeof T
+  var THREE: typeof t
 }

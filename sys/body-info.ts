@@ -115,7 +115,8 @@ export const Mercury: BodyInfo = {
   radius: 2.4397,
   inclination: 3.38 * RAD_PER_DEGREE,
   rotationPeriod: 58.646,
-  axialTilt: 0.034 * RAD_PER_DEGREE
+  axialTilt: 0.034 * RAD_PER_DEGREE,
+  ref: Sun
 }
 
 export const Venus: BodyInfo = {
@@ -130,7 +131,8 @@ export const Venus: BodyInfo = {
   radius: 6.0518,
   inclination: 3.86 * RAD_PER_DEGREE,
   rotationPeriod: -243.025,
-  axialTilt: 177.36 * RAD_PER_DEGREE
+  axialTilt: 177.36 * RAD_PER_DEGREE,
+  ref: Sun
 }
 
 export const Earth: BodyInfo = {
@@ -145,7 +147,8 @@ export const Earth: BodyInfo = {
   radius: 6.371,
   inclination: 7.155 * RAD_PER_DEGREE,
   rotationPeriod: .99,
-  axialTilt: 23.4392811 * RAD_PER_DEGREE
+  axialTilt: 23.4392811 * RAD_PER_DEGREE,
+  ref: Sun
 }
 
 export const Mars: BodyInfo = {
@@ -160,7 +163,8 @@ export const Mars: BodyInfo = {
   radius: 3.3895,
   inclination: 5.65 * RAD_PER_DEGREE,
   rotationPeriod: 1.025957,
-  axialTilt: 25.19 * RAD_PER_DEGREE
+  axialTilt: 25.19 * RAD_PER_DEGREE,
+  ref: Sun
 }
 
 export const Jupiter: BodyInfo = {
@@ -175,7 +179,8 @@ export const Jupiter: BodyInfo = {
   radius: 69.911,
   inclination: 6.09 * RAD_PER_DEGREE,
   rotationPeriod: 9.925 / 24,
-  axialTilt: 3.13 * RAD_PER_DEGREE
+  axialTilt: 3.13 * RAD_PER_DEGREE,
+  ref: Sun
 }
 
 /**
@@ -201,6 +206,7 @@ export const Saturn: BodyInfo = {
   inclination: 5.51 * RAD_PER_DEGREE,
   rotationPeriod: 10.5 / 24,
   axialTilt: 26.73 * RAD_PER_DEGREE,
+  ref: Sun,
   rings: [
     ['#000000', 66900],
     ['#1c1c1c', 74510],
@@ -228,6 +234,7 @@ export const Uranus: BodyInfo = {
   inclination: 6.48 * RAD_PER_DEGREE,
   rotationPeriod: -17.2 / 24,
   axialTilt: 97.77 * RAD_PER_DEGREE,
+  ref: Sun,
   /**
    * 26840 – 34890
    * 34890 – 37850
@@ -258,7 +265,8 @@ export const Neptune: BodyInfo = {
   radius: approximates(24.622, .019),
   inclination: 6.43 * RAD_PER_DEGREE,
   rotationPeriod: 0.6713,
-  axialTilt: 28.32 * RAD_PER_DEGREE
+  axialTilt: 28.32 * RAD_PER_DEGREE,
+  ref: Sun
 }
 
 export const Pluto: BodyInfo = {
@@ -273,7 +281,8 @@ export const Pluto: BodyInfo = {
   radius: approximates(1188.3, .8) * .001,
   inclination: 11.88 * RAD_PER_DEGREE,
   rotationPeriod: 6.387230,
-  axialTilt: 122.53 * RAD_PER_DEGREE
+  axialTilt: 122.53 * RAD_PER_DEGREE,
+  ref: Sun
 }
 
 export const Ceres: BodyInfo = {
@@ -288,7 +297,8 @@ export const Ceres: BodyInfo = {
   radius: .46973,
   inclination: (10.59406704 + Earth.inclination) * RAD_PER_DEGREE,
   rotationPeriod: 1,
-  axialTilt: 4 * RAD_PER_DEGREE
+  axialTilt: 4 * RAD_PER_DEGREE,
+  ref: Sun
 }
 
 export const Eris: BodyInfo = {
@@ -303,7 +313,8 @@ export const Eris: BodyInfo = {
   radius: approximates(1163, 6) * .001,
   inclination: 44.040 * RAD_PER_DEGREE,
   rotationPeriod: 1,
-  axialTilt: 78 * RAD_PER_DEGREE
+  axialTilt: 78 * RAD_PER_DEGREE,
+  ref: Sun
 }
 
 // Commets bellow
@@ -318,7 +329,8 @@ export const Halley: BodyInfo = {
   color: composeColors(COLORS.orange),
   mass: 2.2 * Math.pow(10, -10),
   radius: 11 * .001,
-  inclination: 0
+  inclination: 0,
+  ref: Sun
 }
 
 export const Tempel1: BodyInfo = {
@@ -331,7 +343,8 @@ export const Tempel1: BodyInfo = {
   color: composeColors(COLORS.golden, COLORS.tan),
   mass: 2.2 * Math.pow(10, -10),
   radius: 5 * .001,
-  inclination: 10.474 * RAD_PER_DEGREE
+  inclination: 10.474 * RAD_PER_DEGREE,
+  ref: Sun
 }
 
 export const Holmes: BodyInfo = {
@@ -344,7 +357,8 @@ export const Holmes: BodyInfo = {
   color: composeColors(COLORS.white, COLORS.brown, COLORS.blue),
   mass: 2.2 * Math.pow(10, -10),
   radius: 5 * .001,
-  inclination: 19.1126 * RAD_PER_DEGREE
+  inclination: 19.1126 * RAD_PER_DEGREE,
+  ref: Sun
 }
 
 export const HaleBopp: BodyInfo = {
@@ -357,7 +371,8 @@ export const HaleBopp: BodyInfo = {
   color: composeColors(COLORS.grey, COLORS.brown, COLORS.red),
   mass: 2.2 * Math.pow(10, -10),
   radius: approximates(60, 20) * .001,
-  inclination: 89.4 * RAD_PER_DEGREE
+  inclination: 89.4 * RAD_PER_DEGREE,
+  ref: Sun
 }
 
 // natural satellites
@@ -369,10 +384,10 @@ export const Luna: BodyInfo = {
   semiMajorAxis: 384.399,
   avatar: "/nineplanets-org/moon.png",
   map: "/maps/moon-1024x512.jpg",
-  color: randColor(),
+  color: composeColors(COLORS.grey, COLORS.tan),
   mass: .07342,
   radius: 1.7374,
-  inclination: (5.145 + Earth.axialTilt) * RAD_PER_DEGREE,
+  inclination: 5.145 * RAD_PER_DEGREE,
   rotationPeriod: 27.321661,
   axialTilt: 6.687 * RAD_PER_DEGREE,
   ref: Earth
@@ -389,7 +404,8 @@ export const KamoOalewa: BodyInfo = {
   mass: .07342,
   radius: 0.041 * .001,
   inclination: 7.7816 * RAD_PER_DEGREE,
-  rotationPeriod: 0.467 / 24
+  rotationPeriod: 0.467 / 24,
+  ref: Sun
 }
 
 // juptier's
