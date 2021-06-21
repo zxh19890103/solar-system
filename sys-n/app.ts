@@ -1,4 +1,4 @@
-import { TetrahedronGeometry } from "three"
+
 import {
   Earth,
   Sun,
@@ -11,6 +11,12 @@ import {
   Saturn,
   Bodies13,
   BodyInfo,
+  Ceres,
+  HaleBopp,
+  Halley,
+  Pluto,
+  Tempel1,
+  Holmes,
 } from "../sys/body-info"
 import { AU, RAD_PER_DEGREE } from "../sys/constants"
 
@@ -24,7 +30,7 @@ const camera = new THREE.PerspectiveCamera(
   75,
   window.innerWidth / window.innerHeight,
   0.1,
-  8000000
+  Pluto.aphelion
 )
 
 const renderer = new THREE.WebGLRenderer({ alpha: true })
@@ -32,25 +38,30 @@ renderer.setClearColor(0x000000, 0)
 renderer.setSize(window.innerWidth, window.innerHeight)
 document.body.appendChild(renderer.domElement)
 
-// const light = new THREE.DirectionalLight("#ffffff", 1)
-// light.position.set(1, 0, 0)
-// scene.add(light)
+const light = new THREE.DirectionalLight("#ffffff", 1)
+light.position.set(1, 1, 0)
+scene.add(light)
 
-const ami = new THREE.AmbientLight("#ffffff", 1)
+const ami = new THREE.AmbientLight("#ffffff", .3)
 scene.add(ami)
 
-// const infos = [Sun, Mercury, Venus, Earth]
-const infos = [Earth, Luna]
+const infos = [Sun, Mercury, Venus, Earth, Jupiter]
 
 const bodies = infos.map(info => {
-  const { points, updateFn } = track(info)
-  const body = new CelestialBody(points, info)
-  body.updateFn = updateFn
-  scene.add(body.o3)
-  return body
+  if (info.name === Sun.name) {
+    const o3 = point(info)
+    const body = new CelestialBody(o3, info)
+    scene.add(body.o3)
+    return body
+  } else {
+    const o3 = point(info)
+    const body = new CelestialBody(o3, info)
+    scene.add(body.o3)
+    return body
+  }
 })
 
-camera.position.set(0, 0, 500)
+camera.position.set(0, 3000, Neptune.aphelion)
 camera.up.set(0, 1, 0)
 camera.lookAt(0, 0, 0)
 
@@ -65,7 +76,7 @@ const rotation = centerBody.o3.rotation
 
 function animate() {
   requestAnimationFrame(animate)
-  // rotation.y += .03
+  rotation.y += .03
   for (const body of bodies) {
     body.next()
   }

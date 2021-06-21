@@ -49,7 +49,13 @@ function sphere(info: BodyInfo) {
   const tex = textureLoader.load(info.map)
   const geometry = new THREE.SphereGeometry(info.radius, 60, 60)
   const material = new THREE.MeshPhongMaterial({ map: tex })
-  return new THREE.Mesh(geometry, material)
+  const mesh = new THREE.Mesh(geometry, material)
+  return {
+    o3: mesh,
+    update: () => {
+      mesh.rotation.y += .003
+    }
+  }
 }
 
 function point(info: BodyInfo) {
@@ -68,7 +74,7 @@ function point(info: BodyInfo) {
     vertexShader: `
     void main() {
       gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-      gl_PointSize = ${info.radius};
+      gl_PointSize = 1.0;
     }
     `,
     fragmentShader: `
@@ -98,8 +104,8 @@ function track(info: BodyInfo) {
     uniforms: {},
     vertexShader: `
     void main() {
-      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-      gl_PointSize = ${info.radius};
+      gl_Position = projectionMatrix * viewMatrix * vec4(position, 1.0);
+      gl_PointSize = 1.0;
     }
     `,
     fragmentShader: `
@@ -109,11 +115,11 @@ function track(info: BodyInfo) {
     `
   })
 
-  const points = new THREE.Points(geometry, material)
+  const points = new THREE.Line(geometry, material)
 
   return {
     points,
-    updateFn: (points: number[]) => {
+    update: (points: number[]) => {
       geometry.setAttribute(
         "position",
         new THREE.Float32BufferAttribute(points, 3)
