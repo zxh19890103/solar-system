@@ -30,7 +30,7 @@ const camera = new THREE.PerspectiveCamera(
   75,
   window.innerWidth / window.innerHeight,
   0.1,
-  Pluto.aphelion
+  HaleBopp.aphelion
 )
 
 const renderer = new THREE.WebGLRenderer({ alpha: true })
@@ -45,7 +45,7 @@ scene.add(light)
 const ami = new THREE.AmbientLight("#ffffff", .3)
 scene.add(ami)
 
-const infos = [Sun, Mercury, Venus, Earth, Jupiter]
+const infos = [Sun, Earth, Halley]
 
 const bodies = infos.map(info => {
   if (info.name === Sun.name) {
@@ -61,7 +61,7 @@ const bodies = infos.map(info => {
   }
 })
 
-camera.position.set(0, 3000, Neptune.aphelion)
+camera.position.set(0, 100, Halley.aphelion)
 camera.up.set(0, 1, 0)
 camera.lookAt(0, 0, 0)
 

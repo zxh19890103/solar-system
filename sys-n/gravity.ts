@@ -2,6 +2,11 @@ import { BodyInfo } from "../sys/body-info"
 import { AU } from "../sys/constants"
 
 const G = 6.67 * .00001
+/**
+ * one year on earth equals this value.
+ * 365 * 24 * 60 * 60
+ */
+const K = 31567699.59
 
 const div = document.createElement('div')
 div.style.cssText = `
@@ -16,11 +21,13 @@ width: 200px;
 document.body.appendChild(div)
 
 const insertCanvas = (info: BodyInfo) => {
+  const dpr = window.devicePixelRatio
   const canvas = document.createElement('canvas')
-  canvas.width = 200
-  canvas.height = 60
+  canvas.width = 200 * dpr
+  canvas.height = 60 * dpr
   canvas.style.cssText = `width: 200px; height: 60px; position: static;`
   const ctx = canvas.getContext('2d')
+  ctx.scale(dpr, dpr)
   div.appendChild(canvas)
   const color = 'rgba(' + info.color.map(x => 0 ^ x * 255).join(',') + ')'
   ctx.strokeStyle = color
@@ -45,6 +52,7 @@ export class CelestialBody {
   position: THREE.Vector3
   orbitalAxis: THREE.Vector3
   period: number = 0
+  period2: number = 0
 
   inclinationMat: THREE.Matrix4
 
@@ -105,8 +113,8 @@ export class CelestialBody {
   }
 
   private buffer() {
-    let n = 4000
-    const dt = 100
+    let n = 100
+    const dt = 1000
     const m = this.info.mass
     const k = dt / m
     const v = this.velocity.clone().toArray()
@@ -156,11 +164,17 @@ export class CelestialBody {
       this.position.z
     )
 
+    // if (Math.abs(this.velocity.y) < 1) {
+    //   console.log(this.info.name, this.velocity.y)
+    //   performance.mark(this.info.name)
+    // }
+
+    const writer = this.writer
     const distance = this.position.length() / AU
-    this.writer.write(`distance: ${distance.toFixed(4)} AU`, 1)
+    writer.write(`distance: ${distance.toFixed(4)} AU`, 1)
     const speed = this.velocity.length() * 1000
-    this.writer.write(`speed: ${speed.toFixed(2)} km/s`, 2)
-    this.writer.write(`period: ${this.period.toFixed(2)} year(s)`, 3)
+    writer.write(`speed: ${speed.toFixed(2)} km/s`, 2)
+    writer.write(`period: ${this.period.toFixed(2)} year(s) / `, 3)
     // this.updateFn && this.updateFn()
   }
 
@@ -180,7 +194,6 @@ export class CelestialBody {
     const pipi = Math.PI ** 2
     const aaa = this.info.semiMajorAxis ** 3
     const M = this.ref.info.mass
-    const K = 31567699.59
     return Math.sqrt(
       (4 * pipi * aaa) / (G * M)
     ) / K
