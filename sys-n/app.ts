@@ -45,7 +45,7 @@ scene.add(light)
 const ami = new THREE.AmbientLight("#ffffff", .3)
 scene.add(ami)
 
-const infos = [Sun, Earth, Halley]
+const infos = [Sun, Earth, Jupiter, Holmes]
 
 const bodies = infos.map(info => {
   if (info.name === Sun.name) {
@@ -61,7 +61,7 @@ const bodies = infos.map(info => {
   }
 })
 
-camera.position.set(0, 100, Halley.aphelion)
+camera.position.set(0, 0, 1.4 * Holmes.aphelion)
 camera.up.set(0, 1, 0)
 camera.lookAt(0, 0, 0)
 

@@ -260,7 +260,7 @@ export const Neptune: BodyInfo = {
   semiMajorAxis: 30.07 * AU,
   avatar: "/nineplanets-org/neptune.png",
   map: "/maps/neptune-1024x512.jpg",
-  color: composeColors(COLORS.blue),
+  color: composeColors(COLORS.blue, COLORS.orange),
   mass: 102.413,
   radius: approximates(24.622, .019),
   inclination: 6.43 * RAD_PER_DEGREE,

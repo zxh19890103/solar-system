@@ -1,12 +1,24 @@
 import { BodyInfo } from "../sys/body-info"
 import { AU } from "../sys/constants"
 
-const G = 6.67 * .00001
+const G = 6.67 * .001
+
 /**
  * one year on earth equals this value.
  * 365 * 24 * 60 * 60
  */
-const K = 31567699.59
+const K = 3156769.959
+
+const BEST_INITIAL_VELOCITY = {
+  Mecury: .3870,
+  Venus: .3460,
+  Earth: .2890,
+  Mars: .2178,
+  Jupiter: .1230,
+  Saturn: .0902,
+  Uranus: .065,
+  Neptune: .0533,
+}
 
 const div = document.createElement('div')
 div.style.cssText = `
@@ -52,15 +64,11 @@ export class CelestialBody {
   position: THREE.Vector3
   orbitalAxis: THREE.Vector3
   period: number = 0
-  period2: number = 0
 
   inclinationMat: THREE.Matrix4
 
   ref: CelestialBody = null
-  force: THREE.Vector3
 
-  history: number[] = []
-  updateFn: () => void
   writer: { write: (txt: string, lineno?: number) => void }
 
   constructor(o3: THREE.Object3D, info: BodyInfo) {
@@ -73,7 +81,7 @@ export class CelestialBody {
 
   init() {
 
-    const refPlane = new THREE.Vector3(1, 0, 1)
+    const refPlane = new THREE.Vector3(.3, 0, 1)
     this.orbitalAxis = new THREE.Vector3(0, 1, 0)
     const mat = new THREE.Matrix4()
     mat.makeRotationAxis(refPlane, this.info.inclination)
@@ -81,16 +89,13 @@ export class CelestialBody {
 
     this.inclinationMat = mat
 
-    this.position = new THREE.Vector3(this.info.aphelion, 0, 0)
-    this.position.applyMatrix4(mat)
-
-    this.computeVelocityOnAphelion()
+    this.putObjectOnAphelion()
     this.period = this.computePeriod()
 
     this.writer = insertCanvas(this.info)
   }
 
-  private computeFieldForceByRef(position0: [number, number, number], position: THREE.Vector3, mass0: number, mass: number) {
+  private computeAccByRef(position0: [number, number, number], position: THREE.Vector3, mass: number) {
     const [x, y, z] = position0
     const { x: rx, y: ry, z: rz } = position
     const r2 = (
@@ -99,7 +104,7 @@ export class CelestialBody {
       (z - rz) * (z - rz)
     )
 
-    const scalar = G * (mass0 * mass) / r2
+    const scalar = G * mass / r2
 
     const dx = rx - x,
       dy = ry - y,
@@ -114,26 +119,22 @@ export class CelestialBody {
 
   private buffer() {
     let n = 100
-    const dt = 1000
-    const m = this.info.mass
-    const k = dt / m
+    const dt = 100
     const v = this.velocity.clone().toArray()
     const p = this.position.clone().toArray()
 
     const arg0 = this.ref.position
-    const arg1 = this.info.mass
-    const arg2 = this.ref.info.mass
+    const M = this.ref.info.mass
 
-    const getForce = this.computeFieldForceByRef
+    const getAcc = this.computeAccByRef
 
     while (n--) {
-      const force = getForce(
+      const a = getAcc(
         p,
         arg0,
-        arg1,
-        arg2
+        M
       ) // force changes
-      const dv = force.map(c => c * k)
+      const dv = a.map(c => c * dt)
       const [vx, vy, vz] = v
       const [dvx, dvy, dvz] = dv
       const ds = [
@@ -164,29 +165,75 @@ export class CelestialBody {
       this.position.z
     )
 
-    // if (Math.abs(this.velocity.y) < 1) {
-    //   console.log(this.info.name, this.velocity.y)
-    //   performance.mark(this.info.name)
-    // }
-
     const writer = this.writer
     const distance = this.position.length() / AU
-    writer.write(`distance: ${distance.toFixed(4)} AU`, 1)
-    const speed = this.velocity.length() * 1000
+    writer.write(`distance: ${distance.toFixed(6)} AU`, 1)
+    const speed = this.velocity.length() * 100
     writer.write(`speed: ${speed.toFixed(2)} km/s`, 2)
-    writer.write(`period: ${this.period.toFixed(2)} year(s) / `, 3)
-    // this.updateFn && this.updateFn()
+    writer.write(`period: ${this.period.toFixed(2)} year(s) / ${(this.s / 1000).toFixed(2)}s`, 3)
+
+    this.computeActualPeriod(speed)
   }
 
-  i = 0
-  useHistory: boolean = false
+  /**
+   * Best Velocity:
+   * 
+   * Mecury: .3870
+   * Venus: .3460
+   * Earth: .2890
+   * Mars: .2178
+   * Jupiter: .1230
+   * Saturn: .0902
+   * Uranus: .065
+   * Neptune: .0533
+   */
 
-  private computeVelocityOnAphelion() {
+  private putObjectOnAphelion() {
     const { ref, semiMajorAxis, aphelion } = this.info
+    this.position = new THREE.Vector3(aphelion, 0, 0)
+    this.position.applyMatrix4(this.inclinationMat)
     const m = ref.mass
-    const scalar = Math.sqrt(G * m * (2 / aphelion - 1 / semiMajorAxis))
+    const scalar = BEST_INITIAL_VELOCITY[this.info.name] || Math.sqrt(G * m * (2 / aphelion - 1 / semiMajorAxis))
+    console.log(scalar)
     this.velocity = new THREE.Vector3(0, 0, scalar)
     this.velocity.applyMatrix4(this.inclinationMat)
+  }
+
+  private stage: 1 | 2 | 3 | 4 = 1
+  private lastSpeed = 0
+  private s: number = 0
+
+  private computeActualPeriod(speed: number) {
+    switch (this.stage) {
+      case 1: {
+        // a
+        this.s = performance.now()
+        this.stage = 2
+        break
+      }
+      case 2: {
+        // a -> p
+        if (speed < this.lastSpeed) {
+          this.stage = 3
+        }
+        break
+      }
+      case 3: {
+        // p -> a
+        if (speed > this.lastSpeed) {
+          this.s = performance.now() - this.s
+          this.stage = 4
+        }
+        break
+      }
+      case 4:
+      default: {
+      }
+    }
+
+    if (this.stage < 4) {
+      this.lastSpeed = speed
+    }
   }
 
   private computePeriod() {
