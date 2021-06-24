@@ -1,4 +1,5 @@
 
+import { Object3D } from "three"
 import {
   Earth,
   Sun,
@@ -38,48 +39,54 @@ renderer.setClearColor(0x000000, 0)
 renderer.setSize(window.innerWidth, window.innerHeight)
 document.body.appendChild(renderer.domElement)
 
-const light = new THREE.DirectionalLight("#ffffff", 1)
-light.position.set(1, 1, 0)
-scene.add(light)
+// const light = new THREE.DirectionalLight("#ffffff", 1)
+// light.position.set(1, 1, 0)
+// scene.add(light)
 
-const ami = new THREE.AmbientLight("#ffffff", .3)
-scene.add(ami)
+// const ami = new THREE.AmbientLight("#ffffff", .3)
+// scene.add(ami)
 
-const infos = [Sun, Earth, Jupiter, Holmes]
+const system: CelestialSystem = {
+  body: Sun,
+  subSystems: [
+    {
+      body: Earth,
+      subSystems: [
+        {
+          body: Luna
+        }
+      ]
+    }
+  ]
+}
 
-const bodies = infos.map(info => {
-  if (info.name === Sun.name) {
-    const o3 = point(info)
-    const body = new CelestialBody(o3, info)
-    scene.add(body.o3)
-    return body
-  } else {
-    const o3 = point(info)
-    const body = new CelestialBody(o3, info)
-    scene.add(body.o3)
-    return body
+const make = () => {
+  const mkNode = (sys: CelestialSystem, parent: CelestialSystem) => {
+    sys.celestialBody = new CelestialBody(point(sys.body), sys.body)
+    if (parent !== null) {
+      parent.celestialBody.add(sys.celestialBody)
+      sys.celestialBody.init()
+    }
+    if (sys.subSystems) {
+      for (const subSys of sys.subSystems) {
+        mkNode(subSys, sys)
+      }
+    }
   }
-})
 
-camera.position.set(0, 0, 1.4 * Holmes.aphelion)
+  mkNode(system, null)
+}
+
+make()
+
+scene.add(system.celestialBody.o3)
+
+camera.position.set(0, 0, Earth.aphelion)
 camera.up.set(0, 1, 0)
 camera.lookAt(0, 0, 0)
 
-const centerBody = bodies.shift()
-
-for (const body of bodies) {
-  body.ref = centerBody
-  body.init()
-}
-
-const rotation = centerBody.o3.rotation
-
 function animate() {
   requestAnimationFrame(animate)
-  rotation.y += .03
-  for (const body of bodies) {
-    body.next()
-  }
   renderer.render(scene, camera)
 }
 animate()

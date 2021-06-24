@@ -173,6 +173,17 @@ export class CelestialBody {
     writer.write(`period: ${this.period.toFixed(2)} year(s) / ${(this.s / 1000).toFixed(2)}s`, 3)
 
     this.computeActualPeriod(speed)
+
+    for (const child of this.children) {
+      child.next()
+    }
+  }
+
+  private children: CelestialBody[] = []
+  public add(child: CelestialBody) {
+    child.ref = this
+    this.o3.add(child.o3)
+    this.children.push(child)
   }
 
   /**
@@ -194,7 +205,7 @@ export class CelestialBody {
     this.position.applyMatrix4(this.inclinationMat)
     const m = ref.mass
     const scalar = BEST_INITIAL_VELOCITY[this.info.name] || Math.sqrt(G * m * (2 / aphelion - 1 / semiMajorAxis))
-    console.log(scalar)
+    console.log(this.info.name, ...this.position.toArray())
     this.velocity = new THREE.Vector3(0, 0, scalar)
     this.velocity.applyMatrix4(this.inclinationMat)
   }
