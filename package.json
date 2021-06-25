@@ -1,0 +1,26 @@
+{
+  "name": "solar-system",
+  "version": "1.0.0",
+  "description": "repo for solar study",
+  "main": "none.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zxh19890103/solar-system.git"
+  },
+  "keywords": [
+    "solar"
+  ],
+  "author": "singhi",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/zxh19890103/solar-system/issues"
+  },
+  "homepage": "https://github.com/zxh19890103/solar-system#readme",
+  "devDependencies": {
+    "typescript": "^4.3.4"
+  }
+}

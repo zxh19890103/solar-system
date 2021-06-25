@@ -1,4 +1,3 @@
-
 import { Object3D } from "three"
 import {
   Earth,
@@ -22,7 +21,7 @@ import {
 import { AU, RAD_PER_DEGREE } from "../sys/constants"
 
 import { CelestialBody } from "./gravity"
-import { dot, sphere, point, track } from './providers'
+import { dot, sphere, point, track } from "./providers"
 
 const scene = new THREE.Scene()
 scene.background = null
@@ -53,11 +52,11 @@ const system: CelestialSystem = {
       body: Earth,
       subSystems: [
         {
-          body: Luna
-        }
-      ]
-    }
-  ]
+          body: Luna,
+        },
+      ],
+    },
+  ],
 }
 
 const make = () => {
@@ -85,8 +84,11 @@ camera.position.set(0, 0, Earth.aphelion)
 camera.up.set(0, 1, 0)
 camera.lookAt(0, 0, 0)
 
+const star = system.celestialBody
+
 function animate() {
   requestAnimationFrame(animate)
+  star.run()
   renderer.render(scene, camera)
 }
 animate()

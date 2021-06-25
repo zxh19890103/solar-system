@@ -1,7 +1,7 @@
 import { BodyInfo } from "../sys/body-info"
 import { AU } from "../sys/constants"
 
-const G = 6.67 * .001
+const G = 6.67 * 0.001
 
 /**
  * one year on earth equals this value.
@@ -10,17 +10,17 @@ const G = 6.67 * .001
 const K = 3156769.959
 
 const BEST_INITIAL_VELOCITY = {
-  Mecury: .3870,
-  Venus: .3460,
-  Earth: .2890,
-  Mars: .2178,
-  Jupiter: .1230,
-  Saturn: .0902,
-  Uranus: .065,
-  Neptune: .0533,
+  Mecury: 0.387,
+  Venus: 0.346,
+  Earth: 0.289,
+  Mars: 0.2178,
+  Jupiter: 0.123,
+  Saturn: 0.0902,
+  Uranus: 0.065,
+  Neptune: 0.0533,
 }
 
-const div = document.createElement('div')
+const div = document.createElement("div")
 div.style.cssText = `
 position: absolute;
 top: 8px;
@@ -34,17 +34,17 @@ document.body.appendChild(div)
 
 const insertCanvas = (info: BodyInfo) => {
   const dpr = window.devicePixelRatio
-  const canvas = document.createElement('canvas')
+  const canvas = document.createElement("canvas")
   canvas.width = 200 * dpr
   canvas.height = 60 * dpr
   canvas.style.cssText = `width: 200px; height: 60px; position: static;`
-  const ctx = canvas.getContext('2d')
+  const ctx = canvas.getContext("2d")
   ctx.scale(dpr, dpr)
   div.appendChild(canvas)
-  const color = 'rgba(' + info.color.map(x => 0 ^ x * 255).join(',') + ')'
+  const color = "rgba(" + info.color.map((x) => 0 ^ (x * 255)).join(",") + ")"
   ctx.strokeStyle = color
-  ctx.textBaseline = 'top'
-  const h = 12
+  ctx.textBaseline = "top"
+  const h = 13
   ctx.font = `${h}px / 1 Wawati SC`
   ctx.strokeText(info.name, 0, 0, 200)
 
@@ -52,10 +52,9 @@ const insertCanvas = (info: BodyInfo) => {
     write: (txt: string, lineno = 1) => {
       ctx.clearRect(0, h * lineno, 200, h)
       ctx.strokeText(txt, 0, h * lineno, 200)
-    }
+    },
   }
 }
-
 
 export class CelestialBody {
   o3: THREE.Object3D
@@ -80,8 +79,7 @@ export class CelestialBody {
   }
 
   init() {
-
-    const refPlane = new THREE.Vector3(.3, 0, 1)
+    const refPlane = new THREE.Vector3(0.3, 0, 1)
     this.orbitalAxis = new THREE.Vector3(0, 1, 0)
     const mat = new THREE.Matrix4()
     mat.makeRotationAxis(refPlane, this.info.inclination)
@@ -95,16 +93,16 @@ export class CelestialBody {
     this.writer = insertCanvas(this.info)
   }
 
-  private computeAccByRef(position0: [number, number, number], position: THREE.Vector3, mass: number) {
+  private computeAccByRef(
+    position0: [number, number, number],
+    position: THREE.Vector3,
+    mass: number
+  ) {
     const [x, y, z] = position0
     const { x: rx, y: ry, z: rz } = position
-    const r2 = (
-      (x - rx) * (x - rx) +
-      (y - ry) * (y - ry) +
-      (z - rz) * (z - rz)
-    )
+    const r2 = (x - rx) * (x - rx) + (y - ry) * (y - ry) + (z - rz) * (z - rz)
 
-    const scalar = G * mass / r2
+    const scalar = (G * mass) / r2
 
     const dx = rx - x,
       dy = ry - y,
@@ -114,7 +112,7 @@ export class CelestialBody {
 
     const length = Math.sqrt(dx * dx + dy * dy + dz * dz)
 
-    return dir.map(com => scalar * com / length)
+    return dir.map((com) => (scalar * com) / length)
   }
 
   private buffer() {
@@ -129,18 +127,14 @@ export class CelestialBody {
     const getAcc = this.computeAccByRef
 
     while (n--) {
-      const a = getAcc(
-        p,
-        arg0,
-        M
-      ) // force changes
-      const dv = a.map(c => c * dt)
+      const a = getAcc(p, arg0, M) // force changes
+      const dv = a.map((c) => c * dt)
       const [vx, vy, vz] = v
       const [dvx, dvy, dvz] = dv
       const ds = [
-        vx * dt + .5 * dvx * dt,
-        vy * dt + .5 * dvy * dt,
-        vz * dt + .5 * dvz * dt,
+        vx * dt + 0.5 * dvx * dt,
+        vy * dt + 0.5 * dvy * dt,
+        vz * dt + 0.5 * dvz * dt,
       ]
 
       v[0] += dv[0]
@@ -153,29 +147,34 @@ export class CelestialBody {
     }
 
     this.velocity.set(...v) // velocity changes
-    this.position.set(...p)// position changes
+    this.position.set(...p) // position changes
   }
 
   public next() {
+    console.log(this.info.name, "next")
     this.buffer()
     // sync mesh
-    this.o3.position.set(
-      this.position.x,
-      this.position.y,
-      this.position.z
-    )
+    this.o3.position.set(this.position.x, this.position.y, this.position.z)
 
     const writer = this.writer
     const distance = this.position.length() / AU
     writer.write(`distance: ${distance.toFixed(6)} AU`, 1)
     const speed = this.velocity.length() * 100
     writer.write(`speed: ${speed.toFixed(2)} km/s`, 2)
-    writer.write(`period: ${this.period.toFixed(2)} year(s) / ${(this.s / 1000).toFixed(2)}s`, 3)
+    writer.write(
+      `period: ${this.period.toFixed(2)} year(s) / ${(this.s / 1000).toFixed(
+        2
+      )}s`,
+      3
+    )
 
     this.computeActualPeriod(speed)
+  }
 
+  run() {
+    if (this.ref) this.next()
     for (const child of this.children) {
-      child.next()
+      child.run()
     }
   }
 
@@ -188,7 +187,7 @@ export class CelestialBody {
 
   /**
    * Best Velocity:
-   * 
+   *
    * Mecury: .3870
    * Venus: .3460
    * Earth: .2890
@@ -204,7 +203,9 @@ export class CelestialBody {
     this.position = new THREE.Vector3(aphelion, 0, 0)
     this.position.applyMatrix4(this.inclinationMat)
     const m = ref.mass
-    const scalar = BEST_INITIAL_VELOCITY[this.info.name] || Math.sqrt(G * m * (2 / aphelion - 1 / semiMajorAxis))
+    const scalar =
+      BEST_INITIAL_VELOCITY[this.info.name] ||
+      Math.sqrt(G * m * (2 / aphelion - 1 / semiMajorAxis))
     console.log(this.info.name, ...this.position.toArray())
     this.velocity = new THREE.Vector3(0, 0, scalar)
     this.velocity.applyMatrix4(this.inclinationMat)
@@ -252,8 +253,6 @@ export class CelestialBody {
     const pipi = Math.PI ** 2
     const aaa = this.info.semiMajorAxis ** 3
     const M = this.ref.info.mass
-    return Math.sqrt(
-      (4 * pipi * aaa) / (G * M)
-    ) / K
+    return Math.sqrt((4 * pipi * aaa) / (G * M)) / K
   }
 }
