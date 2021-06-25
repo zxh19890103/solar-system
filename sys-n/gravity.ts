@@ -1,6 +1,8 @@
 import { BodyInfo } from "../sys/body-info"
 import { AU } from "../sys/constants"
 
+type ARRAY_VECTOR3 = [number, number, number]
+
 const G = 6.67 * 0.001
 
 /**
@@ -60,7 +62,6 @@ export class CelestialBody {
   o3: THREE.Object3D
   info: BodyInfo
   velocity: THREE.Vector3
-  position: THREE.Vector3
   orbitalAxis: THREE.Vector3
   period: number = 0
 
@@ -73,8 +74,6 @@ export class CelestialBody {
   constructor(o3: THREE.Object3D, info: BodyInfo) {
     this.o3 = o3
     this.info = info
-
-    this.position = new THREE.Vector3(0, 0, 0)
     this.velocity = new THREE.Vector3(0, 0, 0)
   }
 
@@ -94,12 +93,12 @@ export class CelestialBody {
   }
 
   private computeAccByRef(
-    position0: [number, number, number],
-    position: THREE.Vector3,
+    position0: ARRAY_VECTOR3,
+    position: ARRAY_VECTOR3,
     mass: number
   ) {
     const [x, y, z] = position0
-    const { x: rx, y: ry, z: rz } = position
+    const [rx, ry, rz] = position
     const r2 = (x - rx) * (x - rx) + (y - ry) * (y - ry) + (z - rz) * (z - rz)
 
     const scalar = (G * mass) / r2
@@ -118,18 +117,29 @@ export class CelestialBody {
   private buffer() {
     let n = 100
     const dt = 100
-    const v = this.velocity.clone().toArray()
-    const p = this.position.clone().toArray()
 
-    const arg0 = this.ref.position
-    const M = this.ref.info.mass
-
+    const deltaV: ARRAY_VECTOR3 = [0, 0, 0]
+    const deltaP: ARRAY_VECTOR3 = [0, 0, 0]
+    
+    const posi = this.o3.getWorldPosition(new THREE.Vector3()).toArray()
+    const a: ARRAY_VECTOR3 = [0, 0, 0]
+    
     const getAcc = this.computeAccByRef
+    
+    let ref = this.ref
+    while (ref) {
+      const refPosi = ref.o3.getWorldPosition(new THREE.Vector3()).toArray()
+      const da = getAcc(posi, refPosi, ref.info.mass)
+      a[0] += da[0]
+      a[1] += da[1]
+      a[2] += da[2]
+
+      ref = ref.ref
+    }
 
     while (n--) {
-      const a = getAcc(p, arg0, M) // force changes
       const dv = a.map((c) => c * dt)
-      const [vx, vy, vz] = v
+      const [vx, vy, vz] = deltaV
       const [dvx, dvy, dvz] = dv
       const ds = [
         vx * dt + 0.5 * dvx * dt,
@@ -137,27 +147,28 @@ export class CelestialBody {
         vz * dt + 0.5 * dvz * dt,
       ]
 
-      v[0] += dv[0]
-      v[1] += dv[1]
-      v[2] += dv[2]
+      deltaV[0] += dv[0]
+      deltaV[1] += dv[1]
+      deltaV[2] += dv[2]
 
-      p[0] += ds[0]
-      p[1] += ds[1]
-      p[2] += ds[2]
+      deltaP[0] += ds[0]
+      deltaP[1] += ds[1]
+      deltaP[2] += ds[2]
     }
 
-    this.velocity.set(...v) // velocity changes
-    this.position.set(...p) // position changes
+    return [deltaV, deltaP]
   }
 
   public next() {
     console.log(this.info.name, "next")
-    this.buffer()
-    // sync mesh
-    this.o3.position.set(this.position.x, this.position.y, this.position.z)
+    const [dv, dp] = this.buffer()
+
+    this.o3.position.add(new THREE.Vector3(dp[0], dp[1], dp[2]))
+
+    this.velocity.add(new THREE.Vector3(dv[0], dv[1], dv[2]))
 
     const writer = this.writer
-    const distance = this.position.length() / AU
+    const distance = this.o3.position.length() / AU
     writer.write(`distance: ${distance.toFixed(6)} AU`, 1)
     const speed = this.velocity.length() * 100
     writer.write(`speed: ${speed.toFixed(2)} km/s`, 2)
@@ -197,16 +208,16 @@ export class CelestialBody {
    * Uranus: .065
    * Neptune: .0533
    */
-
   private putObjectOnAphelion() {
     const { ref, semiMajorAxis, aphelion } = this.info
-    this.position = new THREE.Vector3(aphelion, 0, 0)
-    this.position.applyMatrix4(this.inclinationMat)
+    const position = this.o3.position
+    position.set(aphelion, 0, 0)
+    position.applyMatrix4(this.inclinationMat)
     const m = ref.mass
     const scalar =
       BEST_INITIAL_VELOCITY[this.info.name] ||
       Math.sqrt(G * m * (2 / aphelion - 1 / semiMajorAxis))
-    console.log(this.info.name, ...this.position.toArray())
+    console.log(this.info.name, ...position.toArray())
     this.velocity = new THREE.Vector3(0, 0, scalar)
     this.velocity.applyMatrix4(this.inclinationMat)
   }
