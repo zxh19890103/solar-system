@@ -1,9 +1,11 @@
 import { BodyInfo } from "../sys/body-info"
 import { AU } from "../sys/constants"
 
-type ARRAY_VECTOR3 = [number, number, number]
+type ARRAY_VECTOR3 = THREE.Vector3Tuple
 
 const G = 6.67 * 0.001
+const BUFFER_SIZE = 1000
+const MOMENT = 100
 
 /**
  * one year on earth equals this value.
@@ -64,6 +66,7 @@ export class CelestialBody {
   velocity: THREE.Vector3
   orbitalAxis: THREE.Vector3
   period: number = 0
+  periodText: string = ''
 
   inclinationMat: THREE.Matrix4
 
@@ -88,11 +91,12 @@ export class CelestialBody {
 
     this.putObjectOnAphelion()
     this.period = this.computePeriod()
+    this.periodText = this.period < .5 ? `${(this.period * 365).toFixed(2)} days` : `${this.period.toFixed(2)} years`
 
     this.writer = insertCanvas(this.info)
   }
 
-  private computeAccByRef(
+  private computeAccBy(
     position0: ARRAY_VECTOR3,
     position: ARRAY_VECTOR3,
     mass: number
@@ -114,78 +118,90 @@ export class CelestialBody {
     return dir.map((com) => (scalar * com) / length)
   }
 
-  private buffer() {
-    let n = 100
-    const dt = 100
+  private buffer(position: THREE.Vector3Tuple, velocity: THREE.Vector3Tuple) {
 
-    const deltaV: ARRAY_VECTOR3 = [0, 0, 0]
-    const deltaP: ARRAY_VECTOR3 = [0, 0, 0]
-    
-    const posi = this.o3.getWorldPosition(new THREE.Vector3()).toArray()
-    const a: ARRAY_VECTOR3 = [0, 0, 0]
-    
-    const getAcc = this.computeAccByRef
-    
-    let ref = this.ref
-    while (ref) {
-      const refPosi = ref.o3.getWorldPosition(new THREE.Vector3()).toArray()
-      const da = getAcc(posi, refPosi, ref.info.mass)
-      a[0] += da[0]
-      a[1] += da[1]
-      a[2] += da[2]
+    let n = BUFFER_SIZE
 
-      ref = ref.ref
-    }
+    const computeAcc = this.computeAccBy
+    const ref = this.ref
+    const mass = ref.info.mass
+    const origin: THREE.Vector3Tuple = [0, 0, 0]
 
     while (n--) {
-      const dv = a.map((c) => c * dt)
-      const [vx, vy, vz] = deltaV
+      const a = computeAcc(position, origin, mass)
+      const dv = [
+        a[0] * MOMENT,
+        a[1] * MOMENT,
+        a[2] * MOMENT
+      ]
+      const [vx, vy, vz] = velocity
       const [dvx, dvy, dvz] = dv
       const ds = [
-        vx * dt + 0.5 * dvx * dt,
-        vy * dt + 0.5 * dvy * dt,
-        vz * dt + 0.5 * dvz * dt,
+        vx * MOMENT + 0.5 * dvx * MOMENT,
+        vy * MOMENT + 0.5 * dvy * MOMENT,
+        vz * MOMENT + 0.5 * dvz * MOMENT,
       ]
 
-      deltaV[0] += dv[0]
-      deltaV[1] += dv[1]
-      deltaV[2] += dv[2]
+      velocity[0] += dv[0]
+      velocity[1] += dv[1]
+      velocity[2] += dv[2]
 
-      deltaP[0] += ds[0]
-      deltaP[1] += ds[1]
-      deltaP[2] += ds[2]
+      position[0] += ds[0]
+      position[1] += ds[1]
+      position[2] += ds[2]
     }
-
-    return [deltaV, deltaP]
   }
 
-  public next() {
-    console.log(this.info.name, "next")
-    const [dv, dp] = this.buffer()
-
-    this.o3.position.add(new THREE.Vector3(dp[0], dp[1], dp[2]))
-
-    this.velocity.add(new THREE.Vector3(dv[0], dv[1], dv[2]))
+  public createNextFn() {
+    const { o3, velocity } = this
+    const { position } = o3
 
     const writer = this.writer
-    const distance = this.o3.position.length() / AU
-    writer.write(`distance: ${distance.toFixed(6)} AU`, 1)
-    const speed = this.velocity.length() * 100
-    writer.write(`speed: ${speed.toFixed(2)} km/s`, 2)
-    writer.write(
-      `period: ${this.period.toFixed(2)} year(s) / ${(this.s / 1000).toFixed(
-        2
-      )}s`,
-      3
-    )
 
-    this.computeActualPeriod(speed)
+    let loc = position.toArray()
+    let velo = velocity.toArray()
+
+    return () => {
+      this.buffer(loc, velo)
+
+      position.set(...loc)
+      velocity.set(...velo)
+
+      const distance = position.length() / AU
+      writer.write(`distance: ${distance.toFixed(6)} AU`, 1)
+      const speed = velocity.length() * 100
+      writer.write(`speed: ${speed.toFixed(2)} km/s`, 2)
+      writer.write(
+        `period: ${this.periodText} / ${(this.s / 1000).toFixed(
+          2
+        )}s`,
+        3
+      )
+      this.computeActualPeriod(speed)
+    }
   }
 
-  run() {
-    if (this.ref) this.next()
-    for (const child of this.children) {
-      child.run()
+  bootstrap() {
+    const items: CelestialBody[] = []
+    const add = (b: CelestialBody) => {
+      items.push(b)
+      for (const child of b.children) {
+        items.push(child)
+        add(child)
+      }
+    }
+
+    add(this)
+
+    items.shift()
+
+    const fns = items.map((item) => {
+      return item.createNextFn()
+    })
+
+    return () => {
+      for (const fn of fns)
+        fn()
     }
   }
 
@@ -217,7 +233,6 @@ export class CelestialBody {
     const scalar =
       BEST_INITIAL_VELOCITY[this.info.name] ||
       Math.sqrt(G * m * (2 / aphelion - 1 / semiMajorAxis))
-    console.log(this.info.name, ...position.toArray())
     this.velocity = new THREE.Vector3(0, 0, scalar)
     this.velocity.applyMatrix4(this.inclinationMat)
   }

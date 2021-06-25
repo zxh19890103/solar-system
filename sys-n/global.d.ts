@@ -4,8 +4,9 @@ import { CelestialBody } from "./gravity"
 declare global {
   export var THREE: typeof t
   export interface CelestialSystem {
-    body: BodyInfo,
+    body: BodyInfo
+    hidden?: boolean
     celestialBody?: CelestialBody
-    subSystems?: Array<CelestialSystem>
+    subSystems?: Array<CelestialSystem | BodyInfo>
   }
 }
