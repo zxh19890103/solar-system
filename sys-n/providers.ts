@@ -24,7 +24,7 @@ const textureLoader = new THREE.TextureLoader()
 function sphere(info: BodyInfo) {
   const tex = textureLoader.load(info.map)
   const geometry = new THREE.SphereGeometry(info.radius, 60, 60)
-  const material = new THREE.MeshDistanceMaterial({ map: tex })
+  const material = new THREE.MeshPhongMaterial({ color: '#ffffff' })
   const mesh = new THREE.Mesh(geometry, material)
   return mesh
 }

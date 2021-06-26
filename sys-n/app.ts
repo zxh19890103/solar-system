@@ -44,33 +44,27 @@ renderer.setClearColor(0x000000, 0)
 renderer.setSize(window.innerWidth, window.innerHeight)
 document.body.appendChild(renderer.domElement)
 
-// const light = new THREE.DirectionalLight("#ffffff", 1)
-// light.position.set(1, 1, 0)
-// scene.add(light)
-
-// const ami = new THREE.AmbientLight("#ffffff", .3)
-// scene.add(ami)
-
 const system: CelestialSystem = {
   body: Sun,
   subSystems: [
-    Holmes,
-    Halley,
+    Mercury,
+    Venus,
     {
-      hidden: true,
+      hidden: false,
       body: Earth,
       subSystems: [
         {
+          hidden: true,
           body: Luna
         }
       ]
     },
     {
-      hidden: true,
+      hidden: false,
       body: Mars,
       subSystems: [
-        { body: Phobos },
-        { body: Deimos }
+        { body: Phobos, hidden: true },
+        { body: Deimos, hidden: true }
       ]
     },
     {
@@ -86,16 +80,26 @@ const system: CelestialSystem = {
   ],
 }
 
+const system1: CelestialSystem = {
+  hidden: false,
+  body: Earth,
+  subSystems: [
+    {
+      hidden: false,
+      body: Luna
+    }
+  ]
+}
+
 const make = () => {
   const mkNode = (sys: CelestialSystem, parent: CelestialSystem) => {
     if (sys.hidden) return
-    if (parent === null) {
-      sys.celestialBody = new CelestialBody(dot(sys.body), sys.body)
-    } else {
-      sys.celestialBody = new CelestialBody(point(sys.body), sys.body)
+    sys.celestialBody = new CelestialBody(dot(sys.body), sys.body)
+    if (parent) {
       parent.celestialBody.add(sys.celestialBody)
-      sys.celestialBody.init()
     }
+    sys.celestialBody.init()
+
     if (sys.subSystems) {
       for (const subSys of sys.subSystems) {
         const info = subSys as BodyInfo
@@ -115,7 +119,7 @@ make()
 
 scene.add(system.celestialBody.o3)
 
-camera.position.set(0, 0, 1.4 * Jupiter.aphelion)
+camera.position.set(0, 0, 1.5 * Mars.aphelion)
 camera.up.set(0, 1, 0)
 camera.lookAt(0, 0, 0)
 
