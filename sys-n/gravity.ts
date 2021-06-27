@@ -5,7 +5,18 @@ type ARRAY_VECTOR3 = THREE.Vector3Tuple
 
 const G = 6.67 * 0.001
 const BUFFER_SIZE = 100
-const MOMENT = 10
+const MOMENT = 50
+
+/**
+ * https://www.theplanetstoday.com/Scripts/data.php
+ * 
+ * returns
+ * 
+ * var names = [["Sol",46],["Earth",30.1],["Luna",13.55],["Mercury",13.35],["Venus",15.5],["Mars",14.5],["Jupiter",40.9],["Saturn ",31.1],["Uranus",26],["Neptune",18.1],["Ceres",5.9],["Pluto",5.9],["Haumea",5.9],["Makemake",5.9],["Eris",5.9]]; 
+ * var data = [
+ *  ["${date}", 400, 400, 0, (x,y,0){14},.0000003]
+ * ]
+ */
 
 /**
  * one year on earth equals this value.
@@ -66,11 +77,10 @@ export class CelestialBody {
   info: BodyInfo
   readonly velocity: THREE.Vector3
   readonly orbitalAxis: THREE.Vector3
+  readonly inclinationMat: THREE.Matrix4
   scene: THREE.Scene
   period: number = 0
   periodText: string = '--'
-
-  inclinationMat: THREE.Matrix4
 
   ref: CelestialBody = null
   state: 'normal' | 'reqStop' | 'stopped' = 'normal'
@@ -82,15 +92,13 @@ export class CelestialBody {
     this.info = info
     this.velocity = new THREE.Vector3(0, 0, 0)
     this.orbitalAxis = new THREE.Vector3(0, 1, 0)
+    this.inclinationMat = new THREE.Matrix4()
   }
 
   init() {
     const refPlane = new THREE.Vector3(0.3, 0, 1)
-    const mat = new THREE.Matrix4()
-    mat.makeRotationAxis(refPlane, this.info.inclination)
-    this.orbitalAxis.applyMatrix4(mat)
-
-    this.inclinationMat = mat
+    this.inclinationMat.makeRotationAxis(refPlane, this.info.inclination)
+    this.orbitalAxis.applyMatrix4(this.inclinationMat)
 
     if (this.ref) { // or it's on the center
       this.putObjectOnAphelion()

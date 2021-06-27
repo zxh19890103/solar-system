@@ -9,4 +9,8 @@ declare global {
     celestialBody?: CelestialBody
     subSystems?: Array<CelestialSystem | BodyInfo>
   }
+
+  export interface AppBoot {
+    (scene: THREE.Scene, renderer: THREE.Renderer, camera: THREE.Camera): void
+  }
 }
