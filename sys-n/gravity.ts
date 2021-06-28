@@ -77,10 +77,13 @@ export class CelestialBody {
   info: BodyInfo
   readonly velocity: THREE.Vector3
   readonly orbitalAxis: THREE.Vector3
-  readonly inclinationMat: THREE.Matrix4
   scene: THREE.Scene
   period: number = 0
   periodText: string = '--'
+
+  // ref direction: J2000 ecliptic (1, 0, 0)
+  readonly periapsis: THREE.Vector3
+  readonly toPeriapsis: THREE.Matrix4
 
   ref: CelestialBody = null
   state: 'normal' | 'reqStop' | 'stopped' = 'normal'
@@ -91,14 +94,21 @@ export class CelestialBody {
     this.o3 = o3
     this.info = info
     this.velocity = new THREE.Vector3(0, 0, 0)
-    this.orbitalAxis = new THREE.Vector3(0, 1, 0)
-    this.inclinationMat = new THREE.Matrix4()
+
+    const refDirection = new THREE.Vector3(1, 0, 0)
+    const toPeriapsis = new THREE.Matrix4()
+
+    toPeriapsis.multiply(new THREE.Matrix4().makeRotationY(info.loan))
+    toPeriapsis.multiply(new THREE.Matrix4().makeRotationX(info.inclination))
+    toPeriapsis.multiply(new THREE.Matrix4().makeRotationY(info.aop))
+
+    this.periapsis = refDirection.clone().applyMatrix4(toPeriapsis)
+    this.toPeriapsis = toPeriapsis
   }
 
-  init() {
-    const refPlane = new THREE.Vector3(0.3, 0, 1)
-    this.inclinationMat.makeRotationAxis(refPlane, this.info.inclination)
-    this.orbitalAxis.applyMatrix4(this.inclinationMat)
+  init(rt: THREE.Vector3) {
+
+    console.log(this.info.name, ...rt.toArray())
 
     if (this.ref) { // or it's on the center
       this.putObjectOnAphelion()
@@ -246,16 +256,14 @@ export class CelestialBody {
    * Neptune: .0533
    */
   private putObjectOnAphelion() {
-    const { ref, semiMajorAxis, aphelion } = this.info
+    const { ref, semiMajorAxis, peribelion } = this.info
     const position = this.o3.position
-    position.set(aphelion, 0, 0)
-    position.applyMatrix4(this.inclinationMat)
+    position.set(peribelion, 0, 0)
+    position.applyMatrix4(this.toPeriapsis)
     const m = ref.mass
-    const scalar =
-      BEST_INITIAL_VELOCITY[this.info.name] ||
-      Math.sqrt(G * m * (2 / aphelion - 1 / semiMajorAxis))
-    this.velocity.set(0, 0, scalar)
-    this.velocity.applyMatrix4(this.inclinationMat)
+    const scalar = Math.sqrt(G * m * (2 / peribelion - 1 / semiMajorAxis))
+    this.velocity.set(0, 0, - scalar)
+    this.velocity.applyMatrix4(this.toPeriapsis)
   }
 
   private stage: 1 | 2 | 3 | 4 = 1

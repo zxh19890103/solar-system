@@ -28,12 +28,14 @@ import { AU, RAD_PER_DEGREE } from "../sys/constants"
 
 import { CelestialBody } from "./gravity"
 import { dot, sphere, point } from "./providers"
+import RT, { names } from './realtime'
 
 const system: CelestialSystem = {
   body: Sun,
   subSystems: [
     Mercury,
     Venus,
+    Halley,
     {
       hidden: false,
       body: Earth,
@@ -65,17 +67,6 @@ const system: CelestialSystem = {
   ],
 }
 
-const system1: CelestialSystem = {
-  hidden: false,
-  body: Earth,
-  subSystems: [
-    {
-      hidden: false,
-      body: Luna
-    }
-  ]
-}
-
 const make = () => {
   const mkNode = (sys: CelestialSystem, parent: CelestialSystem) => {
     if (sys.hidden) return
@@ -83,7 +74,14 @@ const make = () => {
     if (parent) {
       parent.celestialBody.add(sys.celestialBody)
     }
-    sys.celestialBody.init()
+    const index = names.findIndex(x => x[0] === sys.body.name)
+    let rt: THREE.Vector3 = new THREE.Vector3()
+    if (index !== -1) {
+      const [x, y] = RT.slice(1 + index * 3, 4 + index * 3) as number[]
+      rt.set(x - 400, 0, y - 400)
+      rt.normalize()
+    }
+    sys.celestialBody.init(rt)
 
     if (sys.subSystems) {
       for (const subSys of sys.subSystems) {
@@ -109,12 +107,12 @@ const bootstrap = (scene: THREE.Scene, renderer: THREE.Renderer, camera: THREE.C
 
   scene.add(star.o3)
 
-  camera.position.set(0, 0, 1.5 * Mars.aphelion)
+  camera.position.set(0, 1.5 * Mars.aphelion, 0)
   camera.up.set(0, 1, 0)
   camera.lookAt(0, 0, 0)
 
   const animate = () => {
-    requestAnimationFrame(animate)
+    // requestAnimationFrame(animate)
     next()
     renderer.render(scene, camera)
   }

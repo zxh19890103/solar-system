@@ -38,6 +38,7 @@ export interface BodyInfo {
   map: string
   /**
    * to the Sun's equator;
+   * In the future it will be to J2000 ecliptic
    */
   inclination?: number
   /**
@@ -56,7 +57,15 @@ export interface BodyInfo {
    * or, equivalently, the angle between its equatorial plane and orbital plane. 
    * It differs from orbital inclination.
    */
-  axialTilt?: number
+  axialTilt?: number,
+  /**
+   * Argument of perihelion
+   */
+  aop?: number,
+  /**
+   * Longitude of ascending node
+   */
+  loan?: number
 }
 
 const COLORS = {
@@ -99,6 +108,8 @@ export const Sun: BodyInfo = {
   mass: 1.9885 * 1000000,
   radius: 696.342,
   inclination: 0,
+  aop: 0,
+  loan: 0,
   axialTilt: 0,
   rotationPeriod: 0
 }
@@ -113,7 +124,9 @@ export const Mercury: BodyInfo = {
   color: composeColors(COLORS.grey),
   mass: .33011,
   radius: 2.4397,
-  inclination: 3.38 * RAD_PER_DEGREE,
+  inclination: 7.005 * RAD_PER_DEGREE,
+  aop: 29.124 * RAD_PER_DEGREE,
+  loan: 48.331 * RAD_PER_DEGREE,
   rotationPeriod: 58.646,
   axialTilt: 0.034 * RAD_PER_DEGREE,
   ref: Sun
@@ -129,7 +142,9 @@ export const Venus: BodyInfo = {
   color: composeColors(COLORS.grey, COLORS.brown),
   mass: 4.8675,
   radius: 6.0518,
-  inclination: 3.86 * RAD_PER_DEGREE,
+  inclination: 3.39458 * RAD_PER_DEGREE,
+  aop: 54.884 * RAD_PER_DEGREE,
+  loan: 76.680 * RAD_PER_DEGREE,
   rotationPeriod: -243.025,
   axialTilt: 177.36 * RAD_PER_DEGREE,
   ref: Sun
@@ -145,7 +160,9 @@ export const Earth: BodyInfo = {
   color: composeColors(COLORS.blue, COLORS.green),
   mass: 5.97237,
   radius: 6.371,
-  inclination: 7.155 * RAD_PER_DEGREE,
+  inclination: 0.00005 * RAD_PER_DEGREE,
+  aop: 114.20783 * RAD_PER_DEGREE,
+  loan: - 11.26064 * RAD_PER_DEGREE,
   rotationPeriod: .99,
   axialTilt: 23.4392811 * RAD_PER_DEGREE,
   ref: Sun
@@ -161,7 +178,9 @@ export const Mars: BodyInfo = {
   color: composeColors(COLORS.red, COLORS.brown, COLORS.tan),
   mass: .64171,
   radius: 3.3895,
-  inclination: 5.65 * RAD_PER_DEGREE,
+  inclination: 1.850 * RAD_PER_DEGREE,
+  aop: 286.502 * RAD_PER_DEGREE,
+  loan: 49.558 * RAD_PER_DEGREE,
   rotationPeriod: 1.025957,
   axialTilt: 25.19 * RAD_PER_DEGREE,
   ref: Sun
@@ -329,7 +348,11 @@ export const Halley: BodyInfo = {
   color: composeColors(COLORS.orange),
   mass: 2.2 * Math.pow(10, -10),
   radius: 11 * .001,
-  inclination: 0,
+  inclination: 162.26 * RAD_PER_DEGREE,
+  loan: 58.42 * RAD_PER_DEGREE,
+  aop: 111.33 * RAD_PER_DEGREE,
+  axialTilt: 0,
+  rotationPeriod: 0,
   ref: Sun
 }
 
@@ -348,7 +371,7 @@ export const Tempel1: BodyInfo = {
 }
 
 export const Holmes: BodyInfo = {
-  name: "Holmes",
+  name: "17P/Holmes",
   aphelion: 5.183610 * AU,
   peribelion: 2.053218 * AU,
   semiMajorAxis: 3.618414 * AU,
