@@ -6,6 +6,8 @@ declare global {
   export interface CelestialSystem {
     body: BodyInfo
     hidden?: boolean
+    initialPosition?: THREE.Vector3
+    initialVelocity?: THREE.Vector3
     celestialBody?: CelestialBody
     subSystems?: Array<CelestialSystem | BodyInfo>
   }

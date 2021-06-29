@@ -95,7 +95,7 @@ export class CelestialBody {
     this.info = info
     this.velocity = new THREE.Vector3(0, 0, 0)
 
-    const refDirection = new THREE.Vector3(1, 0, 0)
+    const refDirection = new THREE.Vector3(1, 0, 0) // J2000
     const toPeriapsis = new THREE.Matrix4()
 
     toPeriapsis.multiply(new THREE.Matrix4().makeRotationY(info.loan))
@@ -106,12 +106,14 @@ export class CelestialBody {
     this.toPeriapsis = toPeriapsis
   }
 
-  init(rt: THREE.Vector3) {
-
-    console.log(this.info.name, ...rt.toArray())
-
+  init(position?: THREE.Vector3, velocity?: THREE.Vector3) {
     if (this.ref) { // or it's on the center
-      this.putObjectOnAphelion()
+      if (position && velocity) {
+        this.o3.position.copy(position)
+        this.velocity.copy(velocity)
+      } else {
+        this.putObjectOnAphelion()
+      }
       this.period = this.computePeriod()
       this.periodText = this.period < .5 ? `${(this.period * 365).toFixed(2)} days` : `${this.period.toFixed(2)} years`
     }
@@ -262,7 +264,7 @@ export class CelestialBody {
     position.applyMatrix4(this.toPeriapsis)
     const m = ref.mass
     const scalar = Math.sqrt(G * m * (2 / peribelion - 1 / semiMajorAxis))
-    this.velocity.set(0, 0, - scalar)
+    this.velocity.set(0, 0, scalar)
     this.velocity.applyMatrix4(this.toPeriapsis)
   }
 
