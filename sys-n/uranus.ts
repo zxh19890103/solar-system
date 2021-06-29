@@ -6,16 +6,16 @@ import { dot, sphere, ring } from "./providers"
 const bootstrap: AppBoot = (scene, renderer, camera) => {
   // const uranus = sphere(Uranus)
   // const earth = sphere(Earth)
-  // const mars = sphere(Mars)
-  const jupiter = sphere(Jupiter)
+  const mars = sphere(Mars)
+  // const jupiter = sphere(Jupiter)
   // const neptune = sphere(Neptune)
   // const saturn = sphere(Saturn)
   // const uranusRing = ring(Uranus)
   // o3.add(uranusRing)
   // scene.add(uranus)
   // scene.add(earth)
-  // scene.add(mars)
-  scene.add(jupiter)
+  scene.add(mars)
+  // scene.add(jupiter)
   // scene.add(neptune)
   // scene.add(saturn)
 
@@ -32,7 +32,7 @@ const bootstrap: AppBoot = (scene, renderer, camera) => {
   const ambientLight = new THREE.AmbientLight(0xffffff, .03)
   scene.add(ambientLight)
 
-  camera.position.set(0, 0, 300)
+  camera.position.set(0, 0, 10)
   camera.up.set(0, 1, 0)
   camera.lookAt(0, 0, 0)
 
@@ -40,8 +40,8 @@ const bootstrap: AppBoot = (scene, renderer, camera) => {
     requestAnimationFrame(animate)
     // uranus.rotation.y += .003
     // earth.rotation.y += .003
-    jupiter.rotation.y += .003
-    // mars.rotation.y += .003
+    // jupiter.rotation.y += .003
+    mars.rotation.y += .003
     // neptune.rotation.y += .004
     // saturn.rotation.y += .001
     renderer.render(scene, camera)

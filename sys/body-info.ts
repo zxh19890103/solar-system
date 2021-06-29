@@ -174,7 +174,7 @@ export const Mars: BodyInfo = {
   peribelion: 206700,
   semiMajorAxis: 227939.2,
   avatar: "/nineplanets-org/mars.png",
-  map: "/maps/mars-1024x512.jpg",
+  map: "/8k/8k_mars.jpg",
   color: composeColors(COLORS.red, COLORS.brown, COLORS.tan),
   mass: .64171,
   radius: 3.3895,
