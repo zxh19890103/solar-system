@@ -27,17 +27,24 @@ import {
 import { AU, RAD_PER_DEGREE, SECONDS_IN_A_DAY } from "../sys/constants"
 
 import { CelestialBody } from "./gravity"
-import { toThreeJSCSMat } from "./jpl-data/index"
+import { toThreeJSCSMat, BOOTSTRAP_STATE } from "./jpl-data"
 import { dot, sphere, point } from "./providers"
 
 const system: CelestialSystem = {
   body: Sun,
   subSystems: [
     {
+      body: Mercury,
+      bootstrapState: BOOTSTRAP_STATE.Mercury
+    },
+    {
+      body: Venus,
+      bootstrapState: BOOTSTRAP_STATE.Venus
+    },
+    {
       hidden: false,
       body: Earth,
-      initialPosition: [1.273555128442919E-01, -1.008595863432608E+00, 5.025624779797198E-05],
-      initialVelocity: [1.678506069402309E-02, 2.085228180777305E-03, -2.667715746691512E-08],
+      bootstrapState: BOOTSTRAP_STATE.Earth,
       subSystems: [
         {
           hidden: true,
@@ -46,8 +53,9 @@ const system: CelestialSystem = {
       ]
     },
     {
-      hidden: true,
+      hidden: false,
       body: Mars,
+      bootstrapState: BOOTSTRAP_STATE.Mars,
       subSystems: [
         { body: Phobos, hidden: true },
         { body: Deimos, hidden: true }
@@ -84,7 +92,11 @@ const make = () => {
       parent.celestialBody.add(sys.celestialBody)
     }
 
-    sys.celestialBody.init(transformPosition(sys.initialPosition), transformVelocity(sys.initialVelocity))
+    if (sys.bootstrapState) {
+      sys.celestialBody.init(transformPosition(sys.bootstrapState.posi), transformVelocity(sys.bootstrapState.velo))
+    } else {
+      sys.celestialBody.init()
+    }
 
     if (sys.subSystems) {
       for (const subSys of sys.subSystems) {

@@ -1,12 +1,12 @@
 import { BodyInfo } from "../sys/body-info"
 import { AU, SECONDS_IN_A_DAY } from "../sys/constants"
-import { toJ2000CSMat } from "./jpl-data/index"
+import { toJ2000CSMat } from "./jpl-data"
 
 type ARRAY_VECTOR3 = THREE.Vector3Tuple
 
 const G = 6.67 * .00001 // be sure the velocity's unit is km/s
-const BUFFER_SIZE = 100
-const MOMENT = 50 // s
+const BUFFER_SIZE = 1000
+const MOMENT = 10 // s
 
 /**
  * seconds
@@ -111,7 +111,6 @@ export class CelestialBody {
         this.putObjectOnAphelion()
       }
       this.period = this.computePeriod()
-      this.periodText = this.period < .5 ? `${(this.period * 365).toFixed(2)} days` : `${this.period.toFixed(2)} years`
     }
 
     this.writer = insertCanvas(this.info)
@@ -195,7 +194,11 @@ export class CelestialBody {
         writer.write(`distance: ${distance.toFixed(6)} AU`, 1)
         const speed = velocity.length() * 1000
         writer.write(`speed: ${speed.toFixed(2)} km/s`, 2)
-        writer.write(`period: ${(this.s / 1000).toFixed(2)}s`, 3)
+        if (this.stage === 8) {
+          writer.write(`period: ${(this.s / 1000).toFixed(2)}s / ${this.periodText}`, 3)
+        } else {
+          writer.write('period: ...', 3)
+        }
         writer.write(`time: ${(this.days)} days`, 4)
         this.computeActualPeriod(speed)
       }
@@ -274,8 +277,10 @@ export class CelestialBody {
   private s: number = 0
 
   private computeActualPeriod(speed: number) {
+    if (this.stage === 8) return
     switch (this.stage) {
       case 0: {
+        this.stage = 1
         break
       }
       case 1: {
@@ -339,15 +344,15 @@ export class CelestialBody {
         }
         break
       }
-      case 8:
       default: {
-        console.log('got!')
         break
       }
     }
 
     if (this.stage < 8)
       this.lastSpeed = speed
+    else
+      this.periodText = this.days + 'days'
   }
 
   private computePeriod() {
