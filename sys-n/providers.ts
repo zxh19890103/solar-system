@@ -23,7 +23,7 @@ const textureLoader = new THREE.TextureLoader()
 
 function sphere(info: BodyInfo) {
   const tex = textureLoader.load(info.map)
-  const geometry = new THREE.SphereGeometry(info.radius, 60, 60)
+  const geometry = new THREE.SphereGeometry(info.radius, 120, 120)
   const material = new THREE.MeshPhongMaterial({ map: tex })
   const mesh = new THREE.Mesh(geometry, material)
   mesh.rotateOnAxis(

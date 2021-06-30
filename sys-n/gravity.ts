@@ -1,33 +1,28 @@
 import { BodyInfo } from "../sys/body-info"
-import { AU } from "../sys/constants"
+import { AU, SECONDS_IN_A_DAY } from "../sys/constants"
+import { toJ2000CSMat } from "./jpl-data/index"
 
 type ARRAY_VECTOR3 = THREE.Vector3Tuple
 
-const G = 6.67 * 0.001
+const G = 6.67 * .00001 // be sure the velocity's unit is km/s
 const BUFFER_SIZE = 100
-const MOMENT = 50
+const MOMENT = 50 // s
 
 /**
- * https://www.theplanetstoday.com/Scripts/data.php
- * 
- * returns
- * 
- * var names = [["Sol",46],["Earth",30.1],["Luna",13.55],["Mercury",13.35],["Venus",15.5],["Mars",14.5],["Jupiter",40.9],["Saturn ",31.1],["Uranus",26],["Neptune",18.1],["Ceres",5.9],["Pluto",5.9],["Haumea",5.9],["Makemake",5.9],["Eris",5.9]]; 
- * var data = [
- *  ["${date}", 400, 400, 0, (x,y,0){14},.0000003]
- * ]
+ * seconds
  */
+const BUFFER_MOMENT = BUFFER_SIZE * MOMENT
 
 /**
  * one year on earth equals this value.
  * 365 * 24 * 60 * 60
  */
-const K = 3156769.959
+const K = 31567699.59
 
 const BEST_INITIAL_VELOCITY = {
   Mecury: 0.387,
   Venus: 0.346,
-  Earth: 0.289,
+  Earth: 0.0289,
   Mars: 0.2178,
   Jupiter: 0.123,
   Saturn: 0.0902,
@@ -48,30 +43,29 @@ width: 200px;
 `
 document.body.appendChild(div)
 
-const insertCanvas = (info: BodyInfo) => {
+const insertCanvas = (info: BodyInfo, width: number = 200, height: number = 100) => {
   const dpr = window.devicePixelRatio
   const canvas = document.createElement("canvas")
-  canvas.width = 200 * dpr
-  canvas.height = 60 * dpr
-  canvas.style.cssText = `width: 200px; height: 60px; position: static;`
+  canvas.width = width * dpr
+  canvas.height = height * dpr
+  canvas.style.cssText = `width: ${width}px; height: ${height}px; position: static;`
   const ctx = canvas.getContext("2d")
   ctx.scale(dpr, dpr)
   div.appendChild(canvas)
   const color = "rgba(" + info.color.map((x) => 0 ^ (x * 255)).join(",") + ")"
-  ctx.strokeStyle = color
+  ctx.fillStyle = color
   ctx.textBaseline = "top"
   const h = 13
-  ctx.font = `${h}px / 1 Wawati SC`
-  ctx.strokeText(info.name, 0, 0, 200)
+  ctx.font = `${h - 1}px / 1 Wawati SC`
+  ctx.fillText(info.name, 0, 0, 200)
 
   return {
     write: (txt: string, lineno = 1) => {
-      ctx.clearRect(0, h * lineno, 200, h)
-      ctx.strokeText(txt, 0, h * lineno, 200)
+      ctx.clearRect(0, h * lineno, width, h)
+      ctx.fillText(txt, 0, h * lineno, width)
     },
   }
 }
-
 export class CelestialBody {
   o3: THREE.Object3D
   info: BodyInfo
@@ -93,8 +87,10 @@ export class CelestialBody {
   constructor(o3: THREE.Object3D, info: BodyInfo) {
     this.o3 = o3
     this.info = info
+    /**
+     * 10^3 km/s
+     */
     this.velocity = new THREE.Vector3(0, 0, 0)
-
     const refDirection = new THREE.Vector3(1, 0, 0) // J2000
     const toPeriapsis = new THREE.Matrix4()
 
@@ -161,6 +157,9 @@ export class CelestialBody {
     }
   }
 
+  clock: number = 0
+  days: number = 0
+
   public createNextFn() {
     const { o3, velocity } = this
     const { position } = o3
@@ -185,17 +184,19 @@ export class CelestialBody {
       position.set(...loc)
       velocity.set(...velo)
 
-      const distance = position.length() / AU
-      writer.write(`distance: ${distance.toFixed(6)} AU`, 1)
-      const speed = velocity.length() * 100
-      writer.write(`speed: ${speed.toFixed(2)} km/s`, 2)
-      writer.write(
-        `period: ${this.periodText} / ${(this.s / 1000).toFixed(
-          2
-        )}s`,
-        3
-      )
+      this.clock += BUFFER_MOMENT
+      if (this.clock > SECONDS_IN_A_DAY) {
+        this.days += 1
+        this.clock = this.clock % SECONDS_IN_A_DAY
+      }
+
       if (this.ref) {
+        const distance = position.length() / AU
+        writer.write(`distance: ${distance.toFixed(6)} AU`, 1)
+        const speed = velocity.length() * 1000
+        writer.write(`speed: ${speed.toFixed(2)} km/s`, 2)
+        writer.write(`period: ${(this.s / 1000).toFixed(2)}s`, 3)
+        writer.write(`time: ${(this.days)} days`, 4)
         this.computeActualPeriod(speed)
       }
     }
@@ -263,46 +264,90 @@ export class CelestialBody {
     position.set(peribelion, 0, 0)
     position.applyMatrix4(this.toPeriapsis)
     const m = ref.mass
-    const scalar = Math.sqrt(G * m * (2 / peribelion - 1 / semiMajorAxis))
+    const scalar = BEST_INITIAL_VELOCITY[this.info.name] || Math.sqrt(G * m * (2 / peribelion - 1 / semiMajorAxis))
     this.velocity.set(0, 0, scalar)
     this.velocity.applyMatrix4(this.toPeriapsis)
   }
 
-  private stage: 1 | 2 | 3 | 4 = 1
+  private stage: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 = 0
   private lastSpeed = 0
   private s: number = 0
 
   private computeActualPeriod(speed: number) {
     switch (this.stage) {
-      case 1: {
-        // a
-        this.s = performance.now()
-        this.stage = 2
+      case 0: {
         break
       }
-      case 2: {
-        // a -> p
+      case 1: {
+        // justify
         if (speed < this.lastSpeed) {
+          // to A
+          this.stage = 2
+        } else {
+          // to P
           this.stage = 3
         }
         break
       }
-      case 3: {
-        // p -> a
+      case 2: {
+        // @A
         if (speed > this.lastSpeed) {
-          this.s = performance.now() - this.s
+          this.s = performance.now()
           this.stage = 4
         }
         break
       }
-      case 4:
+      case 3: {
+        // @P
+        if (speed < this.lastSpeed) {
+          this.s = performance.now()
+          this.stage = 6
+        }
+        break
+      }
+      case 4: {
+        // a -> p
+        // @P
+        if (speed < this.lastSpeed) {
+          this.stage = 5
+        }
+        break
+      }
+      case 5: {
+        // p -> a
+        // @A
+        if (speed > this.lastSpeed) {
+          this.s = performance.now() - this.s
+          this.stage = 8
+        }
+        break
+      }
+      case 6: {
+        // p -> a
+        // @A
+        if (speed > this.lastSpeed) {
+          this.stage = 7
+        }
+        break
+      }
+      case 7: {
+        // a -> p
+        // @P
+        if (speed < this.lastSpeed) {
+          this.s = performance.now() - this.s
+          this.stage = 8
+        }
+        break
+      }
+      case 8:
       default: {
+        console.log('got!')
+        break
       }
     }
 
-    if (this.stage < 4) {
+    if (this.stage < 8)
       this.lastSpeed = speed
-    }
   }
 
   private computePeriod() {

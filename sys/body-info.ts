@@ -156,7 +156,7 @@ export const Earth: BodyInfo = {
   peribelion: 147095,
   semiMajorAxis: 149598.023,
   avatar: "/nineplanets-org/earth.png",
-  map: "/maps/earth-1600x800.jpg",
+  map: "/8k/8k_earth_daymap.jpg",
   color: composeColors(COLORS.blue, COLORS.green),
   mass: 5.97237,
   radius: 6.371,
