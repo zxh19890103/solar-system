@@ -6,7 +6,7 @@ type ARRAY_VECTOR3 = THREE.Vector3Tuple
 
 const G = 6.67 * .00001 // be sure the velocity's unit is km/s
 const BUFFER_SIZE = 1000
-const MOMENT = 10 // s
+const MOMENT = 100 // s
 
 /**
  * seconds
@@ -66,6 +66,22 @@ const insertCanvas = (info: BodyInfo, width: number = 200, height: number = 100)
     },
   }
 }
+
+/**
+ * seconds
+ */
+let clock: number = 0
+let days: number = 0
+
+export const dida = () => {
+  // 1/60 s
+  clock += BUFFER_MOMENT
+  if (clock > SECONDS_IN_A_DAY) {
+    days += 1
+    clock = clock % SECONDS_IN_A_DAY
+  }
+}
+
 export class CelestialBody {
   o3: THREE.Object3D
   info: BodyInfo
@@ -73,7 +89,7 @@ export class CelestialBody {
   readonly orbitalAxis: THREE.Vector3
   scene: THREE.Scene
   period: number = 0
-  periodText: string = '--'
+  periodText: string = ''
 
   // ref direction: J2000 ecliptic (1, 0, 0)
   readonly periapsis: THREE.Vector3
@@ -156,9 +172,6 @@ export class CelestialBody {
     }
   }
 
-  clock: number = 0
-  days: number = 0
-
   public createNextFn() {
     const { o3, velocity } = this
     const { position } = o3
@@ -183,24 +196,16 @@ export class CelestialBody {
       position.set(...loc)
       velocity.set(...velo)
 
-      this.clock += BUFFER_MOMENT
-      if (this.clock > SECONDS_IN_A_DAY) {
-        this.days += 1
-        this.clock = this.clock % SECONDS_IN_A_DAY
-      }
+      const distance = position.length() / AU
+      writer.write(`distance: ${distance.toFixed(6)} AU`, 1)
+      const speed = velocity.length() * 1000
+      writer.write(`speed: ${speed.toFixed(2)} km/s`, 2)
+      writer.write(`period: ${(this.s / 1000).toFixed(2)}s / ${this.periodText}`, 3)
+      writer.write(`time: ${(days)} days`, 4)
+      this.measureActualPeriod(speed)
 
-      if (this.ref) {
-        const distance = position.length() / AU
-        writer.write(`distance: ${distance.toFixed(6)} AU`, 1)
-        const speed = velocity.length() * 1000
-        writer.write(`speed: ${speed.toFixed(2)} km/s`, 2)
-        if (this.stage === 8) {
-          writer.write(`period: ${(this.s / 1000).toFixed(2)}s / ${this.periodText}`, 3)
-        } else {
-          writer.write('period: ...', 3)
-        }
-        writer.write(`time: ${(this.days)} days`, 4)
-        this.computeActualPeriod(speed)
+      if (this.stage === 8 && !this.periodText) {
+        this.periodText = days + 'days'
       }
     }
   }
@@ -276,7 +281,7 @@ export class CelestialBody {
   private lastSpeed = 0
   private s: number = 0
 
-  private computeActualPeriod(speed: number) {
+  private measureActualPeriod(speed: number) {
     if (this.stage === 8) return
     switch (this.stage) {
       case 0: {
@@ -351,8 +356,6 @@ export class CelestialBody {
 
     if (this.stage < 8)
       this.lastSpeed = speed
-    else
-      this.periodText = this.days + 'days'
   }
 
   private computePeriod() {

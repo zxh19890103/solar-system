@@ -339,7 +339,7 @@ export const Eris: BodyInfo = {
 // Commets bellow
 
 export const Halley: BodyInfo = {
-  name: "Halley",
+  name: "1P/Halley",
   aphelion: 35.082 * AU,
   peribelion: 0.586 * AU,
   semiMajorAxis: 17.834 * AU,
@@ -357,7 +357,7 @@ export const Halley: BodyInfo = {
 }
 
 export const Tempel1: BodyInfo = {
-  name: "Tempel-1",
+  name: "9P/Tempel 1",
   aphelion: 4.748 * AU,
   peribelion: 1.542 * AU,
   semiMajorAxis: 3.145 * AU,

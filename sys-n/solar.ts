@@ -26,7 +26,7 @@ import {
 } from "../sys/body-info"
 import { AU, RAD_PER_DEGREE, SECONDS_IN_A_DAY } from "../sys/constants"
 
-import { CelestialBody } from "./gravity"
+import { CelestialBody, dida } from "./gravity"
 import { toThreeJSCSMat, BOOTSTRAP_STATE } from "./jpl-data"
 import { dot, sphere, point } from "./providers"
 
@@ -34,10 +34,27 @@ const system: CelestialSystem = {
   body: Sun,
   subSystems: [
     {
+      hidden: true,
+      body: Halley,
+      bootstrapState: BOOTSTRAP_STATE.Halley,
+    },
+    {
+      hidden: true,
+      body: Tempel1,
+      bootstrapState: BOOTSTRAP_STATE.Tempel1
+    },
+    {
+      hidden: true,
+      body: Holmes,
+      bootstrapState: BOOTSTRAP_STATE.Holmes
+    },
+    {
+      hidden: false,
       body: Mercury,
       bootstrapState: BOOTSTRAP_STATE.Mercury
     },
     {
+      hidden: false,
       body: Venus,
       bootstrapState: BOOTSTRAP_STATE.Venus
     },
@@ -62,13 +79,14 @@ const system: CelestialSystem = {
       ]
     },
     {
-      hidden: true,
+      hidden: false,
       body: Jupiter,
+      bootstrapState: BOOTSTRAP_STATE.Jupiter,
       subSystems: [
-        { body: Lo },
-        { body: Europa },
-        { body: Ganymede },
-        { body: Callisto }
+        { body: Lo, hidden: true },
+        { body: Europa, hidden: true },
+        { body: Ganymede, hidden: true },
+        { body: Callisto, hidden: true }
       ]
     }
   ],
@@ -122,13 +140,14 @@ const bootstrap = (scene: THREE.Scene, renderer: THREE.Renderer, camera: THREE.C
 
   scene.add(star.o3)
 
-  camera.position.set(0, 1000, 1.2 * Mars.aphelion)
+  camera.position.set(0, 1 * Jupiter.aphelion, 4 * Mars.aphelion)
   camera.up.set(0, 1, 0)
   camera.lookAt(0, 0, 0)
 
   const animate = () => {
     requestAnimationFrame(animate)
     next()
+    dida()
     renderer.render(scene, camera)
   }
   animate()
