@@ -24,11 +24,11 @@ import {
   Ganymede,
   Callisto,
 } from "../sys/body-info"
-import { AU, RAD_PER_DEGREE, SECONDS_IN_A_DAY } from "../sys/constants"
+import { SECONDS_IN_A_DAY } from "../sys/constants"
 
-import { CelestialBody, dida } from "./gravity"
+import { CelestialBody } from "./gravity"
 import { toThreeJSCSMat, BOOTSTRAP_STATE } from "./jpl-data"
-import { dot, sphere, point } from "./providers"
+import { point } from "./providers"
 
 const system: CelestialSystem = {
   body: Sun,
@@ -49,12 +49,12 @@ const system: CelestialSystem = {
       bootstrapState: BOOTSTRAP_STATE.Holmes
     },
     {
-      hidden: false,
+      hidden: true,
       body: Mercury,
       bootstrapState: BOOTSTRAP_STATE.Mercury
     },
     {
-      hidden: false,
+      hidden: true,
       body: Venus,
       bootstrapState: BOOTSTRAP_STATE.Venus
     },
@@ -64,29 +64,41 @@ const system: CelestialSystem = {
       bootstrapState: BOOTSTRAP_STATE.Earth,
       subSystems: [
         {
-          hidden: true,
-          body: Luna
+          hidden: false,
+          moon: true,
+          body: Luna,
+          bootstrapState: BOOTSTRAP_STATE.Luna
         }
       ]
     },
     {
-      hidden: false,
+      hidden: true,
       body: Mars,
       bootstrapState: BOOTSTRAP_STATE.Mars,
       subSystems: [
-        { body: Phobos, hidden: true },
-        { body: Deimos, hidden: true }
+        { body: Phobos, hidden: true, moon: true, },
+        { body: Deimos, hidden: true, moon: true, }
       ]
     },
     {
-      hidden: false,
+      hidden: true,
+      body: Neptune,
+      bootstrapState: BOOTSTRAP_STATE.Neptune
+    },
+    {
+      hidden: true,
+      body: Pluto,
+      bootstrapState: BOOTSTRAP_STATE.Pluto
+    },
+    {
+      hidden: true,
       body: Jupiter,
       bootstrapState: BOOTSTRAP_STATE.Jupiter,
       subSystems: [
-        { body: Lo, hidden: true },
-        { body: Europa, hidden: true },
-        { body: Ganymede, hidden: true },
-        { body: Callisto, hidden: true }
+        { body: Lo, hidden: true, moon: true, },
+        { body: Europa, hidden: true, moon: true, },
+        { body: Ganymede, hidden: true, moon: true, },
+        { body: Callisto, hidden: true, moon: true, }
       ]
     }
   ],
@@ -105,7 +117,7 @@ const transformVelocity = (value: THREE.Vector3Tuple) => {
 const make = () => {
   const mkNode = (sys: CelestialSystem, parent: CelestialSystem) => {
     if (sys.hidden) return
-    sys.celestialBody = new CelestialBody(point(sys.body), sys.body)
+    sys.celestialBody = new CelestialBody(point(sys.body), sys.body, Boolean(sys.moon))
     if (parent) {
       parent.celestialBody.add(sys.celestialBody)
     }
@@ -136,18 +148,32 @@ const bootstrap = (scene: THREE.Scene, renderer: THREE.Renderer, camera: THREE.C
   make()
 
   const star = system.celestialBody
-  const next = star.bootstrap()
+  const next = CelestialBody.bootstrap(scene, star)
 
-  scene.add(star.o3)
+  let earth: CelestialBody = null
 
-  camera.position.set(0, 1 * Jupiter.aphelion, 4 * Mars.aphelion)
+  for (const b of star.children) {
+    if (b.info === Earth) {
+      earth = b
+    }
+  }
+
+  const camPos = earth.o3.position.clone()
+
+  camPos.setY(50000)
+
+  camera.position.set(...camPos.toArray())
   camera.up.set(0, 1, 0)
-  camera.lookAt(0, 0, 0)
+
+  if (earth) {
+    camera.lookAt(earth.o3.position)
+  } else {
+    camera.lookAt(0, 0, 0)
+  }
 
   const animate = () => {
     requestAnimationFrame(animate)
     next()
-    dida()
     renderer.render(scene, camera)
   }
   animate()

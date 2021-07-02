@@ -1,12 +1,9 @@
 import { BodyInfo } from "../sys/body-info"
 import { AU, SECONDS_IN_A_DAY } from "../sys/constants"
-import { toJ2000CSMat } from "./jpl-data"
-
-type ARRAY_VECTOR3 = THREE.Vector3Tuple
 
 const G = 6.67 * .00001 // be sure the velocity's unit is km/s
 const BUFFER_SIZE = 1000
-const MOMENT = 100 // s
+const MOMENT = 1 // s
 
 /**
  * seconds
@@ -19,29 +16,23 @@ const BUFFER_MOMENT = BUFFER_SIZE * MOMENT
  */
 const K = 31567699.59
 
-const BEST_INITIAL_VELOCITY = {
-  Mecury: 0.387,
-  Venus: 0.346,
-  Earth: 0.0289,
-  Mars: 0.2178,
-  Jupiter: 0.123,
-  Saturn: 0.0902,
-  Uranus: 0.065,
-  Neptune: 0.0533,
-  Luna: .000004
+const setupDisplay = () => {
+  const div = document.createElement("div")
+  div.style.cssText = `
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  color: #fff;
+  font-size: 14px;
+  z-index: 10;
+  width: 200px;
+  `
+  document.body.appendChild(div)
+
+  return div
 }
 
-const div = document.createElement("div")
-div.style.cssText = `
-position: absolute;
-top: 8px;
-left: 8px;
-color: #fff;
-font-size: 14px;
-z-index: 10;
-width: 200px;
-`
-document.body.appendChild(div)
+const displayDiv = setupDisplay()
 
 const insertCanvas = (info: BodyInfo, width: number = 200, height: number = 100) => {
   const dpr = window.devicePixelRatio
@@ -51,7 +42,7 @@ const insertCanvas = (info: BodyInfo, width: number = 200, height: number = 100)
   canvas.style.cssText = `width: ${width}px; height: ${height}px; position: static;`
   const ctx = canvas.getContext("2d")
   ctx.scale(dpr, dpr)
-  div.appendChild(canvas)
+  displayDiv.appendChild(canvas)
   const color = "rgba(" + info.color.map((x) => 0 ^ (x * 255)).join(",") + ")"
   ctx.fillStyle = color
   ctx.textBaseline = "top"
@@ -67,42 +58,54 @@ const insertCanvas = (info: BodyInfo, width: number = 200, height: number = 100)
   }
 }
 
-/**
- * seconds
- */
-let clock: number = 0
-let days: number = 0
+class TickableObject {
+  private seconds = 0
+  private years = 0
+  private days = 0
 
-export const dida = () => {
-  // 1/60 s
-  clock += BUFFER_MOMENT
-  if (clock > SECONDS_IN_A_DAY) {
-    days += 1
-    clock = clock % SECONDS_IN_A_DAY
+  get tickText() {
+    if (this.years === 0) return this.days + 'd'
+    return `${this.years}y${this.days}d`
+  }
+
+  protected tick() {
+    const sec = this.seconds
+    let nextSec = sec + BUFFER_MOMENT
+    if (nextSec > SECONDS_IN_A_DAY) {
+      this.days += Math.floor(nextSec / SECONDS_IN_A_DAY)
+      if (this.days > 365) {
+        this.years += 1
+        this.days = this.days % 365
+      }
+      nextSec = nextSec % SECONDS_IN_A_DAY
+    }
+    this.seconds = nextSec
   }
 }
 
-export class CelestialBody {
+export class CelestialBody extends TickableObject {
   o3: THREE.Object3D
   info: BodyInfo
   readonly velocity: THREE.Vector3
   readonly orbitalAxis: THREE.Vector3
-  scene: THREE.Scene
-  period: number = 0
-  periodText: string = ''
+  private period: number = 0
+  private periodText: string = '...'
 
   // ref direction: J2000 ecliptic (1, 0, 0)
   readonly periapsis: THREE.Vector3
   readonly toPeriapsis: THREE.Matrix4
 
   ref: CelestialBody = null
-  state: 'normal' | 'reqStop' | 'stopped' = 'normal'
+  private state: 'normal' | 'reqStop' | 'stopped' = 'normal'
 
-  writer: { write: (txt: string, lineno?: number) => void }
+  private writer: { write: (txt: string, lineno?: number) => void }
+  readonly moon: boolean = false
 
-  constructor(o3: THREE.Object3D, info: BodyInfo) {
+  constructor(o3: THREE.Object3D, info: BodyInfo, moon: boolean) {
+    super()
     this.o3 = o3
     this.info = info
+    this.moon = moon
     /**
      * 10^3 km/s
      */
@@ -129,19 +132,19 @@ export class CelestialBody {
       this.period = this.computePeriod()
     }
 
-    this.writer = insertCanvas(this.info)
+    this.writer = insertCanvas(this.info, 200, this.ref ? 70 : 24)
   }
 
   private buffer(position: THREE.Vector3Tuple, velocity: THREE.Vector3Tuple) {
 
     let n = BUFFER_SIZE
 
-    const ref = this.ref
-    const { mass, radius } = ref ? ref.info : { mass: 0, radius: 0 }
-    const origin: THREE.Vector3Tuple = [0, 0, 0]
+    // const ref = this.ref
+    // const { mass, radius } = ref ? ref.info : { mass: 0, radius: 0 }
+    // const origin: THREE.Vector3Tuple = [0, 0, 0]
 
     while (n--) {
-      const a = computeAccBy(position, origin, mass, radius)
+      const a = computeAccOfCelestialBody(this)
       if (a === null) {
         this.state = 'reqStop'
         velocity[0] = 0
@@ -180,6 +183,7 @@ export class CelestialBody {
 
     return () => {
 
+      if (this.ref === null) return
       if (this.deleted) return
       if (this.state === 'stopped') return
 
@@ -187,6 +191,7 @@ export class CelestialBody {
       let velo = velocity.toArray()
 
       this.buffer(loc, velo)
+      this.tick()
 
       if (this.state === 'reqStop') {
         this.ref.acceptMaterial(this)
@@ -200,12 +205,10 @@ export class CelestialBody {
       writer.write(`distance: ${distance.toFixed(6)} AU`, 1)
       const speed = velocity.length() * 1000
       writer.write(`speed: ${speed.toFixed(2)} km/s`, 2)
-      writer.write(`period: ${(this.s / 1000).toFixed(2)}s / ${this.periodText}`, 3)
-      writer.write(`time: ${(days)} days`, 4)
-      this.measureActualPeriod(speed)
-
-      if (this.stage === 8 && !this.periodText) {
-        this.periodText = days + 'days'
+      writer.write(`period: ${this.periodText}`, 3)
+      writer.write(`time: ${(this.tickText)}`, 4)
+      if (this.measureActualPeriod(speed) && this.periodText === '...') {
+        this.periodText = `${(this.s / 1000).toFixed(2)}s/${this.tickText}`
       }
     }
   }
@@ -218,21 +221,25 @@ export class CelestialBody {
     this.remove(body)
   }
 
-  bootstrap() {
-    const items: CelestialBody[] = []
-    const add = (b: CelestialBody) => {
-      items.push(b)
+  static bootstrap(scene: THREE.Scene, root: CelestialBody) {
+    const fns: VoidFunction[] = []
+    const iter = (b: CelestialBody) => {
+      scene.add(b.o3)
+      let ref = b.ref
+      while (ref) {
+        b.gravityObjects.push(ref)
+        ref = ref.ref
+      }
+      fns.push(b.createNextFn())
       for (const child of b.children) {
-        items.push(child)
-        add(child)
+        if (child.moon) {
+          b.gravityObjects.push(child)
+        }
+        iter(child)
       }
     }
 
-    add(this)
-
-    const fns = items.map((item) => {
-      return item.createNextFn()
-    })
+    iter(root)
 
     return () => {
       for (const fn of fns)
@@ -240,17 +247,16 @@ export class CelestialBody {
     }
   }
 
-  private children: Set<CelestialBody> = new Set()
+  readonly gravityObjects: CelestialBody[] = []
+  readonly children: Set<CelestialBody> = new Set()
   public add(child: CelestialBody) {
     child.ref = this
-    this.o3.add(child.o3)
     this.children.add(child)
   }
 
   private deleted: boolean = false
   private remove(child: CelestialBody) {
     child.deleted = true
-    this.o3.remove(child.o3)
     this.children.delete(child)
   }
 
@@ -272,7 +278,7 @@ export class CelestialBody {
     position.set(peribelion, 0, 0)
     position.applyMatrix4(this.toPeriapsis)
     const m = ref.mass
-    const scalar = BEST_INITIAL_VELOCITY[this.info.name] || Math.sqrt(G * m * (2 / peribelion - 1 / semiMajorAxis))
+    const scalar = Math.sqrt(G * m * (2 / peribelion - 1 / semiMajorAxis))
     this.velocity.set(0, 0, scalar)
     this.velocity.applyMatrix4(this.toPeriapsis)
   }
@@ -282,7 +288,7 @@ export class CelestialBody {
   private s: number = 0
 
   private measureActualPeriod(speed: number) {
-    if (this.stage === 8) return
+    if (this.stage === 8) return true
     switch (this.stage) {
       case 0: {
         this.stage = 1
@@ -356,6 +362,7 @@ export class CelestialBody {
 
     if (this.stage < 8)
       this.lastSpeed = speed
+    return false
   }
 
   private computePeriod() {
@@ -370,10 +377,9 @@ export class CelestialBody {
 const ZERO_ACC = [0, 0, 0]
 
 export function computeAccBy(
-  position0: ARRAY_VECTOR3,
-  position: ARRAY_VECTOR3,
-  mass: number,
-  radius: number
+  position0: THREE.Vector3Tuple,
+  position: THREE.Vector3Tuple,
+  mass: number
 ) {
 
   if (mass === 0) return ZERO_ACC
@@ -386,15 +392,19 @@ export function computeAccBy(
   const r2 = (dx) * (dx) + (dy) * (dy) + (dz) * (dz)
   const length = Math.sqrt(r2)
 
-  if (length < radius) {
-    return null
-  }
-
   const scalar = (G * mass) / r2
   const factor = scalar / length
   return [dx * factor, dy * factor, dz * factor]
 }
 
-/**
- * m1v1 + m2v2 = mv
- */
+export function computeAccOfCelestialBody(self: CelestialBody) {
+  const sum: THREE.Vector3Tuple = [0, 0, 0]
+  const pos = self.o3.position.toArray()
+  for (const obj of self.gravityObjects) {
+    const a = computeAccBy(pos, obj.o3.position.toArray(), obj.info.mass)
+    sum[0] += a[0]
+    sum[1] += a[1]
+    sum[2] += a[2]
+  }
+  return sum
+}

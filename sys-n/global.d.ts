@@ -6,6 +6,7 @@ declare global {
   export interface CelestialSystem {
     body: BodyInfo
     hidden?: boolean
+    moon?: boolean
     bootstrapState?: { velo: THREE.Vector3Tuple, posi: THREE.Vector3Tuple }
     celestialBody?: CelestialBody
     subSystems?: Array<CelestialSystem | BodyInfo>
