@@ -336,7 +336,7 @@ export const Eris: BodyInfo = {
   ref: Sun
 }
 
-// Commets bellow
+//#region comets
 
 export const Halley: BodyInfo = {
   name: "1P/Halley",
@@ -398,8 +398,11 @@ export const HaleBopp: BodyInfo = {
   ref: Sun
 }
 
+//#endregion
+
 // natural satellites
-// earth's
+
+//#region earth's moons
 export const Luna: BodyInfo = {
   name: "Luna",
   aphelion: 405.400,
@@ -430,8 +433,10 @@ export const KamoOalewa: BodyInfo = {
   rotationPeriod: 0.467 / 24,
   ref: Sun
 }
+//#endregion
 
-// juptier's
+//#region Jupiter's moons
+
 export const Lo: BodyInfo = {
   name: "Lo",
   aphelion: 423.400,
@@ -488,7 +493,10 @@ export const Callisto: BodyInfo = {
   ref: Jupiter
 }
 
-// saturn's
+//#endregion
+
+//#region saturn's moons
+
 export const Titan: BodyInfo = {
   name: "Titan",
   aphelion: 1257.060,
@@ -587,7 +595,10 @@ export const Iapetus: BodyInfo = {
   ref: Saturn
 }
 
-// neptune's
+//#endregion
+
+//#region  neptune's moons
+
 /**
  * - Periapsis	117584±10 km
  * - Apoapsis	117709±10 km
@@ -647,7 +658,10 @@ export const Nereid: BodyInfo = {
   ref: Neptune
 }
 
-// mars'
+//#endregion
+
+//#region mars' moons
+
 export const Phobos: BodyInfo = {
   name: "Phobos",
   aphelion: 9.51758,
@@ -675,6 +689,24 @@ export const Deimos: BodyInfo = {
   inclination: 0.93 * RAD_PER_DEGREE,
   ref: Mars
 }
+
+//#endregion
+
+//#region pluto's moons
+export const Charon: BodyInfo = {
+  name: "Charon",
+  aphelion: 19.595,
+  peribelion: 19.587,
+  semiMajorAxis: 19.5914,
+  avatar: "/nineplanets-org/440px-Phobos_colour_2008.jpg",
+  map: "",
+  color: randColor(),
+  mass: 1.586 * Math.pow(10, -3), // 1.0659×1016 kg
+  radius: .606,
+  inclination: 0.080 * RAD_PER_DEGREE,
+  ref: Pluto
+}
+//#endregion
 
 export const Bodies13 = {
   Sun,

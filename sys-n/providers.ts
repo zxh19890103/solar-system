@@ -49,7 +49,7 @@ function point(info: BodyInfo) {
     vertexShader: `
     void main() {
       gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-      gl_PointSize = 1.0;
+      gl_PointSize = 2.0;
     }
     `,
     fragmentShader: `
@@ -62,6 +62,35 @@ function point(info: BodyInfo) {
   const point = new THREE.Points(geometry, material)
 
   return point
+}
+
+function path(info: BodyInfo) {
+
+  const geometry = new THREE.BufferGeometry()
+
+  geometry.setAttribute(
+    "position",
+    new THREE.Float32BufferAttribute([], 3)
+  )
+
+  const [r, g, b] = info.color
+
+  const material = new THREE.ShaderMaterial({
+    uniforms: {},
+    vertexShader: `
+    void main() {
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      gl_PointSize = .1;
+    }
+    `,
+    fragmentShader: `
+    void main() {
+      gl_FragColor=vec4(${r}, ${g}, ${b}, 1.0);
+    }
+    `
+  })
+  const path = new THREE.Points(geometry, material)
+  return path
 }
 
 function ring(info: BodyInfo) {
@@ -104,6 +133,7 @@ function ring(info: BodyInfo) {
 export {
   dot,
   point,
+  path,
   sphere,
   ring
 }
