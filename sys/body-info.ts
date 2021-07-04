@@ -435,7 +435,7 @@ export const KamoOalewa: BodyInfo = {
 }
 //#endregion
 
-//#region Jupiter's moons
+//#region jupiter's moons
 
 export const Lo: BodyInfo = {
   name: "Lo",
@@ -597,7 +597,7 @@ export const Iapetus: BodyInfo = {
 
 //#endregion
 
-//#region  neptune's moons
+//#region neptune's moons
 
 /**
  * - Periapsis	117584±10 km

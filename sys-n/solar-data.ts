@@ -24,19 +24,39 @@ import {
   Ganymede,
   Callisto,
   Charon,
+  Titan,
+  Nereid,
 } from "../sys/body-info"
 
 import { BOOTSTRAP_STATE } from "./jpl-data"
+
+const mercurySystemActive = true
+const mercurySystem: CelestialSystem = {
+  hidden: !mercurySystemActive,
+  path: true,
+  body: Mercury,
+  bootstrapState: BOOTSTRAP_STATE.Mercury
+}
+
+const venusSystemActive = true
+const venusSystem: CelestialSystem = {
+  hidden: !venusSystemActive,
+  body: Venus,
+  path: true,
+  bootstrapState: BOOTSTRAP_STATE.Venus
+}
 
 const earthSystemActive = true
 const earthSystem: CelestialSystem = {
   hidden: !earthSystemActive,
   body: Earth,
   bootstrapState: BOOTSTRAP_STATE.Earth,
+  path: true,
   subSystems: [
     {
       hidden: false,
       moon: true,
+      path: false,
       body: Luna,
       bootstrapState: BOOTSTRAP_STATE.Luna
     }
@@ -48,6 +68,7 @@ const marsSystem: CelestialSystem = {
   hidden: !marsSystemActive,
   body: Mars,
   bootstrapState: BOOTSTRAP_STATE.Mars,
+  path: true,
   subSystems: [
     {
       body: Phobos,
@@ -86,6 +107,45 @@ const jupiterSystem: CelestialSystem = {
   ]
 }
 
+const saturnSystemActive = false
+const saturnSystem: CelestialSystem = {
+  hidden: !saturnSystemActive,
+  body: Saturn,
+  bootstrapState: BOOTSTRAP_STATE.Saturn,
+  subSystems: [
+    {
+      hidden: false,
+      body: Titan,
+      path: true,
+      moon: true,
+      bootstrapState: BOOTSTRAP_STATE.Titan
+    }
+  ]
+}
+
+const neptuneSystemActive = false
+const neptuneSystem: CelestialSystem = {
+  hidden: !neptuneSystemActive,
+  body: Neptune,
+  bootstrapState: BOOTSTRAP_STATE.Neptune,
+  subSystems: [
+    {
+      hidden: false,
+      moon: true,
+      path: true,
+      body: Nereid,
+      bootstrapState: BOOTSTRAP_STATE.Nereid
+    }
+  ]
+}
+
+const uranusSystemActive = false
+const uranusSystem: CelestialSystem = {
+  hidden: !uranusSystemActive,
+  body: Uranus,
+  bootstrapState: BOOTSTRAP_STATE.Uranus
+}
+
 const comets: CelestialSystem[] = [
   {
     hidden: true,
@@ -94,6 +154,8 @@ const comets: CelestialSystem[] = [
   },
   {
     hidden: true,
+    path: true,
+    tail: false,
     body: Tempel1,
     bootstrapState: BOOTSTRAP_STATE.Tempel1
   },
@@ -114,24 +176,14 @@ export const system: CelestialSystem = {
   bootstrapState: BOOTSTRAP_STATE.Sol,
   subSystems: [
     ...comets,
-    {
-      hidden: false,
-      body: Mercury,
-      bootstrapState: BOOTSTRAP_STATE.Mercury
-    },
-    {
-      hidden: false,
-      body: Venus,
-      bootstrapState: BOOTSTRAP_STATE.Venus
-    },
+    mercurySystem,
+    venusSystem,
     earthSystem,
     marsSystem,
-    {
-      hidden: true,
-      body: Neptune,
-      bootstrapState: BOOTSTRAP_STATE.Neptune
-    },
-    plutoSystem,
-    jupiterSystem
+    jupiterSystem,
+    saturnSystem,
+    uranusSystem,
+    neptuneSystem,
+    plutoSystem
   ]
 }

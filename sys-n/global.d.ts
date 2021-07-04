@@ -7,6 +7,8 @@ declare global {
     body: BodyInfo
     hidden?: boolean
     moon?: boolean
+    path?: boolean
+    tail?: boolean,
     bootstrapState?: { velo: THREE.Vector3Tuple, posi: THREE.Vector3Tuple }
     celestialBody?: CelestialBody
     subSystems?: Array<CelestialSystem | BodyInfo>

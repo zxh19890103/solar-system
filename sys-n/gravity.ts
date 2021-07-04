@@ -1,15 +1,10 @@
 import { BodyInfo } from "../sys/body-info"
-import { AU } from "../sys/constants"
+import { AU, SECONDS_IN_A_DAY } from "../sys/constants"
+import { toThreeJSCSMat } from "./jpl-data"
+import { path, point, tail } from "./providers"
+import { BUFFER_SIZE, BUFFER_MOMENT, MOMENT, SECONDS_IN_HOUR, G, ZERO_ACC } from './settings'
 
-const G = 6.67 * .00001 // be sure the velocity's unit is km/s
-const BUFFER_SIZE = 100
-const MOMENT = 100 // s
-
-/**
- * seconds
- */
-const BUFFER_MOMENT = BUFFER_SIZE * MOMENT
-const SECONDS_IN_HOUR = 60 * 60
+const noop = () => { }
 
 const setupDisplay = () => {
   const div = document.createElement("div")
@@ -29,7 +24,7 @@ const setupDisplay = () => {
 
 const displayDiv = setupDisplay()
 
-const insertCanvas = (info: BodyInfo, width: number = 200, height: number = 100) => {
+export const insertCanvas = (info: BodyInfo, width: number = 200, height: number = 100) => {
   const dpr = window.devicePixelRatio
   const canvas = document.createElement("canvas")
   canvas.width = width * dpr
@@ -61,12 +56,6 @@ class TickableObject {
   private t = '...'
   private delay = false
 
-  constructor() {
-    this.date.setFullYear(2021)
-    this.date.setMonth(5)
-    this.date.setDate(30)
-  }
-
   get elapse() {
     const { years, days, hours } = this
     let t = ''
@@ -80,10 +69,10 @@ class TickableObject {
     if (this.delay) {
       return this.t
     }
-    const { date, years, days } = this
-    date.setFullYear(2021 + years)
-    date.setDate(30 + days)
-    this.t = `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`
+    const { date } = this
+    const month = date.getMonth() + 1
+    const on = date.getDate()
+    this.t = `${date.getFullYear()}/${month < 10 ? '0' + month : month}/${on < 10 ? '0' + on : on}`
     this.delay = true
     setTimeout(() => {
       this.delay = false
@@ -97,7 +86,9 @@ class TickableObject {
     if (nextSec >= SECONDS_IN_HOUR) {
       this.hours += Math.floor(nextSec / SECONDS_IN_HOUR)
       if (this.hours >= 24) {
-        this.days += Math.floor(this.hours / 24)
+        const added = Math.floor(this.hours / 24)
+        this.days += added
+        this.date.setDate(this.date.getDate() + added)
         this.hours = this.hours % 24
         if (this.days >= 365) {
           this.years += 1
@@ -113,7 +104,9 @@ class TickableObject {
 export class CelestialBody {
   o3: THREE.Object3D
   pathO3: THREE.Points
+  tailO3: THREE.Line
   info: BodyInfo
+  readonly sys: CelestialSystem
   readonly positionArr: THREE.Vector3Tuple = [0, 0, 0]
   readonly velocityArr: THREE.Vector3Tuple = [0, 0, 0]
   readonly orbitalAxis: THREE.Vector3
@@ -134,45 +127,61 @@ export class CelestialBody {
   private pathMaxLength: number = Number.MAX_SAFE_INTEGER
   private pathLength = 0
 
-  constructor(o3: THREE.Object3D, info: BodyInfo, moon: boolean) {
-    this.o3 = o3
-    this.info = info
-    this.moon = moon
+  get isRootBody() {
+    return this.ref === null
+  }
+
+  constructor(system: CelestialSystem) {
+    this.o3 = point(system.body)
+    if (system.path)
+      this.pathO3 = path(system.body)
+    if (system.tail)
+      this.tailO3 = tail(this.info)
+    this.sys = system
+    this.info = system.body
+    this.moon = system.moon || false
     /**
      * 10^3 km/s
      */
     const refDirection = new THREE.Vector3(1, 0, 0) // J2000
     const toPeriapsis = new THREE.Matrix4()
 
-    toPeriapsis.multiply(new THREE.Matrix4().makeRotationY(info.loan))
-    toPeriapsis.multiply(new THREE.Matrix4().makeRotationX(info.inclination))
-    toPeriapsis.multiply(new THREE.Matrix4().makeRotationY(info.aop))
+    toPeriapsis.multiply(new THREE.Matrix4().makeRotationY(system.body.loan))
+    toPeriapsis.multiply(new THREE.Matrix4().makeRotationX(system.body.inclination))
+    toPeriapsis.multiply(new THREE.Matrix4().makeRotationY(system.body.aop))
 
     this.periapsis = refDirection.clone().applyMatrix4(toPeriapsis)
     this.toPeriapsis = toPeriapsis
   }
 
-  init(position?: THREE.Vector3, velocity?: THREE.Vector3) {
-    if (this.ref) { // or it's on the center
-      if (position && velocity) {
-        this.positionArr[0] = position.x
-        this.positionArr[1] = position.y
-        this.positionArr[2] = position.z
+  init(scene: THREE.Scene) {
+    if (this.sys.bootstrapState) {
 
-        this.velocityArr[0] = velocity.x
-        this.velocityArr[1] = velocity.y
-        this.velocityArr[2] = velocity.z
+      const position = new THREE.Vector3(...this.sys.bootstrapState.posi).applyMatrix4(toThreeJSCSMat)
+      const velocity = new THREE.Vector3(...this.sys.bootstrapState.velo.map(x => x / SECONDS_IN_A_DAY)).applyMatrix4(toThreeJSCSMat)
 
-        this.o3.position.copy(position)
+      this.positionArr[0] = position.x
+      this.positionArr[1] = position.y
+      this.positionArr[2] = position.z
 
+      this.velocityArr[0] = velocity.x
+      this.velocityArr[1] = velocity.y
+      this.velocityArr[2] = velocity.z
+
+      if (this.ref) { // or it's on the center
         this.initialAngleToRef.set(
           position.x - this.ref.positionArr[0],
           position.y - this.ref.positionArr[1],
           position.z - this.ref.positionArr[2]
         ).normalize()
-      } else {
-        this.log('no position & velocity given')
       }
+
+      this.o3.position.copy(position)
+      scene.add(this.o3)
+      this.pathO3 && scene.add(this.pathO3)
+      this.tailO3 && this.o3.add(this.tailO3)
+    } else {
+      this.log('no position & velocity given')
     }
 
     this.writer = insertCanvas(this.info, 200, 70)
@@ -181,17 +190,25 @@ export class CelestialBody {
       this.writer.write('epoch: J2000', 1)
       this.writer.write('since: 2021-06-30 TDB', 2)
     }
+    for (const child of this.children)
+      child.init(scene)
   }
 
   private readonly currentAngleToRef = new THREE.Vector3()
   private s: number = 0
   private stage = 0
+  private regressed = false
   private checkAngleToRefRegress() {
+    if (this.isRootBody || this.regressed) return
+
+    const { positionArr, ref } = this
+    const { positionArr: refPositionArr } = ref
+
     const nearEqualToZero = this.currentAngleToRef
       .set(
-        this.positionArr[0] - this.ref.positionArr[0],
-        this.positionArr[1] - this.ref.positionArr[1],
-        this.positionArr[2] - this.ref.positionArr[2]
+        this.positionArr[0] - refPositionArr[0],
+        positionArr[1] - refPositionArr[1],
+        positionArr[2] - refPositionArr[2]
       )
       .angleTo(this.initialAngleToRef) < .01
 
@@ -199,7 +216,9 @@ export class CelestialBody {
       this.stage = 1
     }
 
-    return nearEqualToZero && this.stage === 1
+    if (nearEqualToZero && this.stage === 1) {
+      this.regressed = true
+    }
   }
 
   private buffer(position: THREE.Vector3Tuple, velocity: THREE.Vector3Tuple, N = 1) {
@@ -237,6 +256,8 @@ export class CelestialBody {
       posiArr[0] += ds[0]
       posiArr[1] += ds[1]
       posiArr[2] += ds[2]
+
+      this.checkAngleToRefRegress()
     }
   }
 
@@ -245,11 +266,12 @@ export class CelestialBody {
   }
 
   public createNextFn() {
-    const { o3, velocityArr, ticker, writer, positionArr, path, pathO3 } = this
+    const { o3, ticker, writer, positionArr } = this
     const { position } = o3
-    const { geometry: pathGeo } = pathO3 || { geometry: null }
 
-    this.s = performance.now()
+    const pathRender = this.createPathRender()
+    const tailRender = this.createTailRender()
+    const displayRender = this.createDisplayRender()
 
     return () => {
       ticker.tick()
@@ -271,26 +293,81 @@ export class CelestialBody {
       }
 
       position.set(...positionArr)
-      if (pathGeo) {
-        path.push(...positionArr)
-        if (this.pathLength === this.pathMaxLength) {
-          path.shift()
-          path.shift()
-          path.shift()
-        } else {
-          this.pathLength += 1
-        }
-        pathGeo.setAttribute('position', new THREE.Float32BufferAttribute(path, 3))
+      pathRender()
+      tailRender()
+      displayRender()
+    }
+  }
+  public nextFn: () => void
+
+  private createPathRender() {
+    if (!this.pathO3) return noop
+    const { positionArr, path, pathO3 } = this
+    const { geometry } = pathO3
+    return () => {
+      path.push(...positionArr)
+      if (this.pathLength === this.pathMaxLength) {
+        path.shift()
+        path.shift()
+        path.shift()
+      } else {
+        this.pathLength += 1
       }
+      geometry.setAttribute('position', new THREE.Float32BufferAttribute(path, 3))
+    }
+  }
 
+  private createTailRender() {
 
-      if (this.periodText === null && this.checkAngleToRefRegress()) {
+    if (!this.tailO3)
+      return noop
+
+    const { ref, positionArr, tailO3 } = this
+    const { geometry } = tailO3
+    const { positionArr: refPosiArr } = ref
+
+    return () => {
+      const startPoint: THREE.Vector3Tuple = [0, 0, 0]
+      const endPoint = [
+        positionArr[0] - refPosiArr[0],
+        positionArr[1] - refPosiArr[1],
+        positionArr[2] - refPosiArr[2]
+      ]
+      const control = [
+        endPoint[0] / 2,
+        endPoint[1] / 2,
+        endPoint[2] / 2
+      ]
+      const endPoint2 = [
+        endPoint[0] + 100000,
+        endPoint[1] + 1000,
+        endPoint[2] + 1000
+      ]
+      const curve = new THREE.QuadraticBezierCurve3(
+        new THREE.Vector3(...startPoint),
+        new THREE.Vector3(...control),
+        new THREE.Vector3(...endPoint2)
+      )
+      const points = curve.getPoints(100).map(p => p.toArray()).flat()
+      geometry.setAttribute('position', new THREE.Float32BufferAttribute([
+        ...endPoint,
+        ...startPoint,
+        ...points
+      ], 3))
+    }
+  }
+
+  private createDisplayRender() {
+    const { path, ticker, writer, positionArr, velocityArr } = this
+    this.s = performance.now()
+    return () => {
+      if (this.periodText === null && this.regressed) {
         this.s = performance.now() - this.s
         this.periodText = `${(this.s / 1000).toFixed(2)}s/${ticker.elapse}`
         this.pathMaxLength = path.length / 3
       }
 
-      const distance = position.length() / AU
+      const distance = computeVec3Length(positionArr) / AU
       writer.write(`distance: ${distance.toFixed(6)} AU`, 1)
       const speed = computeVec3Length(velocityArr) * 1000
       writer.write(`speed: ${speed.toFixed(2)} km/s`, 2)
@@ -298,30 +375,27 @@ export class CelestialBody {
     }
   }
 
-  static createUniNextFn(scene: THREE.Scene, root: CelestialBody) {
-    const bodies: CelestialBody[] = []
-    const fns: VoidFunction[] = []
-    const iter = (b: CelestialBody) => {
-      bodies.push(b)
-      if (b.o3)
-        scene.add(b.o3)
-      if (b.pathO3)
-        scene.add(b.pathO3)
-      collectAllAncestors(b)
-      fns.push(b.createNextFn())
-      for (const child of b.children) {
-        if (child.moon) {
-          b.gravityCaringObjects.push(child)
-        }
-        iter(child)
+  protected initialGravityCaringObjects() {
+    let ref = this.ref
+    while (ref) {
+      this.gravityCaringObjects.push(ref)
+      ref = ref.ref
+    }
+    for (const child of this.children) {
+      if (child.moon) {
+        this.gravityCaringObjects.push(child)
       }
     }
+  }
 
-    const collectAllAncestors = (b: CelestialBody) => {
-      let ref = b.ref
-      while (ref) {
-        b.gravityCaringObjects.push(ref)
-        ref = ref.ref
+  static createUniNextFn(root: CelestialBody) {
+    const bodies: CelestialBody[] = []
+    const iter = (b: CelestialBody) => {
+      bodies.push(b)
+      b.initialGravityCaringObjects()
+      b.nextFn = b.createNextFn()
+      for (const child of b.children) {
+        iter(child)
       }
     }
 
@@ -334,8 +408,9 @@ export class CelestialBody {
           b.buffer(b.positionArr, b.velocityArr, 1)
         }
       }
-      for (const fn of fns)
-        fn()
+      for (const b of bodies) {
+        b.nextFn()
+      }
     }
   }
 
@@ -353,8 +428,6 @@ export class CelestialBody {
     return null
   }
 }
-
-const ZERO_ACC = [0, 0, 0]
 
 export function computeAccBy(
   position0: THREE.Vector3Tuple,
