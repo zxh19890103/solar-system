@@ -44,31 +44,30 @@ export class Shutte extends CelestialBody {
     a(ref)
   }
 
+  private velocity = new THREE.Vector2()
+
   private initControl() {
     document.addEventListener('keydown', (evt) => {
       evt.stopPropagation()
       evt.preventDefault()
-      console.log(evt.key)
+      this.velocity.set(this.velocityArr[0], this.velocityArr[2])
+      const l = this.velocity.length()
       switch (evt.key) {
         case 'ArrowUp':
-          if (evt.metaKey) {
-            this.velocityArr[1] += DELTA
-          } else {
-            this.velocityArr[2] -= DELTA
-          }
+          this.velocityArr[2] += DELTA
           break
         case 'ArrowDown':
-          if (evt.metaKey) {
-            this.velocityArr[1] -= DELTA
-          } else {
-            this.velocityArr[2] += DELTA
-          }
+          this.velocityArr[2] -= DELTA
           break
         case 'ArrowLeft':
-          this.velocityArr[0] -= DELTA
+          this.velocity.setLength(l - DELTA)
+          this.velocityArr[2] = this.velocity.y
+          this.velocityArr[0] = this.velocity.x
           break
         case 'ArrowRight':
-          this.velocityArr[0] += DELTA
+          this.velocity.setLength(l + DELTA)
+          this.velocityArr[2] = this.velocity.y
+          this.velocityArr[0] = this.velocity.x
           break
       }
     })

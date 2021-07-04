@@ -1,7 +1,7 @@
 import { BodyInfo } from "../sys/body-info"
 import { AU, SECONDS_IN_A_DAY } from "../sys/constants"
 import { toThreeJSCSMat } from "./jpl-data"
-import { path, point, tail } from "./providers"
+import { path, peribelionAndAphelion, point, tail } from "./providers"
 import { BUFFER_SIZE, BUFFER_MOMENT, MOMENT, SECONDS_IN_HOUR, G, ZERO_ACC } from './settings'
 
 const noop = () => { }
@@ -116,6 +116,7 @@ export class CelestialBody {
   // ref direction: J2000 ecliptic (1, 0, 0)
   readonly periapsis: THREE.Vector3
   readonly toPeriapsis: THREE.Matrix4
+  readonly paO3: THREE.Points
 
   ref: CelestialBody | null = null
   private readonly initialAngleToRef: THREE.Vector3 = new THREE.Vector3()
@@ -152,6 +153,15 @@ export class CelestialBody {
 
     this.periapsis = refDirection.clone().applyMatrix4(toPeriapsis)
     this.toPeriapsis = toPeriapsis
+
+    // this.paO3 = peribelionAndAphelion(this.info)
+    // this.paO3.geometry.setAttribute('position', new THREE.Float32BufferAttribute(
+    //   [
+    //     ...this.periapsis.clone().setLength(this.info.peribelion).toArray(),
+    //     ...this.periapsis.clone().negate().setLength(this.info.aphelion).toArray()
+    //   ],
+    //   3
+    // ))
   }
 
   init(scene: THREE.Scene) {
@@ -180,6 +190,8 @@ export class CelestialBody {
       scene.add(this.o3)
       this.pathO3 && scene.add(this.pathO3)
       this.tailO3 && this.o3.add(this.tailO3)
+
+      // scene.add(this.paO3)
     } else {
       this.log('no position & velocity given')
     }
@@ -270,7 +282,6 @@ export class CelestialBody {
     const { position } = o3
 
     const pathRender = this.createPathRender()
-    const tailRender = this.createTailRender()
     const displayRender = this.createDisplayRender()
 
     return () => {
@@ -294,7 +305,6 @@ export class CelestialBody {
 
       position.set(...positionArr)
       pathRender()
-      tailRender()
       displayRender()
     }
   }
@@ -314,46 +324,6 @@ export class CelestialBody {
         this.pathLength += 1
       }
       geometry.setAttribute('position', new THREE.Float32BufferAttribute(path, 3))
-    }
-  }
-
-  private createTailRender() {
-
-    if (!this.tailO3)
-      return noop
-
-    const { ref, positionArr, tailO3 } = this
-    const { geometry } = tailO3
-    const { positionArr: refPosiArr } = ref
-
-    return () => {
-      const startPoint: THREE.Vector3Tuple = [0, 0, 0]
-      const endPoint = [
-        positionArr[0] - refPosiArr[0],
-        positionArr[1] - refPosiArr[1],
-        positionArr[2] - refPosiArr[2]
-      ]
-      const control = [
-        endPoint[0] / 2,
-        endPoint[1] / 2,
-        endPoint[2] / 2
-      ]
-      const endPoint2 = [
-        endPoint[0] + 100000,
-        endPoint[1] + 1000,
-        endPoint[2] + 1000
-      ]
-      const curve = new THREE.QuadraticBezierCurve3(
-        new THREE.Vector3(...startPoint),
-        new THREE.Vector3(...control),
-        new THREE.Vector3(...endPoint2)
-      )
-      const points = curve.getPoints(100).map(p => p.toArray()).flat()
-      geometry.setAttribute('position', new THREE.Float32BufferAttribute([
-        ...endPoint,
-        ...startPoint,
-        ...points
-      ], 3))
     }
   }
 
@@ -432,7 +402,8 @@ export class CelestialBody {
 export function computeAccBy(
   position0: THREE.Vector3Tuple,
   position: THREE.Vector3Tuple,
-  mass: number
+  mass: number,
+  radius: number
 ) {
 
   if (mass === 0) return ZERO_ACC
@@ -444,6 +415,8 @@ export function computeAccBy(
     dz = rz - z
   const r2 = (dx) * (dx) + (dy) * (dy) + (dz) * (dz)
   const length = Math.sqrt(r2)
+
+  if (radius > length) return ZERO_ACC
 
   const scalar = (G * mass) / r2
   const factor = scalar / length
@@ -459,7 +432,7 @@ export function computeAccOfCelestialBody(self: CelestialBody) {
   const sum: THREE.Vector3Tuple = [0, 0, 0]
   const pos = self.positionArr
   for (const obj of self.gravityCaringObjects) {
-    const a = computeAccBy(pos, obj.positionArr, obj.info.mass)
+    const a = computeAccBy(pos, obj.positionArr, obj.info.mass, obj.info.radius)
     sum[0] += a[0]
     sum[1] += a[1]
     sum[2] += a[2]

@@ -68,7 +68,7 @@ const lookAt = (b: CelestialBody, camera: THREE.Camera, far: number) => {
   const mat = new THREE.Matrix4().makeTranslation(
     ...b.positionArr
   )
-  camera.position.copy(new THREE.Vector3(0, far * .3, far).applyMatrix4(mat))
+  camera.position.copy(new THREE.Vector3(0, far * 1.6, 0).applyMatrix4(mat))
   camera.up.set(0, 1, 0)
   camera.lookAt(new THREE.Vector3(0, 0, 0).applyMatrix4(mat))
 }

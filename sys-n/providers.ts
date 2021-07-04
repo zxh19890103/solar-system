@@ -139,10 +139,39 @@ function tail(info: BodyInfo) {
   return o3
 }
 
+function peribelionAndAphelion(info: BodyInfo) {
+
+  const geometry = new THREE.BufferGeometry()
+
+  geometry.setAttribute(
+    "position",
+    new THREE.Float32BufferAttribute([0, 0, 0, 0, 0, 0], 3)
+  )
+
+  const [r, g, b] = info.color
+
+  const material = new THREE.ShaderMaterial({
+    vertexShader: `
+    void main() {
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      gl_PointSize = 5.0;
+    }
+    `,
+    fragmentShader: `
+    void main() {
+      gl_FragColor=vec4(${r}, ${g}, ${b}, 1.0);
+    }
+    `
+  })
+  const o3 = new THREE.Points(geometry, material)
+  return o3
+}
+
 export {
   point,
   path,
   tail,
   sphere,
-  ring
+  ring,
+  peribelionAndAphelion
 }
