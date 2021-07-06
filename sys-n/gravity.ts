@@ -346,15 +346,29 @@ export class CelestialBody {
   }
 
   protected initialGravityCaringObjects() {
+    this.traverseAncestors(b => {
+      this.gravityCaringObjects.push(b)
+    })
+    this.traverse((b) => {
+      if (b.moon) {
+        this.gravityCaringObjects.push(b)
+      }
+    }, 1)
+  }
+
+  public traverse(fn: (b: CelestialBody) => void, maxDepth = 1, depth = 0) {
+    fn(this)
+    if (depth === maxDepth) return
+    for (const child of this.children) {
+      child.traverse(fn, maxDepth, depth + 1)
+    }
+  }
+
+  public traverseAncestors(fn: (b: CelestialBody) => void) {
     let ref = this.ref
     while (ref) {
-      this.gravityCaringObjects.push(ref)
+      fn(ref)
       ref = ref.ref
-    }
-    for (const child of this.children) {
-      if (child.moon) {
-        this.gravityCaringObjects.push(child)
-      }
     }
   }
 

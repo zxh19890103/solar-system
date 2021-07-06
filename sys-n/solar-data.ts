@@ -27,10 +27,11 @@ import {
   Titan,
   Nereid,
 } from "../sys/body-info"
+import { AU } from "../sys/constants"
 
 import { BOOTSTRAP_STATE } from "./jpl-data"
 
-const mercurySystemActive = true
+const mercurySystemActive = false
 const mercurySystem: CelestialSystem = {
   hidden: !mercurySystemActive,
   path: true,
@@ -38,7 +39,7 @@ const mercurySystem: CelestialSystem = {
   bootstrapState: BOOTSTRAP_STATE.Mercury
 }
 
-const venusSystemActive = true
+const venusSystemActive = false
 const venusSystem: CelestialSystem = {
   hidden: !venusSystemActive,
   body: Venus,
@@ -46,7 +47,7 @@ const venusSystem: CelestialSystem = {
   bootstrapState: BOOTSTRAP_STATE.Venus
 }
 
-const earthSystemActive = true
+const earthSystemActive = false
 const earthSystem: CelestialSystem = {
   hidden: !earthSystemActive,
   body: Earth,
@@ -63,7 +64,7 @@ const earthSystem: CelestialSystem = {
   ]
 }
 
-const marsSystemActive = true
+const marsSystemActive = false
 const marsSystem: CelestialSystem = {
   hidden: !marsSystemActive,
   body: Mars,
@@ -80,7 +81,7 @@ const marsSystem: CelestialSystem = {
   ]
 }
 
-const plutoSystemActive = false
+const plutoSystemActive = true
 const plutoSystem: CelestialSystem = {
   hidden: !plutoSystemActive,
   body: Pluto,
@@ -123,11 +124,12 @@ const saturnSystem: CelestialSystem = {
   ]
 }
 
-const neptuneSystemActive = false
+const neptuneSystemActive = true
 const neptuneSystem: CelestialSystem = {
   hidden: !neptuneSystemActive,
   body: Neptune,
   bootstrapState: BOOTSTRAP_STATE.Neptune,
+  path: true,
   subSystems: [
     {
       hidden: false,
@@ -170,6 +172,8 @@ const comets: CelestialSystem[] = [
   }
 ]
 
+export const FAR_OF_CAMERA: THREE.Vector3Tuple = [0, 50 * AU, 0]
+
 export const system: CelestialSystem = {
   hidden: false,
   body: Sun,
@@ -187,3 +191,4 @@ export const system: CelestialSystem = {
     plutoSystem
   ]
 }
+

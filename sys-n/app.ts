@@ -1,6 +1,5 @@
 import { HaleBopp } from "../sys/body-info"
 import { bootstrap } from './solar'
-// import { bootstrap } from './uranus'
 
 const scene = new THREE.Scene()
 scene.background = null

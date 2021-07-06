@@ -35,13 +35,10 @@ export class Shutte extends CelestialBody {
     while (ref.ref) {
       ref = ref.ref
     }
-    const a = (b: CelestialBody) => {
-      if (b !== this)
-        this.gravityCaringObjects.push(b)
-      for (const child of b.children)
-        a(child)
-    }
-    a(ref)
+    ref.traverse(b => {
+      if (b === this) return
+      this.gravityCaringObjects.push(b)
+    }, 10)
   }
 
   private velocity = new THREE.Vector2()
@@ -54,10 +51,10 @@ export class Shutte extends CelestialBody {
       const l = this.velocity.length()
       switch (evt.key) {
         case 'ArrowUp':
-          this.velocityArr[2] += DELTA
+          this.velocityArr[1] += DELTA
           break
         case 'ArrowDown':
-          this.velocityArr[2] -= DELTA
+          this.velocityArr[1] -= DELTA
           break
         case 'ArrowLeft':
           this.velocity.setLength(l - DELTA)
