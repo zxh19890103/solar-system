@@ -47,7 +47,7 @@ const venusSystem: CelestialSystem = {
   bootstrapState: BOOTSTRAP_STATE.Venus
 }
 
-const earthSystemActive = false
+const earthSystemActive = true
 const earthSystem: CelestialSystem = {
   hidden: !earthSystemActive,
   body: Earth,
@@ -81,20 +81,6 @@ const marsSystem: CelestialSystem = {
   ]
 }
 
-const plutoSystemActive = true
-const plutoSystem: CelestialSystem = {
-  hidden: !plutoSystemActive,
-  body: Pluto,
-  bootstrapState: BOOTSTRAP_STATE.Pluto,
-  subSystems: [
-    {
-      moon: true,
-      body: Charon,
-      bootstrapState: BOOTSTRAP_STATE.Charon
-    }
-  ]
-}
-
 const jupiterSystemActive = false
 const jupiterSystem: CelestialSystem = {
   hidden: !jupiterSystemActive,
@@ -124,7 +110,7 @@ const saturnSystem: CelestialSystem = {
   ]
 }
 
-const neptuneSystemActive = true
+const neptuneSystemActive = false
 const neptuneSystem: CelestialSystem = {
   hidden: !neptuneSystemActive,
   body: Neptune,
@@ -146,6 +132,20 @@ const uranusSystem: CelestialSystem = {
   hidden: !uranusSystemActive,
   body: Uranus,
   bootstrapState: BOOTSTRAP_STATE.Uranus
+}
+
+const plutoSystemActive = false
+const plutoSystem: CelestialSystem = {
+  hidden: !plutoSystemActive,
+  body: Pluto,
+  bootstrapState: BOOTSTRAP_STATE.Pluto,
+  subSystems: [
+    {
+      moon: true,
+      body: Charon,
+      bootstrapState: BOOTSTRAP_STATE.Charon
+    }
+  ]
 }
 
 const comets: CelestialSystem[] = [
@@ -172,7 +172,7 @@ const comets: CelestialSystem[] = [
   }
 ]
 
-export const FAR_OF_CAMERA: THREE.Vector3Tuple = [0, 50 * AU, 0]
+export const FAR_OF_CAMERA: THREE.Vector3Tuple = [0, 2 * AU, 0]
 
 export const system: CelestialSystem = {
   hidden: false,

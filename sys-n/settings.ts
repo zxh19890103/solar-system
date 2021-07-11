@@ -2,8 +2,8 @@ import { AU } from "../sys/constants";
 
 export const CAMERA_POSITION_Y = 2 * AU
 export const G = 6.67 * .00001 // be sure the velocity's unit is km/s
-export const BUFFER_SIZE = 100
-export const MOMENT = 100 // s
+export const BUFFER_SIZE = 10000
+export const MOMENT = 10 // s
 
 /**
  * seconds

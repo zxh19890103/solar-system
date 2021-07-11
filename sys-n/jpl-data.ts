@@ -1,3 +1,4 @@
+import * as THREE from 'three'
 import { AU } from '../sys/constants'
 
 const toJ2000CSMat = new THREE.Matrix4().makeRotationX(-.5 * Math.PI)

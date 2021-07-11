@@ -1,3 +1,4 @@
+import * as THREE from 'three'
 import { BodyInfo } from "../sys/body-info"
 import { AU } from "../sys/constants"
 

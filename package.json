@@ -22,5 +22,8 @@
   "homepage": "https://github.com/zxh19890103/solar-system#readme",
   "devDependencies": {
     "typescript": "^4.3.4"
+  },
+  "dependencies": {
+    "md5": "^2.3.0"
   }
 }

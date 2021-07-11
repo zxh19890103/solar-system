@@ -1,3 +1,4 @@
+import * as THREE from 'three'
 import { BodyInfo } from "../sys/body-info"
 import { AU, SECONDS_IN_A_DAY } from "../sys/constants"
 import { toThreeJSCSMat } from "./jpl-data"

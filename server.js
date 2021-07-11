@@ -1,5 +1,23 @@
 const fs = require("fs")
 const http = require("http")
+const path = require("path")
+const tsCompiler = require('./tscompiler')
+const { LAST_HANDLER } = require('./last-handler')
+/**
+ * @typedef {(req: http.IncomingMessage, res: http.ServerResponse, next: () => Promise<void>) => Promise<void>} MyRouteHandler
+ * @typedef {Object} MyRoute
+ * @property {RegExp} regx
+ * @property {MyRouteHandler[]} handlers
+ */
+
+/**
+ * @typedef {Object} HTTP_THREAD_CONTEXT
+ * @property {http.IncomingMessage} req
+ * @property {http.ServerResponse} res
+ * @property {Symbol} $is
+ * @property {() => MyRouteHandler} getHandler
+ * @property {() => Promise<void>} nextFn
+ */
 
 /**
  * 
@@ -54,103 +72,219 @@ fs.watch("./sys-n", (event, name) => {
   eventSource.emit({ reload: true })
 })
 
-// fs.watch("./sys", (event, name) => {
-//   if (event !== "change") return
-//   if (!name.endsWith(".ts")) return
-//   eventSource.emit({ reload: true })
-// })
+/**
+ * @type {Array<MyRoute>}
+ */
+const routes = []
 
-// fs.watch("./huanghelou", (event, name) => {
-//   if (event !== "change") return
-//   if (!name.endsWith(".ts")) return
-//   eventSource.emit({ reload: true })
-// })
-
-// fs.watch("./common", (event, name) => {
-//   if (event !== "change") return
-//   if (!name.endsWith(".ts")) return
-//   eventSource.emit({ reload: true })
-// })
-
-// fs.watch("./shaders", (event) => {
-//   if (event !== "change") return
-//   eventSource.emit({ reload: true })
-// })
-
-const compileTs = (tsFile, saveAs) => {
-  const source = fs.readFileSync(tsFile, "utf-8")
-  const output = require("typescript").transpileModule(source, require("./tsconfig.json"))
-  fs.writeFileSync(saveAs, output.outputText)
-  console.log("->", saveAs)
+/**
+ * 
+ * @param {RegExp} regx 
+ * @param {(MyRouteHandler | boolean)[]} handlers
+ */
+const route = (regx, ...handlers) => {
+  const last = handlers.pop()
+  let final = []
+  const isLastBoolean = typeof last === 'boolean'
+  if (isLastBoolean) {
+    if (last === true) {
+      final = [LAST_HANDLER, ...handlers]
+    }
+  } else {
+    final = [LAST_HANDLER, ...handlers, last]
+  }
+  routes.push(
+    {
+      regx: regx,
+      handlers: final
+    }
+  )
 }
 
-http.createServer((req, res) => {
-  const url = req.url
-  if (/\.(jpg|png|gif|webp)$/.test(url)) {
-    const [path, , ext] = /^\/(.+?)\.(jpg|png|gif|webp)$/.exec(url)
+const HTTP_THREAD_CONTEXT = Symbol('http thread context')
+
+/**
+ * @param {http.IncomingMessage} req 
+ * @param {http.ServerResponse} res 
+ */
+const createThread = (req, res) => {
+  console.log('create thread for', req.url)
+  const route = routes.find(x => x.regx.test(req.url))
+  if (!route) return
+  const handlers = route.handlers.map(h => h)
+  console.log('handlers', handlers.length)
+  let handler = null
+  /**
+   * @type {HTTP_THREAD_CONTEXT}
+   */
+  const context = {
+    $is: HTTP_THREAD_CONTEXT,
+    req,
+    res,
+    getHandler: () => handler,
+    nextFn: () => {
+      handler = handlers.shift()
+      if (!handler) {
+        handler = null
+        console.log('handler is out.')
+        return
+      }
+      return fireRouteHandler.call(context)
+    }
+  }
+
+  context.nextFn()
+}
+
+/**
+ * @this {HTTP_THREAD_CONTEXT}
+ * @returns {void}
+ */
+async function fireRouteHandler() {
+  if (this.$is !== HTTP_THREAD_CONTEXT) {
+    throw new Error('`this` is not HTTP_THREAD_CONTEXT')
+  }
+  const {
+    req,
+    res,
+    getHandler,
+    nextFn
+  } = this
+  const handler = getHandler()
+  await handler(req, res, nextFn)
+  await nextFn()
+}
+
+//#region routes
+
+// image
+route(
+  /\.(jpg|png|gif|webp)$/,
+  async (req, res, next) => {
+    const [imgpath, , ext] = /^\/(.+?)\.(jpg|png|gif|webp)$/.exec(req.url)
     res.setHeader("Content-Type", `image/${ext}`)
     res.setHeader("Cache-Control", `private, max-age=2592000`)
-    const filename = `./planets-inf/${path}`
-    if (fs.existsSync(filename)) {
-      const rs = fs.createReadStream(filename)
-      rs.pipe(res)
-    } else {
-      const rs = fs.createReadStream("./planets-inf/Earth.jpg")
-      rs.pipe(res)
+    let filename = path.join(IMG_CONTENT_SERVE_AT, imgpath)
+    if (!fs.existsSync(filename)) {
+      filename = path.join(IMG_CONTENT_SERVE_AT, 'Earth.jpg')
     }
-  } else if (/\.glsl$/.test(url)) {
+    await pipeFile(filename, res)
+  }
+)
+
+// glsl
+route(
+  /\.glsl$/,
+  async (req, res, next) => {
     res.setHeader("Content-Type", "text/plain")
-    const [, name] = /^\/(.+)\.glsl$/.exec(url)
-    const rs = fs.createReadStream(`./${name}.glsl`)
-    rs.pipe(res)
-  } else if (/^\/npm\//.test(url)) {
-    const [, name] = /^\/npm\/(.+)$/.exec(url)
-    const resource = `../node_modules/${name}`
-    if (fs.existsSync(resource)) {
-      res.setHeader("Content-Type", getContentType(name))
-      const rs = fs.createReadStream(resource)
-      rs.pipe(res)
+    const [, name] = /^\/(.+)\.glsl$/.exec(req.url)
+    const filename = path.join(TEXT_CONTENT_SERVE_AT, name)
+    await pipeFile(filename, res)
+  }
+)
+
+// js css html json ...
+route(
+  /\.(js|css|json|html)$/,
+  async (req, res, next) => {
+    const [, name, ext] = /^\/(.*?)\.([a-z]+)$/.exec(req.url)
+    const filename = path.join(TEXT_CONTENT_SERVE_AT, `./${name}.${ext}`)
+    res.setHeader("Content-Type", getContentType(filename))
+    res.setHeader("Cache-Control", `private, max-age=2592000`)
+    if (fs.existsSync(filename)) {
+      await pipeFile(filename, res)
     } else {
-      res.setHeader("Content-Type", "text/javascript")
-      res.end(`console.error('file "${name}" is not found.')`)
+      let txt = ''
+      if (ext === 'js') txt = `console.error('404', '${filename}')`
+      else if (ext === 'html') txt = '<h1 style="color: red">404</h1>'
+      else if (ext === 'css') txt = 'html { background-color: red; }'
+      else if (ext === 'json') txt = JSON.stringify({ code: 404 })
+      res.end(txt)
     }
-  } else if (/\.(js|css|json|html)$/.test(url)) {
-    const [, name, ext] = /^\/(.*?)\.([a-z]+)$/.exec(url)
-    const oriRresouce = `./${name}.${ext}`
-    res.setHeader("Content-Type", getContentType(oriRresouce))
-    const rs = fs.createReadStream(oriRresouce)
-    rs.pipe(res)
-  } else if (/^\/sys|huanghelou|common/.test(url)) {
-    const [, name] = /^\/(.*?)(\.ts)?$/.exec(url)
-    const oriRresouce = `${name}.ts`
+  }
+)
+
+// ts
+route(
+  /\.ts$/,
+  (req, res, next) => {
+    const [, name] = /^\/(.*?)\.ts$/.exec(req.url)
     res.setHeader("Content-Type", "text/javascript")
-    const asJsResource = `./dist/${name}.js`
-    const isJsExisting = fs.existsSync(asJsResource)
-    let isExpired = false
-    if (isJsExisting) {
-      const statJs = fs.statSync(asJsResource)
-      const statTs = fs.statSync(oriRresouce)
-      isExpired = statTs.mtimeMs > statJs.ctimeMs
-    }
-    if (!isJsExisting || isExpired) {
-      compileTs(oriRresouce, asJsResource)
-    }
-    const rs = fs.createReadStream(asJsResource)
-    rs.pipe(res)
-  } else if (/^\/sse/.test(url)) {
+    const scriptContent = tsCompiler.readScriptContent(`${name}.ts`)
+    res.write(scriptContent)
+  }
+)
+
+// sse
+route(
+  /^\/sse/,
+  (req, res, next) => {
     // event source
     // never close by sever
-    if (/open$/.test(url)) {
+    if (/open$/.test(req.url)) {
       eventSource.set(res)
     } else {
       eventSource.emit({ reload: true })
       res.end("sent!")
     }
-  } else {
-    // fallback
-    const rs = fs.createReadStream("./index.html")
-    rs.pipe(res)
+  },
+  false
+)
+
+// /
+route(
+  /^\//,
+  async (req, res, next) => {
+    const filename = path.join(TEXT_CONTENT_SERVE_AT, req.url)
+    console.log(filename)
+    if (fs.existsSync(filename)) {
+      const stat = fs.statSync(filename)
+      if (stat.isDirectory()) {
+        const indexfile = path.join(filename, 'index.html')
+        if (fs.existsSync(indexfile)) {
+          await pipeFile(indexfile, res)
+          return
+        }
+      } else if (stat.isFile()) {
+        await pipeFile(filename, res)
+        return
+      }
+    }
+    res.writeHead(404)
+    res.end()
   }
-}).listen(9001, "0.0.0.0", () => {
-  console.log("application is running on port 9001")
-})
+)
+
+//#endregion
+
+const delay = () => {
+  console.log('delay for 4 seconds')
+  return new Promise(r => {
+    setTimeout(r, 4000)
+  })
+}
+
+/**
+ * 
+ * @param {string} filepath 
+ * @param {http.ServerResponse} res 
+ * @returns {void}
+ */
+const pipeFile = (filepath, res) => {
+  return new Promise((r, e) => {
+    fs.createReadStream(filepath)
+      .on('end', r)
+      .on('error', e)
+      .pipe(res, { end: false })
+      .on('error', e)
+  })
+}
+
+const TEXT_CONTENT_SERVE_AT = __dirname
+const IMG_CONTENT_SERVE_AT = path.join(__dirname, './planets-inf')
+tsCompiler.setRootDir(__dirname)
+
+http.createServer(createThread)
+  .listen(9001, "0.0.0.0", () => {
+    console.log("application is running on port 9001")
+  })
