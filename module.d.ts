@@ -1,4 +1,3 @@
 declare module 'md5' {
-  var ret: string
-  export default ret
+  export const MD5: (message: string) => string
 }
