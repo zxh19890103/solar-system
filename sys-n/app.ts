@@ -1,9 +1,6 @@
 import * as THREE from 'three'
 import { HaleBopp } from "../sys/body-info"
 import { bootstrap } from './solar'
-import { MD5 } from 'md5'
-
-console.log(MD5('singhi'))
 
 const scene = new THREE.Scene()
 scene.background = null

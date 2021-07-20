@@ -6,18 +6,18 @@
   <meta charset="utf8">
   <link rel="icon" href="/nineplanets-org/neptune-150x150.png" type="image/png">
   <link rel="stylesheet" type="text/css" href="/style.css">
+  <style>
+    body {
+      background-color: black;
+      /* background-image: url(/nasa3d/tycho8.jpg); */
+      background-repeat: no-repeat;
+    }
+  </style>
 </head>
 
 <body>
   <script src="/runtime.js"></script>
   <script type="module" src="/sys-n/app.ts"></script>
-  <style>
-    body {
-      background-color: black;
-      background-image: url(/nasa3d/yale8.jpg);
-      background-repeat: repeat;
-    }
-  </style>
   <script>
     const es = new EventSource("/sse-open")
     es.onmessage = (evt) => {
