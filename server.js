@@ -110,9 +110,11 @@ const HTTP_THREAD_CONTEXT = Symbol('http thread context')
 const createThread = (req, res) => {
   console.log('create thread for', req.url)
   const route = routes.find(x => x.regx.test(req.url))
-  if (!route) return
+  if (!route) {
+    console.log('no route found.')
+    return
+  }
   const handlers = route.handlers.map(h => h)
-  console.log('handlers', handlers.length)
   let handler = null
   /**
    * @type {HTTP_THREAD_CONTEXT}
