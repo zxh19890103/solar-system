@@ -66,7 +66,9 @@ data: ${JSON.stringify(payload)}
   }
 }
 
-fs.watch("./sys-n", (event, name) => {
+fs.watch("./sys-n", {
+  recursive: true
+}, (event, name) => {
   if (event !== "change") return
   if (!name.endsWith(".ts")) return
   eventSource.emit({ reload: true })
@@ -89,6 +91,8 @@ const route = (regx, ...handlers) => {
   if (isLastBoolean) {
     if (last === true) {
       final = [LAST_HANDLER, ...handlers]
+    } else {
+      final = [...handlers]
     }
   } else {
     final = [LAST_HANDLER, ...handlers, last]
@@ -128,7 +132,6 @@ const createThread = (req, res) => {
       handler = handlers.shift()
       if (!handler) {
         handler = null
-        console.log('handler is out.')
         return
       }
       return fireRouteHandler.call(context)

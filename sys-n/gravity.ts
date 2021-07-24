@@ -2,7 +2,7 @@ import * as THREE from 'three'
 import { BodyInfo } from "../sys/body-info"
 import { AU, SECONDS_IN_A_DAY } from "../sys/constants"
 import { toThreeJSCSMat } from "./jpl-data"
-import { path, peribelionAndAphelion, point, tail } from "./providers"
+import { path, peribelionAndAphelion, point, sphere, tail } from "./providers"
 import { BUFFER_SIZE, BUFFER_MOMENT, MOMENT, SECONDS_IN_HOUR, G, ZERO_ACC } from './settings'
 
 const noop = () => { }
@@ -134,7 +134,7 @@ export class CelestialBody {
   }
 
   constructor(system: CelestialSystem) {
-    this.o3 = point(system.body)
+    this.o3 = system.provider ? system.provider(system.body) : point(system.body)
     if (system.path)
       this.pathO3 = path(system.body)
     if (system.tail)
@@ -394,6 +394,7 @@ export class CelestialBody {
         }
       }
       for (const b of bodies) {
+        // b.o3.rotation.y += .001
         b.nextFn()
       }
     }

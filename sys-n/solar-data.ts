@@ -28,6 +28,7 @@ import {
   Nereid,
 } from "../sys/body-info"
 import { AU } from "../sys/constants"
+import { CelestialBody } from "./gravity"
 
 import { BOOTSTRAP_STATE } from "./jpl-data"
 
@@ -39,7 +40,7 @@ const mercurySystem: CelestialSystem = {
   bootstrapState: BOOTSTRAP_STATE.Mercury
 }
 
-const venusSystemActive = false
+const venusSystemActive = true
 const venusSystem: CelestialSystem = {
   hidden: !venusSystemActive,
   body: Venus,
@@ -190,5 +191,25 @@ export const system: CelestialSystem = {
     neptuneSystem,
     plutoSystem
   ]
+}
+
+export const initializeSystem = (sys: CelestialSystem, parent: CelestialSystem) => {
+  if (sys.hidden || !sys.bootstrapState) return
+  sys.celestialBody = new CelestialBody(sys)
+
+  if (parent) {
+    parent.celestialBody.add(sys.celestialBody)
+  }
+
+  if (sys.subSystems) {
+    for (const subSys of sys.subSystems) {
+      const info = subSys as BodyInfo
+      if (info.name) {
+        initializeSystem({ body: info }, sys)
+      } else {
+        initializeSystem(subSys as CelestialSystem, sys)
+      }
+    }
+  }
 }
 

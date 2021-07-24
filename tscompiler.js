@@ -52,15 +52,17 @@ const transformTSImport = (node, sourceFile) => {
           if (typeof importFrom === 'string')
             importStatement += '\'' + importFrom + '\' '
           else {
-            const { module, from } = importFrom
-            if (module) {
-              importStatement += '\'' + from + '\' '
+            if (importFrom.module) {
+              importStatement += '\'' + importFrom.from + '\' '
             } else {
+              // it's not a module.
               return importStatement
                 .replace('import ', 'const ')
-                .replace('from ', `= await importAnyJS("${from}"); \n`)
+                .replace('from ', `= await importAnyJS("${importFrom.from}"); \n`)
             }
           }
+        } else {
+          return `console.warn("Path ${text} is not there!");`
         }
         break
       }
@@ -106,7 +108,8 @@ const tsResolve = (dep, refer) => {
 
     const indexFile = path.join(abspath, 'index.ts')
     if (fs.existsSync(indexFile)) {
-      return path.join(dep, 'index.ts')
+      // Warning! join delete the relative symbol of path.
+      return dep + '/index.ts'
     }
 
     const moduleFile = tsResolvePackage(abspath)

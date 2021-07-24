@@ -1,3 +1,4 @@
+import { Object3D } from "three"
 import { BodyInfo } from "../sys/body-info"
 import { CelestialBody } from "./gravity"
 declare global {
@@ -6,7 +7,8 @@ declare global {
     hidden?: boolean
     moon?: boolean
     path?: boolean
-    tail?: boolean,
+    tail?: boolean
+    provider?: (info: BodyInfo) => Object3D
     bootstrapState?: { velo: THREE.Vector3Tuple, posi: THREE.Vector3Tuple }
     celestialBody?: CelestialBody
     subSystems?: Array<CelestialSystem | BodyInfo>

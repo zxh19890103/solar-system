@@ -14,5 +14,8 @@
       "ESNext.Promise"
     ],
     "noImplicitThis": true
-  }
+  },
+  "exclude": [
+    "./legacy/**/*"
+  ]
 }

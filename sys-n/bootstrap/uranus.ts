@@ -1,8 +1,8 @@
 import * as THREE from 'three'
-import { Earth, Uranus, Jupiter, Mars, Neptune, Saturn } from "../sys/body-info"
-import { AU } from "../sys/constants"
-import { CelestialBody } from "./gravity"
-import { sphere, ring } from "./providers"
+import { Earth, Uranus, Jupiter, Mars, Neptune, Saturn } from "../../sys/body-info"
+import { AU } from "../../sys/constants"
+import { CelestialBody } from "../gravity"
+import { sphere, ring } from "../providers"
 
 const bootstrap: AppBoot = (scene, renderer, camera) => {
   // const uranus = sphere(Uranus)
