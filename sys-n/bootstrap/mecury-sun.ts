@@ -4,7 +4,7 @@ import { AU } from '../../sys/constants'
 import { CelestialBody } from '../gravity'
 import { BOOTSTRAP_STATE, toThreeJSCSMat } from '../jpl-data'
 import { sphere, point } from "../providers"
-import { initializeSystem } from '../solar-data'
+import { initializeSystem } from './solar-data'
 
 const bootstrap: AppBoot = (scene, renderer, camera) => {
 

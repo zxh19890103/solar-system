@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import { HaleBopp } from "../sys/body-info"
-import { bootstrapMecurySol } from "./bootstrap"
+import { bootstrapSolar, bootstrapEarthMoon } from "./bootstrap"
 import { PERSPECTIVE_VIEW_FIELD } from './settings'
 
 const scene = new THREE.Scene()
@@ -18,7 +18,7 @@ renderer.setClearColor(0x000000, 0)
 renderer.setSize(window.innerWidth, window.innerHeight)
 document.body.appendChild(renderer.domElement)
 
-bootstrapMecurySol(
+bootstrapSolar(
   scene,
   renderer,
   camera

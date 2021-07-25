@@ -26,11 +26,11 @@ import {
   Charon,
   Titan,
   Nereid,
-} from "../sys/body-info"
-import { AU } from "../sys/constants"
-import { CelestialBody } from "./gravity"
+} from "../../sys/body-info"
+import { AU } from "../../sys/constants"
+import { CelestialBody } from "../gravity"
 
-import { BOOTSTRAP_STATE } from "./jpl-data"
+import { BOOTSTRAP_STATE } from "../jpl-data"
 
 const mercurySystemActive = false
 const mercurySystem: CelestialSystem = {
@@ -40,7 +40,7 @@ const mercurySystem: CelestialSystem = {
   bootstrapState: BOOTSTRAP_STATE.Mercury
 }
 
-const venusSystemActive = true
+const venusSystemActive = false
 const venusSystem: CelestialSystem = {
   hidden: !venusSystemActive,
   body: Venus,
@@ -56,7 +56,7 @@ const earthSystem: CelestialSystem = {
   path: true,
   subSystems: [
     {
-      hidden: false,
+      hidden: true,
       moon: true,
       path: false,
       body: Luna,
@@ -65,7 +65,7 @@ const earthSystem: CelestialSystem = {
   ]
 }
 
-const marsSystemActive = false
+const marsSystemActive = true
 const marsSystem: CelestialSystem = {
   hidden: !marsSystemActive,
   body: Mars,

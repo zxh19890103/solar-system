@@ -8,6 +8,7 @@ declare global {
     moon?: boolean
     path?: boolean
     tail?: boolean
+    rotates?: boolean
     provider?: (info: BodyInfo) => Object3D
     bootstrapState?: { velo: THREE.Vector3Tuple, posi: THREE.Vector3Tuple }
     celestialBody?: CelestialBody

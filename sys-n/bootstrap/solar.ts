@@ -7,7 +7,7 @@ import { SECONDS_IN_A_DAY } from "../../sys/constants"
 import { CelestialBody } from "../gravity"
 import { BOOTSTRAP_STATE, toThreeJSCSMat } from "../jpl-data"
 import { path, point, tail } from "../providers"
-import { FAR_OF_CAMERA, system, initializeSystem } from '../solar-data'
+import { FAR_OF_CAMERA, system, initializeSystem } from './solar-data'
 import { CAMERA_POSITION_Y } from '../settings'
 import * as Editor from '../editor'
 import { Shutte, ShutteInfo } from "../shutte"
