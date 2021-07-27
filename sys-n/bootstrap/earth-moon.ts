@@ -11,13 +11,13 @@ const bootstrap: AppBoot = (scene, renderer, camera) => {
   const sys: CelestialSystem = {
     body: { ...Earth },
     bootstrapState: BOOTSTRAP_STATE.Earth,
-    provider: point,
+    provider: sphere,
     rotates: true,
     subSystems: [
       {
         body: { ...Luna },
-        rotates: true,
-        provider: point,
+        rotates: false,
+        provider: sphere,
         bootstrapState: BOOTSTRAP_STATE.Luna,
       }
     ]
@@ -29,20 +29,18 @@ const bootstrap: AppBoot = (scene, renderer, camera) => {
   star.init(scene)
   const next = CelestialBody.createUniNextFn(star)
 
+  const luna = star.find('Luna')
+  star.o3.add(camera)
+
   const sunLight = new THREE.DirectionalLight(0xffffff, .8)
   sunLight.position.set(0, 0, 1)
   scene.add(sunLight)
   const ambientLight = new THREE.AmbientLight(0xffffff, .1)
   scene.add(ambientLight)
 
-  const luna = star.find('Luna')
-
-  camera.position.set(0, 0, 500)
+  camera.position.set(0, 0, 0)
   camera.up.set(0, 1, 0)
-  camera.lookAt(0, 0, 0)
-
-  star.o3.add(line(new THREE.Vector3(...luna.positionArr), Earth.radius * 4))
-  // star.o3.add(camera)
+  camera.lookAt(...luna.positionArr)
 
   const animate = () => {
     requestAnimationFrame(animate)
@@ -52,12 +50,13 @@ const bootstrap: AppBoot = (scene, renderer, camera) => {
   animate()
 }
 
-const line = (nor: THREE.Vector3, leng: number) => {
-  const material = new THREE.LineBasicMaterial({ color: 0xffffff })
-  const geo = new THREE.BufferGeometry().setAttribute(
+const line = (nor: THREE.Vector3) => {
+  const material = new THREE.LineBasicMaterial({ color: '#ffffff', linewidth: .3 })
+  const geo = new THREE.BufferGeometry()
+  geo.setAttribute(
     'position',
     new THREE.Float32BufferAttribute([
-      0, 0, 0, ...nor.setLength(leng).toArray()
+      0, 0, 0, ...nor.toArray()
     ], 3)
   )
   const line = new THREE.Line(geo, material)

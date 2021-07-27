@@ -295,6 +295,7 @@ export class CelestialBody {
       if (this.ref === null) { // is sun or center
         writer.write(`date: ${ticker.today}`, 3)
         writer.write(`elapse: ${ticker.elapse}`, 4)
+        renderRotation()
         return
       }
 

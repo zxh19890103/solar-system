@@ -9,10 +9,6 @@ function sphere(info: BodyInfo) {
   const geometry = new THREE.SphereGeometry(info.radius, 120, 120)
   const material = new THREE.MeshPhongMaterial({ map: tex, specular: 0x000000 })
   const mesh = new THREE.Mesh(geometry, material)
-  mesh.rotateOnAxis(
-    new THREE.Vector3(1, 0, 1),
-    info.axialTilt
-  )
   return mesh
 }
 
