@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { Object3D } from 'three'
 import { BodyInfo } from "../sys/body-info"
 import { AU, SECONDS_IN_A_DAY } from "../sys/constants"
 import { toThreeJSCSMat } from "./jpl-data"
@@ -208,6 +209,15 @@ export class CelestialBody {
     }
     for (const child of this.children)
       child.init(scene)
+  }
+
+  showDistTo(o3: Object3D) {
+    const pos0 = this.o3.position
+    const pos1 = o3.position
+    return () => {
+      const dist = pos0.distanceTo(pos1)
+      this.writer.write(`far: ${dist.toFixed(6)}`, 4)
+    }
   }
 
   private readonly currentAngleToRef = new THREE.Vector3()

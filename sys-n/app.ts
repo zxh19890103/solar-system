@@ -18,7 +18,7 @@ renderer.setClearColor(0x000000, 0)
 renderer.setSize(window.innerWidth, window.innerHeight)
 document.body.appendChild(renderer.domElement)
 
-bootstrapEarthMoon(
+bootstrapSolar(
   scene,
   renderer,
   camera

@@ -1,4 +1,7 @@
+
 import { AU } from "../sys/constants"
+import * as THREE from 'three'
+import { BUFFER_MOMENT, MOMENT } from "./settings"
 
 let camera: THREE.Camera = null
 
@@ -76,5 +79,47 @@ const test = (_camera: THREE.Camera, _renderer: THREE.WebGLRenderer) => {
   })
 }
 
+const makeCameraEditable = (camera: THREE.Camera) => {
 
-export { test }
+  document.addEventListener('keydown', evt => {
+    evt.stopPropagation()
+    evt.preventDefault()
+
+    if (evt.metaKey) {
+      switch (evt.key) {
+        case 'ArrowUp':
+          velocity += 10
+          break
+        case 'ArrowDown':
+          velocity -= 10
+          break
+      }
+    } else {
+      switch (evt.key) {
+        case 'ArrowUp':
+          camera.rotateX(.005)
+          break
+        case 'ArrowDown':
+          camera.rotateX(-.005)
+          break
+        case 'ArrowLeft':
+          camera.rotateY(.005)
+          break
+        case 'ArrowRight':
+          camera.rotateY(-.005)
+          break
+      }
+    }
+  })
+
+  const pos = camera.position
+  let velocity = 10
+
+  return () => {
+    pos.setZ(
+      pos.z + velocity * BUFFER_MOMENT
+    )
+  }
+}
+
+export { test, makeCameraEditable }
