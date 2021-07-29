@@ -32,7 +32,7 @@ import { CelestialBody } from "../gravity"
 import * as IMAGES from '../../planets-inf/images'
 
 import { BOOTSTRAP_STATE } from "../jpl-data"
-import { sphere } from "../providers"
+import { point, sphere } from "../providers"
 
 const mercurySystemActive = false
 const mercurySystem: CelestialSystem = {
@@ -70,7 +70,7 @@ const earthSystem: CelestialSystem = {
 const marsSystemActive = true
 const marsSystem: CelestialSystem = {
   hidden: !marsSystemActive,
-  body: { ...Mars, map: IMAGES.MAPS_VENUS_1024X512_JPG, rotationPeriod: .0002 },
+  body: { ...Mars, map: IMAGES.K_8K_MARS_JPG },
   bootstrapState: BOOTSTRAP_STATE.Mars,
   path: false,
   rotates: true,
@@ -80,6 +80,7 @@ const marsSystem: CelestialSystem = {
       body: Phobos,
       hidden: true,
       moon: true,
+      path: true,
       bootstrapState: BOOTSTRAP_STATE.Phobos
     },
     { body: Deimos, hidden: true, moon: true, }
