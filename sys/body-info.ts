@@ -668,7 +668,7 @@ export const Phobos: BodyInfo = {
   peribelion: 9.23442,
   semiMajorAxis: 9.376,
   avatar: "/nineplanets-org/440px-Phobos_colour_2008.jpg",
-  map: "",
+  map: "/nineplanets-org/440px-Phobos_colour_2008.jpg",
   color: randColor(),
   mass: 1.0659 * Math.pow(10, -8), // 1.0659×1016 kg
   radius: 11.2667 * .001,

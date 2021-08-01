@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import { HaleBopp } from "../sys/body-info"
 import { bootstrapSolar, bootstrapEarthMoon } from "./bootstrap"
-import { PERSPECTIVE_VIEW_FIELD } from './settings'
+import { PERSPECTIVE_VIEW_FIELD, SKY_BG } from './settings'
 
 const scene = new THREE.Scene()
 scene.background = null
@@ -18,8 +18,16 @@ renderer.setClearColor(0x000000, 0)
 renderer.setSize(window.innerWidth, window.innerHeight)
 document.body.appendChild(renderer.domElement)
 
-bootstrapSolar(
-  scene,
-  renderer,
-  camera
-)
+const bg = new Image()
+bg.onload = () => {
+  document.body.style.backgroundImage = `url(${SKY_BG})`
+  bootstrapSolar(
+    scene,
+    renderer,
+    camera
+  )
+}
+
+bg.src = SKY_BG
+
+

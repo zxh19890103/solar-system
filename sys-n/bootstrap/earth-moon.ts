@@ -9,7 +9,7 @@ import { initializeSystem } from './solar-data'
 const bootstrap: AppBoot = (scene, renderer, camera) => {
 
   const sys: CelestialSystem = {
-    body: { ...Earth },
+    body: Earth,
     bootstrapState: BOOTSTRAP_STATE.Earth,
     provider: sphere,
     rotates: true,
@@ -18,6 +18,7 @@ const bootstrap: AppBoot = (scene, renderer, camera) => {
         body: { ...Luna },
         rotates: false,
         provider: sphere,
+        path: true,
         bootstrapState: BOOTSTRAP_STATE.Luna,
       }
     ]
@@ -30,7 +31,7 @@ const bootstrap: AppBoot = (scene, renderer, camera) => {
   const next = CelestialBody.createUniNextFn(star)
 
   const luna = star.find('Luna')
-  star.o3.add(camera)
+  const earth = star
 
   const sunLight = new THREE.DirectionalLight(0xffffff, .8)
   sunLight.position.set(0, 0, 1)
@@ -38,9 +39,12 @@ const bootstrap: AppBoot = (scene, renderer, camera) => {
   const ambientLight = new THREE.AmbientLight(0xffffff, .1)
   scene.add(ambientLight)
 
-  camera.position.set(0, 0, 0)
+  // 10 ^ 3 km
+  const line = luna.position.clone().sub(earth.position).setLength(31 * 1000 * 1.60934)
+
+  camera.position.set(...line.toArray())
   camera.up.set(0, 1, 0)
-  camera.lookAt(...luna.positionArr)
+  camera.lookAt(0, 0, 0)
 
   const animate = () => {
     requestAnimationFrame(animate)
@@ -48,19 +52,6 @@ const bootstrap: AppBoot = (scene, renderer, camera) => {
     renderer.render(scene, camera)
   }
   animate()
-}
-
-const line = (nor: THREE.Vector3) => {
-  const material = new THREE.LineBasicMaterial({ color: '#ffffff', linewidth: .3 })
-  const geo = new THREE.BufferGeometry()
-  geo.setAttribute(
-    'position',
-    new THREE.Float32BufferAttribute([
-      0, 0, 0, ...nor.toArray()
-    ], 3)
-  )
-  const line = new THREE.Line(geo, material)
-  return line
 }
 
 export {

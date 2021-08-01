@@ -26,6 +26,8 @@ import {
   Charon,
   Titan,
   Nereid,
+  Rhea,
+  Enceladus,
 } from "../../sys/body-info"
 import { AU } from "../../sys/constants"
 import { CelestialBody } from "../gravity"
@@ -58,16 +60,17 @@ const earthSystem: CelestialSystem = {
   path: false,
   subSystems: [
     {
+      body: Luna,
+      provider: sphere,
       hidden: true,
       moon: true,
       path: false,
-      body: Luna,
       bootstrapState: BOOTSTRAP_STATE.Luna
     }
   ]
 }
 
-const marsSystemActive = true
+const marsSystemActive = false
 const marsSystem: CelestialSystem = {
   hidden: !marsSystemActive,
   body: { ...Mars, map: IMAGES.K_8K_MARS_JPG },
@@ -78,9 +81,10 @@ const marsSystem: CelestialSystem = {
   subSystems: [
     {
       body: Phobos,
-      hidden: true,
+      hidden: false,
       moon: true,
       path: true,
+      provider: point,
       bootstrapState: BOOTSTRAP_STATE.Phobos
     },
     { body: Deimos, hidden: true, moon: true, }
@@ -100,28 +104,41 @@ const jupiterSystem: CelestialSystem = {
   ]
 }
 
-const saturnSystemActive = false
+const saturnSystemActive = true
 const saturnSystem: CelestialSystem = {
   hidden: !saturnSystemActive,
-  body: Saturn,
+  body: { ...Saturn, map: IMAGES.K_8K_SATURN_JPG },
   bootstrapState: BOOTSTRAP_STATE.Saturn,
+  provider: sphere,
   subSystems: [
     {
       hidden: false,
       body: Titan,
-      path: true,
       moon: true,
       bootstrapState: BOOTSTRAP_STATE.Titan
-    }
+    },
+    {
+      hidden: false,
+      body: Rhea,
+      moon: true,
+      bootstrapState: BOOTSTRAP_STATE.Rhea
+    },
+    {
+      hidden: false,
+      body: Enceladus,
+      moon: true,
+      bootstrapState: BOOTSTRAP_STATE.Enceladus
+    },
   ]
 }
 
 const neptuneSystemActive = false
 const neptuneSystem: CelestialSystem = {
   hidden: !neptuneSystemActive,
-  body: Neptune,
+  body: { ...Neptune, map: IMAGES.K_2K_NEPTUNE_JPG },
   bootstrapState: BOOTSTRAP_STATE.Neptune,
-  path: true,
+  path: false,
+  provider: sphere,
   subSystems: [
     {
       hidden: false,

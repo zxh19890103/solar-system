@@ -6,9 +6,12 @@ const textureLoader = new THREE.TextureLoader()
 
 function sphere(info: BodyInfo) {
   const tex = textureLoader.load(info.map)
-  const geometry = new THREE.SphereGeometry(info.radius, 120, 120)
+  const geometry = new THREE.SphereGeometry(info.radius, 60, 60)
   const material = new THREE.MeshPhongMaterial({ map: tex, specular: 0x000000 })
   const mesh = new THREE.Mesh(geometry, material)
+  mesh.rotateX(info.axialTilt + info.inclination)
+  // const z = zAxis(info)
+  // mesh.add(z)
   return mesh
 }
 
@@ -28,7 +31,7 @@ function point(info: BodyInfo) {
     vertexShader: `
     void main() {
       gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-      gl_PointSize = 2.0;
+      gl_PointSize = 1.5;
     }
     `,
     fragmentShader: `
@@ -78,8 +81,10 @@ function ring(info: BodyInfo) {
   const radius = info.radius * 1.5
   const a = 2 * Math.PI / 100
 
-  const points = Array(100).fill(0).map((p, i) => {
-    return [radius * Math.cos(a * i), 0, radius * Math.sin(a * i)]
+  const points = Array(400).fill(0).map((p, i) => {
+    const r = radius + Math.random()
+    const b = a + Math.random()
+    return [r * Math.cos(b * i), Math.random() - .5, r * Math.sin(b * i)]
   }).flat()
 
   geometry.setAttribute(
@@ -87,19 +92,16 @@ function ring(info: BodyInfo) {
     new THREE.Float32BufferAttribute(points, 3)
   )
 
-  const [r, g, b] = info.color
-
   const material = new THREE.ShaderMaterial({
-    uniforms: {},
     vertexShader: `
     void main() {
       gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-      gl_PointSize = 1.0;
+      gl_PointSize = 0.2;
     }
     `,
     fragmentShader: `
     void main() {
-      gl_FragColor=vec4(${r}, ${g}, ${b}, 1.0);
+      gl_FragColor=vec4(0.2, .4, .1, 1);
     }
     `
   })
@@ -107,6 +109,31 @@ function ring(info: BodyInfo) {
   const point = new THREE.Points(geometry, material)
 
   return point
+}
+
+function zAxis(info: BodyInfo) {
+  const geometry = new THREE.BufferGeometry()
+
+  geometry.setAttribute(
+    "position",
+    new THREE.Float32BufferAttribute([0, - 1.5 * info.radius, 0, 0, 1.5 * info.radius, 0], 3)
+  )
+
+  const material = new THREE.ShaderMaterial({
+    vertexShader: `
+    void main() {
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      gl_PointSize = 0.5;
+    }
+    `,
+    fragmentShader: `
+    void main() {
+      gl_FragColor=vec4(1.0, 1.0, 1.0, 1.0);
+    }
+    `
+  })
+
+  return new THREE.Line(geometry, material)
 }
 
 function tail(info: BodyInfo) {

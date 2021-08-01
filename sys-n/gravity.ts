@@ -135,6 +135,10 @@ export class CelestialBody {
     return this.ref === null
   }
 
+  get position(): THREE.Vector3 {
+    return this.o3.position
+  }
+
   constructor(system: CelestialSystem) {
     this.o3 = system.provider ? system.provider(system.body) : point(system.body)
     if (system.path)
@@ -331,16 +335,14 @@ export class CelestialBody {
     if (!this.pathO3) return noop
     const { positionArr, path, pathO3 } = this
     const { geometry } = pathO3
+    let gap = 0
     return () => {
-      path.push(...positionArr)
-      if (this.pathLength === this.pathMaxLength) {
-        path.shift()
-        path.shift()
-        path.shift()
-      } else {
-        this.pathLength += 1
+      gap += 1
+      if (gap % 5 === 0) {
+        gap = 0
       }
-      geometry.setAttribute('position', new THREE.Float32BufferAttribute(path, 3))
+      // path.push(...positionArr)
+      // geometry.setAttribute('position', new THREE.Float32BufferAttribute(path, 3))
     }
   }
 
