@@ -35,6 +35,7 @@ import * as IMAGES from '../../planets-inf/images'
 
 import { BOOTSTRAP_STATE } from "../jpl-data"
 import { point, sphere } from "../providers"
+import { Object3D } from "three"
 
 const mercurySystem: CelestialSystem = {
   path: true,
@@ -194,17 +195,52 @@ export const system: CelestialSystem = {
   ]
 }
 
-type SystemNames = 'Sun' | 'Earth' | 'Mars' | 'Mercury' | 'Venus' | 'Jupiter' | 'Saturn' | 'Uranus' | 'Neptune' | 'Pluto' | 'Halley' | 'Tempel1' | 'Holmes' | 'HaleBopp' | 'Charon' | 'Nereid' | 'Enceladus' | 'Rhea' | 'Titan' | 'Lo' | 'Europa' | 'Ganymede' | 'Callisto' | 'Phobos' | 'Deimos' | 'Luna'
-type SystemOn = Array<SystemNames>
-let onoffs: SystemOn = []
-export const setSystemsActive = (options: SystemOn) => {
-  onoffs = options
+export type SystemName = 'Sun' | 'Earth' | 'Mars' | 'Mercury' | 'Venus' | 'Jupiter' | 'Saturn' | 'Uranus' | 'Neptune' | 'Pluto' | 'Halley' | 'Tempel1' | 'Holmes' | 'HaleBopp' | 'Charon' | 'Nereid' | 'Enceladus' | 'Rhea' | 'Titan' | 'Lo' | 'Europa' | 'Ganymede' | 'Callisto' | 'Phobos' | 'Deimos' | 'Luna'
+const filter: Map<SystemName, boolean> = new Map()
+export const setSystemsActive = (names: SystemName[]) => {
+  names.forEach(name => {
+    filter.set(name, true)
+  })
+}
+
+type SetSystemAttrsArrayItem = {
+  name: SystemName;
+  provider?: (info: BodyInfo) => Object3D;
+  map?: string;
+  hidden?: boolean;
+  path?: boolean;
+  tail?: boolean;
+  rotates?: boolean
+}
+
+const sysoptions: Map<SystemName, SetSystemAttrsArrayItem> = new Map();
+export const setSystemOptions = (...options: (SystemName | SetSystemAttrsArrayItem)[]) => {
+  for (const opt of options) {
+    if (typeof opt === 'string') {
+      sysoptions.set(opt, { name: opt })
+    } else {
+      sysoptions.set(opt.name, opt)
+    }
+  }
 }
 
 export const initializeSystem = (sys: CelestialSystem, parent: CelestialSystem) => {
-  if (!onoffs.includes(sys.body.name as SystemNames)) return
-  if (sys.hidden === true) return
+
+  const name = sys.body.name as SystemName
+  if (!sysoptions.has(name)) return
   if (!sys.bootstrapState) return
+
+  {
+    const { hidden, map, path, tail, rotates, provider } = sysoptions.get(name)
+    if (hidden !== undefined) sys.hidden = hidden
+    if (map !== undefined) sys.body.map = map
+    if (path !== undefined) sys.path = path
+    if (tail !== undefined) sys.tail = tail
+    if (rotates !== undefined) sys.rotates = rotates
+    if (provider !== undefined) sys.provider = provider
+  }
+
+  if (sys.hidden === true) return
   sys.celestialBody = new CelestialBody(sys)
 
   if (parent) {

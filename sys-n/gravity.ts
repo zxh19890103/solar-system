@@ -2,6 +2,7 @@ import * as THREE from 'three'
 import { Object3D } from 'three'
 import { BodyInfo } from "../sys/body-info"
 import { AU, SECONDS_IN_A_DAY } from "../sys/constants"
+import { SystemName } from './bootstrap/solar-data'
 import { toThreeJSCSMat } from "./jpl-data"
 import { path, peribelionAndAphelion, point, sphere, tail } from "./providers"
 import { BUFFER_SIZE, BUFFER_MOMENT, MOMENT, SECONDS_IN_HOUR, G, ZERO_ACC } from './settings'
@@ -106,7 +107,7 @@ class TickableObject {
 
 export class CelestialBody {
   o3: THREE.Object3D
-  pathO3: THREE.Points
+  pathO3: THREE.Line
   tailO3: THREE.Line
   info: BodyInfo
   readonly sys: CelestialSystem
@@ -338,11 +339,11 @@ export class CelestialBody {
     let gap = 0
     return () => {
       gap += 1
-      if (gap % 5 === 0) {
+      if (gap % 30 === 0) {
+        path.push(...positionArr)
         gap = 0
       }
-      // path.push(...positionArr)
-      // geometry.setAttribute('position', new THREE.Float32BufferAttribute(path, 3))
+      geometry.setAttribute('position', new THREE.Float32BufferAttribute(path, 3))
     }
   }
 
@@ -438,7 +439,7 @@ export class CelestialBody {
     child.ref = this
     this.children.add(child)
   }
-  public find(name: string) {
+  public find(name: SystemName) {
     for (const child of this.children) {
       if (child.info.name === name)
         return child
