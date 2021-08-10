@@ -259,3 +259,34 @@ export const initializeSystem = (sys: CelestialSystem, parent: CelestialSystem) 
   }
 }
 
+export const serializeSys = (sys: CelestialSystem) => {
+  if (!sys.celestialBody) return null
+  const { velo, posi } = sys.bootstrapState
+  const o = {
+    m: sys.body.mass,
+    vx: velo[0],
+    vy: velo[1],
+    vz: velo[2],
+    px: posi[0],
+    py: posi[1],
+    pz: posi[2],
+    oo: []
+  }
+  if (sys.subSystems) {
+    const oo = []
+    for (const subSys of sys.subSystems) {
+      const info = subSys as BodyInfo
+      if (info.aphelion) {
+        oo.push(serializeSys({ body: info }))
+      } else {
+        oo.push(serializeSys(subSys as CelestialSystem))
+      }
+    }
+    if (oo.length > 0) {
+      o.oo = oo
+    } else {
+      delete o.oo
+    }
+  }
+  return o
+}
