@@ -263,6 +263,8 @@ export const serializeSys = (sys: CelestialSystem) => {
   if (!sys.celestialBody) return null
   const { velo, posi } = sys.bootstrapState
   const o = {
+    r: sys.body.radius,
+    n: sys.body.name,
     m: sys.body.mass,
     vx: velo[0],
     vy: velo[1],
