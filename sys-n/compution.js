@@ -43,7 +43,7 @@ const others = new Map()
 /**
  * @param {CObj} raw 
  */
-function receiveData(raw) {
+function receive(raw) {
   /**
    * @param {CObj} ro 
    * @param {CObj2} cur 
@@ -55,10 +55,8 @@ function receiveData(raw) {
     cur.n = ro.n
     flatdata.push(cur)
     if (ro.oo) {
-      cur.children = []
       ro.oo.forEach((sro) => {
         const scur = {}
-        cur.children.push(scur)
         loop(sro, scur)
       })
     }
@@ -77,10 +75,10 @@ function receiveData(raw) {
  * @param {THREE.Vector3Tuple} velocity 
  * @param {CObj2} obj 
  */
-function buffer(position, velocity, obj) {
+function buffer(obj) {
   let n = N
-  const posiArr = position
-  const veloArr = velocity
+  const posiArr = obj.p
+  const veloArr = obj.v
 
   while (n--) {
     const a = computeAccOfCelestialBody(obj)
@@ -141,29 +139,6 @@ function computeAccBy(
 
 /**
  * 
- * @param {THREE.Vector3Tuple} vec 
- * @returns 
- */
-function computeVec3Length(vec) {
-  const [x, y, z] = vec
-  return Math.sqrt(x * x + y * y + z * z)
-}
-
-/**
- * 
- * @param {THREE.Vector3Tuple} vec 
- * @param {THREE.Vector3Tuple} to 
- * @returns {THREE.Vector3Tuple}
- */
-function setVec3RelativeTo(vec, to) {
-  vec[0] -= to[0]
-  vec[1] -= to[1]
-  vec[2] -= to[2]
-  return vec
-}
-
-/**
- * 
  * @param {CObj2} self 
  * @returns {THREE.Vector3Tuple}
  */
@@ -178,4 +153,22 @@ function computeAccOfCelestialBody(self) {
     sum[2] += a[2]
   }
   return sum
+}
+
+function compute() {
+  for (let obj of flatdata) {
+    buffer(obj)
+  }
+  const map = Object.fromEntries(flatdata.map(d => {
+    return [
+      d.n,
+      [...d.v, ...d.p]
+    ]
+  }))
+  return JSON.stringify(map)
+}
+
+module.exports = {
+  receive,
+  compute
 }

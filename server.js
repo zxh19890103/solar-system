@@ -220,6 +220,14 @@ route(
   }
 )
 
+const compution = require('./sys-n/compution')
+
+function nextbuffer() {
+  const data = compution.compute()
+  eventSource.emit({ data })
+  setTimeout(nextbuffer, 1000)
+}
+
 // sse
 route(
   /^\/sse/,
@@ -228,6 +236,12 @@ route(
     // never close by sever
     if (/open$/.test(req.url)) {
       eventSource.set(res)
+    } else if (/init$/.test(req.url)) {
+      req.setEncoding('utf-8')
+      req.on('data', (chunk) => {
+        compution.receive(JSON.parse(chunk))
+        nextbuffer()
+      })
     } else {
       eventSource.emit({ reload: true })
       res.end("sent!")
@@ -235,6 +249,7 @@ route(
   },
   false
 )
+
 
 // /
 route(

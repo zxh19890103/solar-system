@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import { CelestialBody, setVec3RelativeTo } from "../gravity"
-import { FAR_OF_CAMERA, system, initializeSystem, setSystemsActive, setSystemOptions } from './solar-data'
+import { FAR_OF_CAMERA, system, initializeSystem, setSystemsActive, setSystemOptions, serializeSys } from './solar-data'
 import { CAMERA_POSITION_Y } from '../settings'
 import { makeCameraEditable } from '../editor'
 import { AU } from '../../sys/constants'
@@ -31,8 +31,19 @@ const bootstrap = (scene: THREE.Scene, renderer: THREE.WebGLRenderer, camera: TH
 
   earth.o3.add(camera)
 
+  fetch('/sse-init', { method: 'POST', body: JSON.stringify(serializeSys(system)) })
+
+  computionResultJsonp((data) => {
+    star.traverse((co) => {
+      console.log(co.info.name)
+      const [vx, vy, vz, px, py, pz] = data[co.info.name]
+      co.o3.position.set(px, py, pz)
+    }, 5)
+    renderer.render(scene, camera)
+  })
+
   const animate = () => {
-    requestAnimationFrame(animate)
+    // requestAnimationFrame(animate)
     next()
     renderer.render(scene, camera)
   }

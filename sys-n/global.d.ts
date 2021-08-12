@@ -18,4 +18,6 @@ declare global {
   export interface AppBoot {
     (scene: THREE.Scene, renderer: THREE.Renderer, camera: THREE.Camera): void
   }
+
+  export function computionResultJsonp(fn: (d: any) => void)
 }

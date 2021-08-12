@@ -278,11 +278,9 @@ export const serializeSys = (sys: CelestialSystem) => {
     const oo = []
     for (const subSys of sys.subSystems) {
       const info = subSys as BodyInfo
-      if (info.aphelion) {
-        oo.push(serializeSys({ body: info }))
-      } else {
-        oo.push(serializeSys(subSys as CelestialSystem))
-      }
+      const ooo = serializeSys(info.aphelion ? { body: info } : subSys as CelestialSystem)
+      if (ooo)
+        oo.push(ooo)
     }
     if (oo.length > 0) {
       o.oo = oo

@@ -19,9 +19,22 @@
   <script src="/runtime.js"></script>
   <script type="module" src="/sys-n/app.ts"></script>
   <script>
+    const __COMPUTION_RESULT_CALLBACKS__ = []
+    function computionResultJsonp(callback) {
+      __COMPUTION_RESULT_CALLBACKS__.push(callback)
+    }
     const es = new EventSource("/sse-open")
     es.onmessage = (evt) => {
-      location.reload()
+      // console.log(evt.data)
+      const data = JSON.parse(evt.data)
+      const payload = JSON.parse(data.data)
+      if (payload.reload) {
+        location.reload()
+      } else {
+        for (const callback of __COMPUTION_RESULT_CALLBACKS__) {
+          callback(payload)
+        }
+      }
     }
   </script>
 </body>
