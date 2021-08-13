@@ -112,7 +112,7 @@ const HTTP_THREAD_CONTEXT = Symbol('http thread context')
  * @param {http.ServerResponse} res 
  */
 const createThread = (req, res) => {
-  console.log('create thread for', req.url)
+  // console.log('create thread for', req.url)
   const route = routes.find(x => x.regx.test(req.url))
   if (!route) {
     console.log('no route found.')
@@ -221,9 +221,9 @@ route(
 )
 
 const compution = require('./sys-n/compution')
-
+let bufferTimes = 10
 function nextbuffer() {
-  const data = compution.compute()
+  const data = compution.compute(bufferTimes)
   eventSource.emit({ data })
   setTimeout(nextbuffer, 1000)
 }
@@ -232,22 +232,35 @@ function nextbuffer() {
 route(
   /^\/sse/,
   (req, res, next) => {
-    // event source
     // never close by sever
     if (/open$/.test(req.url)) {
       eventSource.set(res)
-    } else if (/init$/.test(req.url)) {
-      req.setEncoding('utf-8')
-      req.on('data', (chunk) => {
-        compution.receive(JSON.parse(chunk))
-        nextbuffer()
-      })
     } else {
       eventSource.emit({ reload: true })
       res.end("sent!")
     }
   },
   false
+)
+
+route(
+  /^\/compution/,
+  (req, res, next) => {
+    if (/buffer$/.test(req.url)) {
+      req.setEncoding('utf-8')
+      req.on('data', (chunk) => {
+        bufferTimes = JSON.parse(chunk)
+        console.log(bufferTimes)
+      })
+    } else if (/init$/.test(req.url)) {
+      req.setEncoding('utf-8')
+      console.log('init')
+      req.on('data', (chunk) => {
+        compution.receive(JSON.parse(chunk))
+        nextbuffer()
+      })
+    }
+  }
 )
 
 

@@ -28,6 +28,12 @@ bg.onload = () => {
   )
 }
 
-bg.src = SKY_BG
+bootstrapSolar(
+  scene,
+  renderer,
+  camera
+)
+
+// bg.src = SKY_BG
 
 

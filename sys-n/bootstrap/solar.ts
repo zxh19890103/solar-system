@@ -8,12 +8,12 @@ import { point, sphere } from '../providers'
 
 const bootstrap = (scene: THREE.Scene, renderer: THREE.WebGLRenderer, camera: THREE.Camera) => {
 
-  setSystemOptions({ name: 'Earth', path: false, provider: sphere, rotates: true }, 'Sun', { name: 'Luna', provider: point, path: true })
+  setSystemOptions({ name: 'Earth', path: false, provider: point, rotates: true }, 'Sun', { name: 'Luna', provider: point, path: true })
   initializeSystem(system, null)
 
   const star = system.celestialBody
   star.init(scene)
-  const next = CelestialBody.createUniNextFn(star)
+  const next = CelestialBody.createUniNextFn(star, true)
 
   const sunLight = new THREE.PointLight(0xffffff, 1)
   sunLight.position.set(0, 0, 0)
@@ -23,31 +23,49 @@ const bootstrap = (scene: THREE.Scene, renderer: THREE.WebGLRenderer, camera: TH
 
   renderer.physicallyCorrectLights = true
 
-  const earth = star.find('Earth')
-
   camera.up.set(0, 1, 0)
-  camera.position.set(0, 0, 10)
+  camera.position.set(0, AU, 0)
   camera.lookAt(0, 0, 0)
 
-  earth.o3.add(camera)
+  const hello = async () => {
+    await fetch('/compution-buffer', { method: 'POST', body: JSON.stringify(8) })
+    await fetch('/compution-init', { method: 'POST', body: JSON.stringify(serializeSys(system)) })
+  }
 
-  fetch('/sse-init', { method: 'POST', body: JSON.stringify(serializeSys(system)) })
+  hello()
 
-  computionResultJsonp((data) => {
-    star.traverse((co) => {
-      console.log(co.info.name)
-      const [vx, vy, vz, px, py, pz] = data[co.info.name]
-      co.o3.position.set(px, py, pz)
-    }, 5)
-    renderer.render(scene, camera)
-  })
-
-  const animate = () => {
-    // requestAnimationFrame(animate)
+  const objects = star.flat()
+  const records = []
+  let ing = false
+  const nextTick = () => {
+    console.log(records.length)
+    const record = records.shift()
+    if (!record) {
+      ing = false
+      console.log('out')
+      return
+    }
+    for (const co of objects) {
+      const [vx, vy, vz, px, py, pz] = record[co.info.name]
+      co.velocityArr[0] = vx
+      co.velocityArr[1] = vy
+      co.velocityArr[2] = vz
+      co.positionArr[0] = px
+      co.positionArr[1] = py
+      co.positionArr[2] = pz
+    }
     next()
     renderer.render(scene, camera)
+    requestAnimationFrame(nextTick)
   }
-  animate()
+
+  computionResultJsonp((data) => {
+    console.log('got')
+    records.push(...data)
+    if (ing) return
+    ing = true
+    nextTick()
+  })
 }
 
 export default bootstrap

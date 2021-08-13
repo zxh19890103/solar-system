@@ -394,6 +394,12 @@ export class CelestialBody {
     }
   }
 
+  public flat(): CelestialBody[] {
+    const list = []
+    this.traverse(o => list.push(o))
+    return list
+  }
+
   public traverseAncestors(fn: (b: CelestialBody) => void) {
     let ref = this.ref
     while (ref) {
@@ -402,10 +408,11 @@ export class CelestialBody {
     }
   }
 
-  static createUniNextFn(root: CelestialBody) {
+  static createUniNextFn(root: CelestialBody, computesByNodejs = false) {
     const bodies: CelestialBody[] = []
     const centerPosi: THREE.Vector3Tuple = [...root.positionArr]
     const centerVelo: THREE.Vector3Tuple = [...root.velocityArr]
+
     const iter = (b: CelestialBody) => {
       setVec3RelativeTo(b.positionArr, centerPosi)
       setVec3RelativeTo(b.velocityArr, centerVelo)
@@ -419,6 +426,14 @@ export class CelestialBody {
     }
 
     iter(root)
+
+    if (computesByNodejs) {
+      return () => {
+        for (const b of bodies) {
+          b.nextFn()
+        }
+      }
+    }
 
     return () => {
       let n = BUFFER_SIZE

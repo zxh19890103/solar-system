@@ -155,17 +155,21 @@ function computeAccOfCelestialBody(self) {
   return sum
 }
 
-function compute() {
-  for (let obj of flatdata) {
-    buffer(obj)
+function compute(times = 100) {
+  let i = times
+  const arr = []
+  while (i--) {
+    for (let obj of flatdata) {
+      buffer(obj)
+    }
+    arr.push(Object.fromEntries(flatdata.map(d => {
+      return [
+        d.n,
+        [...d.v, ...d.p]
+      ]
+    })))
   }
-  const map = Object.fromEntries(flatdata.map(d => {
-    return [
-      d.n,
-      [...d.v, ...d.p]
-    ]
-  }))
-  return JSON.stringify(map)
+  return JSON.stringify(arr)
 }
 
 module.exports = {
