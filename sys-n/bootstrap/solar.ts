@@ -1,14 +1,23 @@
 import * as THREE from 'three'
 import { CelestialBody, setVec3RelativeTo } from "../gravity"
 import { FAR_OF_CAMERA, system, initializeSystem, setSystemsActive, setSystemOptions, serializeSys } from './solar-data'
-import { CAMERA_POSITION_Y } from '../settings'
+import { BUFFER_SIZE, CAMERA_POSITION_Y, MOMENT } from '../settings'
 import { makeCameraEditable } from '../editor'
 import { AU } from '../../sys/constants'
 import { point, sphere } from '../providers'
 
 const bootstrap = (scene: THREE.Scene, renderer: THREE.WebGLRenderer, camera: THREE.Camera) => {
 
-  setSystemOptions({ name: 'Earth', path: false, provider: point, rotates: true }, 'Sun', { name: 'Luna', provider: point, path: true })
+  setSystemOptions(
+    // { name: 'Mars', provider: point, path: false },
+    { name: 'Uranus', provider: point, path: true },
+    { name: 'Neptune', provider: point, path: true },
+    { name: 'Pluto', provider: point, path: true },
+    // { name: 'Halley', provider: point, path: true },
+    // { name: 'Jupiter', provider: point },
+    // { name: 'Saturn' },
+    // { name: 'Earth', path: false, provider: point, rotates: true },
+    'Sun')
   initializeSystem(system, null)
 
   const star = system.celestialBody
@@ -24,17 +33,18 @@ const bootstrap = (scene: THREE.Scene, renderer: THREE.WebGLRenderer, camera: TH
   renderer.physicallyCorrectLights = true
 
   camera.up.set(0, 1, 0)
-  camera.position.set(0, AU, 0)
+  camera.position.set(0, 50 * AU, 4 * AU)
   camera.lookAt(0, 0, 0)
 
   const hello = async () => {
-    await fetch('/compution-buffer', { method: 'POST', body: JSON.stringify(8) })
+    await fetch('/compution-buffer', { method: 'POST', body: JSON.stringify({ B: BUFFER_SIZE, M: MOMENT, N: 100 }) })
     await fetch('/compution-init', { method: 'POST', body: JSON.stringify(serializeSys(system)) })
   }
 
   hello()
 
   const objects = star.flat()
+  console.log(...objects)
   const records = []
   let ing = false
   const nextTick = () => {
@@ -60,7 +70,6 @@ const bootstrap = (scene: THREE.Scene, renderer: THREE.WebGLRenderer, camera: TH
   }
 
   computionResultJsonp((data) => {
-    console.log('got')
     records.push(...data)
     if (ing) return
     ing = true

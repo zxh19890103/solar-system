@@ -19,23 +19,20 @@
   <script src="/runtime.js"></script>
   <script type="module" src="/sys-n/app.ts"></script>
   <script>
-    const phases = {}
     const __COMPUTION_RESULT_CALLBACKS__ = []
     function computionResultJsonp(callback) {
       __COMPUTION_RESULT_CALLBACKS__.push(callback)
     }
-    function wait(k, promise) {
-      return new Promise(r => {
-        phases[k] = r
-      })
-    }
     const es = new EventSource("/sse-open")
     es.onmessage = (evt) => {
       const data = JSON.parse(evt.data)
-      const payload = JSON.parse(data.data)
-      if (payload.reload) {
+      if (data.reload) {
+        console.log('sse reload')
         location.reload()
-      } else if (payload.buffer) {
+        return
+      }
+      const payload = JSON.parse(data.data)
+      if (payload.buffer) {
         phases['buffer']()
         console.log('sse buffer')
       } else if (payload.init) {

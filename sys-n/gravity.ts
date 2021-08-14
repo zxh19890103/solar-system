@@ -325,6 +325,7 @@ export class CelestialBody {
       }
 
       position.set(...positionArr)
+      this.checkAngleToRefRegress()
       renderPath()
       renderText()
       renderRotation()
@@ -396,7 +397,7 @@ export class CelestialBody {
 
   public flat(): CelestialBody[] {
     const list = []
-    this.traverse(o => list.push(o))
+    this.traverse(o => list.push(o), 10)
     return list
   }
 

@@ -261,17 +261,17 @@ export const initializeSystem = (sys: CelestialSystem, parent: CelestialSystem) 
 
 export const serializeSys = (sys: CelestialSystem) => {
   if (!sys.celestialBody) return null
-  const { velo, posi } = sys.bootstrapState
+  const { velocityArr, positionArr } = sys.celestialBody
   const o = {
     r: sys.body.radius,
     n: sys.body.name,
     m: sys.body.mass,
-    vx: velo[0],
-    vy: velo[1],
-    vz: velo[2],
-    px: posi[0],
-    py: posi[1],
-    pz: posi[2],
+    vx: velocityArr[0],
+    vy: velocityArr[1],
+    vz: velocityArr[2],
+    px: positionArr[0],
+    py: positionArr[1],
+    pz: positionArr[2],
     oo: []
   }
   if (sys.subSystems) {

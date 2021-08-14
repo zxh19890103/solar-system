@@ -23,8 +23,9 @@
 /**
  * @type {number}
  */
-const N = 100
-const MOMENT = 100
+let N = 100
+let BUFFER_SIZE = 100
+let MOMENT = 100
 const G = 6.67 * .00001
 const ZERO_ACC = [0, 0, 0]
 
@@ -53,6 +54,7 @@ function receive(raw) {
     cur.p = [ro.px, ro.py, ro.pz]
     cur.m = ro.m
     cur.n = ro.n
+    cur.r = ro.r
     flatdata.push(cur)
     if (ro.oo) {
       ro.oo.forEach((sro) => {
@@ -65,44 +67,45 @@ function receive(raw) {
   data = {}
   flatdata = []
   loop(raw, data)
-  for (let i of flatdata) {
+  for (const i of flatdata) {
     others.set(i, flatdata.filter(x => x !== i))
   }
 }
 
+function setNMB(data) {
+  N = data.N
+  MOMENT = data.M
+  BUFFER_SIZE = data.B
+  console.log(data)
+}
+
 /**
- * @param {THREE.Vector3Tuple} position 
- * @param {THREE.Vector3Tuple} velocity 
  * @param {CObj2} obj 
  */
-function buffer(obj) {
-  let n = N
+function move(obj) {
   const posiArr = obj.p
   const veloArr = obj.v
+  const a = computeAccOfCelestialBody(obj)
+  const dv = [
+    a[0] * MOMENT,
+    a[1] * MOMENT,
+    a[2] * MOMENT
+  ]
+  const [vx, vy, vz] = veloArr
+  const [dvx, dvy, dvz] = dv
+  const ds = [
+    vx * MOMENT + 0.5 * dvx * MOMENT,
+    vy * MOMENT + 0.5 * dvy * MOMENT,
+    vz * MOMENT + 0.5 * dvz * MOMENT,
+  ]
 
-  while (n--) {
-    const a = computeAccOfCelestialBody(obj)
-    const dv = [
-      a[0] * MOMENT,
-      a[1] * MOMENT,
-      a[2] * MOMENT
-    ]
-    const [vx, vy, vz] = veloArr
-    const [dvx, dvy, dvz] = dv
-    const ds = [
-      vx * MOMENT + 0.5 * dvx * MOMENT,
-      vy * MOMENT + 0.5 * dvy * MOMENT,
-      vz * MOMENT + 0.5 * dvz * MOMENT,
-    ]
+  veloArr[0] += dv[0]
+  veloArr[1] += dv[1]
+  veloArr[2] += dv[2]
 
-    veloArr[0] += dv[0]
-    veloArr[1] += dv[1]
-    veloArr[2] += dv[2]
-
-    posiArr[0] += ds[0]
-    posiArr[1] += ds[1]
-    posiArr[2] += ds[2]
-  }
+  posiArr[0] += ds[0]
+  posiArr[1] += ds[1]
+  posiArr[2] += ds[2]
 }
 
 /**
@@ -137,8 +140,7 @@ function computeAccBy(
   return [dx * factor, dy * factor, dz * factor]
 }
 
-/**
- * 
+/* 
  * @param {CObj2} self 
  * @returns {THREE.Vector3Tuple}
  */
@@ -155,24 +157,27 @@ function computeAccOfCelestialBody(self) {
   return sum
 }
 
-function compute(times = 100) {
-  let i = times
+let t = 0
+function compute() {
+  console.log('computes#', t++)
+  let i = N // number of packs to send
   const arr = []
   while (i--) {
-    for (let obj of flatdata) {
-      buffer(obj)
+    const o = {}
+    let k = BUFFER_SIZE
+    while (k--) {
+      for (let obj of flatdata) {
+        move(obj)
+        o[obj.n] = [...obj.v, ...obj.p]
+      }
     }
-    arr.push(Object.fromEntries(flatdata.map(d => {
-      return [
-        d.n,
-        [...d.v, ...d.p]
-      ]
-    })))
+    arr.push(o)
   }
   return JSON.stringify(arr)
 }
 
 module.exports = {
   receive,
-  compute
+  compute,
+  setNMB
 }

@@ -221,9 +221,9 @@ route(
 )
 
 const compution = require('./sys-n/compution')
-let bufferTimes = 10
+let isComputing = false
 function nextbuffer() {
-  const data = compution.compute(bufferTimes)
+  const data = compution.compute()
   eventSource.emit({ data })
   setTimeout(nextbuffer, 1000)
 }
@@ -236,6 +236,7 @@ route(
     if (/open$/.test(req.url)) {
       eventSource.set(res)
     } else {
+      stopSignal = 1
       eventSource.emit({ reload: true })
       res.end("sent!")
     }
@@ -243,26 +244,25 @@ route(
   false
 )
 
+// compution
 route(
   /^\/compution/,
   (req, res, next) => {
+    req.setEncoding('utf-8')
     if (/buffer$/.test(req.url)) {
-      req.setEncoding('utf-8')
       req.on('data', (chunk) => {
-        bufferTimes = JSON.parse(chunk)
-        console.log(bufferTimes)
+        compution.setNMB(JSON.parse(chunk))
       })
     } else if (/init$/.test(req.url)) {
-      req.setEncoding('utf-8')
-      console.log('init')
       req.on('data', (chunk) => {
         compution.receive(JSON.parse(chunk))
+        if (isComputing) return
+        isComputing = true
         nextbuffer()
       })
     }
   }
 )
-
 
 // /
 route(
