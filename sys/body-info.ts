@@ -7,6 +7,10 @@ export interface BodyInfo {
    */
   name: string
   /**
+   * name of object that display on screen.
+   */
+  displayName?: string
+  /**
    * unit: x 10 ^ 3 km
    */
   aphelion: number
@@ -99,6 +103,7 @@ const composeColors = (...colors: Array<number[]>): vec4 => {
 
 export const Sun: BodyInfo = {
   name: "Sun",
+  displayName: 'Sol',
   aphelion: 0,
   peribelion: 0,
   semiMajorAxis: 0,
@@ -116,6 +121,7 @@ export const Sun: BodyInfo = {
 
 export const Mercury: BodyInfo = {
   name: "Mercury",
+  displayName: 'Mercury',
   aphelion: 69816.900,
   peribelion: 46001.200,
   semiMajorAxis: 57909.050,
@@ -134,6 +140,7 @@ export const Mercury: BodyInfo = {
 
 export const Venus: BodyInfo = {
   name: "Venus",
+  displayName: 'Venus',
   aphelion: 108939,
   peribelion: 107477,
   semiMajorAxis: 108208,
@@ -152,6 +159,7 @@ export const Venus: BodyInfo = {
 
 export const Earth: BodyInfo = {
   name: "Earth",
+  displayName: 'Earth',
   aphelion: 152100,
   peribelion: 147095,
   semiMajorAxis: 149598.023,
@@ -170,6 +178,7 @@ export const Earth: BodyInfo = {
 
 export const Mars: BodyInfo = {
   name: "Mars",
+  displayName: 'Mars',
   aphelion: 249200,
   peribelion: 206700,
   semiMajorAxis: 227939.2,
@@ -188,6 +197,7 @@ export const Mars: BodyInfo = {
 
 export const Jupiter: BodyInfo = {
   name: "Jupiter",
+  displayName: 'Jupiter',
   aphelion: 816620,
   peribelion: 740520,
   semiMajorAxis: 778570,
@@ -214,6 +224,7 @@ export const Jupiter: BodyInfo = {
  */
 export const Saturn: BodyInfo = {
   name: "Saturn",
+  displayName: 'Saturn',
   aphelion: 1514500,
   peribelion: 1352550,
   semiMajorAxis: 1433530,
@@ -242,6 +253,7 @@ export const Saturn: BodyInfo = {
 
 export const Uranus: BodyInfo = {
   name: "Uranus",
+  displayName: 'Uranus',
   aphelion: 20.11 * AU,
   peribelion: 18.33 * AU,
   semiMajorAxis: 19.2184 * AU,
@@ -274,6 +286,7 @@ export const Uranus: BodyInfo = {
 
 export const Neptune: BodyInfo = {
   name: "Neptune",
+  displayName: 'Neptune',
   aphelion: 30.33 * AU,
   peribelion: 29.81 * AU,
   semiMajorAxis: 30.07 * AU,
@@ -290,6 +303,7 @@ export const Neptune: BodyInfo = {
 
 export const Pluto: BodyInfo = {
   name: "Pluto",
+  displayName: 'Pluto',
   aphelion: 49.305 * AU,
   peribelion: 29.658 * AU,
   semiMajorAxis: 39.482 * AU,
@@ -306,6 +320,7 @@ export const Pluto: BodyInfo = {
 
 export const Ceres: BodyInfo = {
   name: "Ceres",
+  displayName: 'Ceres',
   aphelion: 2.9796467093 * AU,
   peribelion: 2.5586835997 * AU,
   semiMajorAxis: 2.7691651545 * AU,
@@ -322,6 +337,7 @@ export const Ceres: BodyInfo = {
 
 export const Eris: BodyInfo = {
   name: "Eris",
+  displayName: 'Eris',
   aphelion: 97.457 * AU,
   peribelion: 38.271 * AU,
   semiMajorAxis: 67.864 * AU,
@@ -339,7 +355,8 @@ export const Eris: BodyInfo = {
 //#region comets
 
 export const Halley: BodyInfo = {
-  name: "1P/Halley",
+  name: "Halley",
+  displayName: '1P/Halley',
   aphelion: 35.082 * AU,
   peribelion: 0.586 * AU,
   semiMajorAxis: 17.834 * AU,
@@ -357,7 +374,8 @@ export const Halley: BodyInfo = {
 }
 
 export const Tempel1: BodyInfo = {
-  name: "9P/Tempel 1",
+  name: "Tempel1",
+  displayName: '9P/Tempel 1',
   aphelion: 4.748 * AU,
   peribelion: 1.542 * AU,
   semiMajorAxis: 3.145 * AU,
@@ -371,7 +389,8 @@ export const Tempel1: BodyInfo = {
 }
 
 export const Holmes: BodyInfo = {
-  name: "17P/Holmes",
+  name: "Holmes",
+  displayName: '17P/Holmes',
   aphelion: 5.183610 * AU,
   peribelion: 2.053218 * AU,
   semiMajorAxis: 3.618414 * AU,
@@ -385,7 +404,8 @@ export const Holmes: BodyInfo = {
 }
 
 export const HaleBopp: BodyInfo = {
-  name: "Hale-Bopp",
+  name: "HaleBopp",
+  displayName: 'Hale-Bopp',
   aphelion: 370.8 * AU,
   peribelion: 0.914 * AU,
   semiMajorAxis: 186 * AU,
@@ -405,6 +425,7 @@ export const HaleBopp: BodyInfo = {
 //#region earth's moons
 export const Luna: BodyInfo = {
   name: "Luna",
+  displayName: 'Luna',
   aphelion: 405.400,
   peribelion: 362.600,
   semiMajorAxis: 384.399,
@@ -420,7 +441,8 @@ export const Luna: BodyInfo = {
 }
 
 export const KamoOalewa: BodyInfo = {
-  name: "469219 Kamoʻoalewa",
+  name: "KamoOalewa",
+  displayName: '469219 Kamoʻoalewa',
   aphelion: 1.1048 * AU,
   peribelion: 0.8974 * AU,
   semiMajorAxis: 1.0011 * AU,
@@ -439,6 +461,7 @@ export const KamoOalewa: BodyInfo = {
 
 export const Lo: BodyInfo = {
   name: "Lo",
+  displayName: 'Lo',
   aphelion: 423.400,
   peribelion: 420.000,
   semiMajorAxis: 421.700,
@@ -453,6 +476,7 @@ export const Lo: BodyInfo = {
 
 export const Europa: BodyInfo = {
   name: "Europa",
+  displayName: 'Europa',
   aphelion: 676.938,
   peribelion: 664.862,
   semiMajorAxis: 670.900,
@@ -467,6 +491,7 @@ export const Europa: BodyInfo = {
 
 export const Ganymede: BodyInfo = {
   name: "Ganymede",
+  displayName: 'Ganymede',
   aphelion: 1071.600,
   peribelion: 1069.200,
   semiMajorAxis: 1070.400,
@@ -481,6 +506,7 @@ export const Ganymede: BodyInfo = {
 
 export const Callisto: BodyInfo = {
   name: "Callisto",
+  displayName: 'Callisto',
   aphelion: 1897.000,
   peribelion: 1869.000,
   semiMajorAxis: 1882.700,
@@ -499,6 +525,7 @@ export const Callisto: BodyInfo = {
 
 export const Titan: BodyInfo = {
   name: "Titan",
+  displayName: 'Titan',
   aphelion: 1257.060,
   peribelion: 1186.680,
   semiMajorAxis: 1221.870,
@@ -513,6 +540,7 @@ export const Titan: BodyInfo = {
 
 export const Rhea: BodyInfo = {
   name: "Rhea",
+  displayName: 'Rhea',
   aphelion: 527.108,
   peribelion: 527.108,
   semiMajorAxis: 527.108,
@@ -527,6 +555,7 @@ export const Rhea: BodyInfo = {
 
 export const Enceladus: BodyInfo = {
   name: "Enceladus",
+  displayName: 'Enceladus',
   aphelion: 237.948,
   peribelion: 237.948,
   semiMajorAxis: 237.948,
@@ -541,6 +570,7 @@ export const Enceladus: BodyInfo = {
 
 export const Mimas: BodyInfo = {
   name: "Mimas",
+  displayName: 'Mimas',
   aphelion: 189.176,
   peribelion: 181.902,
   semiMajorAxis: 185.539,
@@ -555,6 +585,7 @@ export const Mimas: BodyInfo = {
 
 export const Tethys: BodyInfo = {
   name: "Tethys",
+  displayName: 'Tethys',
   aphelion: 294.619,
   peribelion: 294.619,
   semiMajorAxis: 294.619,
@@ -569,6 +600,7 @@ export const Tethys: BodyInfo = {
 
 export const Dione: BodyInfo = {
   name: "Dione",
+  displayName: 'Dione',
   aphelion: 377.396,
   peribelion: 377.396,
   semiMajorAxis: 377.396,
@@ -583,6 +615,7 @@ export const Dione: BodyInfo = {
 
 export const Iapetus: BodyInfo = {
   name: "Iapetus",
+  displayName: 'Iapetus',
   aphelion: 3560.820,
   peribelion: 3560.820,
   semiMajorAxis: 3560.820,
@@ -608,6 +641,7 @@ export const Iapetus: BodyInfo = {
  */
 export const Proteus: BodyInfo = {
   name: "Proteus",
+  displayName: 'Proteus',
   aphelion: 117.584,
   peribelion: 117.709,
   semiMajorAxis: 117.647,
@@ -628,6 +662,7 @@ export const Proteus: BodyInfo = {
  */
 export const Triton: BodyInfo = {
   name: "Triton",
+  displayName: 'Triton',
   aphelion: 354.759,
   peribelion: 354.759,
   semiMajorAxis: 354.759,
@@ -646,6 +681,7 @@ export const Triton: BodyInfo = {
  */
 export const Nereid: BodyInfo = {
   name: "Nereid",
+  displayName: 'Nereid',
   aphelion: 5513.940 * 1.4,
   peribelion: 5513.940 * .3,
   semiMajorAxis: 5513.940,
@@ -664,6 +700,7 @@ export const Nereid: BodyInfo = {
 
 export const Phobos: BodyInfo = {
   name: "Phobos",
+  displayName: 'Phobos',
   aphelion: 9.51758,
   peribelion: 9.23442,
   semiMajorAxis: 9.376,
@@ -678,6 +715,7 @@ export const Phobos: BodyInfo = {
 
 export const Deimos: BodyInfo = {
   name: "Deimos",
+  displayName: 'Deimos',
   aphelion: 23.4709,
   peribelion: 23.4555,
   semiMajorAxis: 23.4632,
@@ -695,6 +733,7 @@ export const Deimos: BodyInfo = {
 //#region pluto's moons
 export const Charon: BodyInfo = {
   name: "Charon",
+  displayName: 'Charon',
   aphelion: 19.595,
   peribelion: 19.587,
   semiMajorAxis: 19.5914,

@@ -13,7 +13,7 @@ const bootstrap = (scene: THREE.Scene, renderer: THREE.WebGLRenderer, camera: TH
     { name: 'Uranus', provider: point, path: true },
     { name: 'Neptune', provider: point, path: true },
     { name: 'Pluto', provider: point, path: true },
-    // { name: 'Halley', provider: point, path: true },
+    { name: 'Halley', provider: point, path: true },
     // { name: 'Jupiter', provider: point },
     // { name: 'Saturn' },
     // { name: 'Earth', path: false, provider: point, rotates: true },
