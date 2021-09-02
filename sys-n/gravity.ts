@@ -229,15 +229,16 @@ export class CelestialBody {
   private s: number = 0
   private stage = 0
   private regressed = false
+  private loop = 0
   private checkAngleToRefRegress() {
-    if (this.isRootBody || this.regressed) return
+    if (this.isRootBody) return
 
     const { positionArr, ref } = this
     const { positionArr: refPositionArr } = ref
 
     const nearEqualToZero = this.currentAngleToRef
       .set(
-        this.positionArr[0] - refPositionArr[0],
+        positionArr[0] - refPositionArr[0],
         positionArr[1] - refPositionArr[1],
         positionArr[2] - refPositionArr[2]
       )
@@ -248,6 +249,8 @@ export class CelestialBody {
     }
 
     if (nearEqualToZero && this.stage === 1) {
+      this.loop += 1
+      this.stage = 0
       this.regressed = true
     }
   }
@@ -310,8 +313,8 @@ export class CelestialBody {
       if (this.ref === null) { // is sun or center
         writer.write(`date: ${ticker.today}`, 3)
         writer.write(`elapse: ${ticker.elapse}`, 4)
-        renderRotation()
-        return
+        // renderRotation()
+        // return
       }
 
       if (this.state === 'stopped') {
@@ -337,12 +340,9 @@ export class CelestialBody {
     if (!this.pathO3) return noop
     const { positionArr, path, pathO3 } = this
     const { geometry } = pathO3
-    let gap = 0
     return () => {
-      gap += 1
-      if (gap % 30 === 0) {
+      if (this.loop % 30 === 0) {
         path.push(...positionArr)
-        gap = 0
       }
       geometry.setAttribute('position', new THREE.Float32BufferAttribute(path, 3))
     }

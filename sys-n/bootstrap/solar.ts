@@ -4,19 +4,20 @@ import { FAR_OF_CAMERA, system, initializeSystem, setSystemsActive, setSystemOpt
 import { BUFFER_SIZE, CAMERA_POSITION_Y, MOMENT } from '../settings'
 import { makeCameraEditable } from '../editor'
 import { AU } from '../../sys/constants'
-import { point, sphere } from '../providers'
+import { path, point, sphere } from '../providers'
 
 const bootstrap = (scene: THREE.Scene, renderer: THREE.WebGLRenderer, camera: THREE.Camera) => {
 
   setSystemOptions(
-    // { name: 'Mars', provider: point, path: false },
-    { name: 'Uranus', provider: point, path: true },
-    { name: 'Neptune', provider: point, path: true },
-    { name: 'Pluto', provider: point, path: true },
-    { name: 'Halley', provider: point, path: true },
+    // { name: 'Mercury', provider: point, path: true },
+    { name: 'Mars', provider: sphere, rotates: true },
+    // { name: 'Uranus', provider: point, path: true },
+    // { name: 'Neptune', provider: point, path: true },
+    // { name: 'Pluto', provider: point, path: true },
+    // { name: 'Halley', provider: point, path: true },
     // { name: 'Jupiter', provider: point },
     // { name: 'Saturn' },
-    // { name: 'Earth', path: false, provider: point, rotates: true },
+    // { name: 'Earth', path: true, provider: point, rotates: true },
     'Sun')
   initializeSystem(system, null)
 
@@ -32,23 +33,24 @@ const bootstrap = (scene: THREE.Scene, renderer: THREE.WebGLRenderer, camera: TH
 
   renderer.physicallyCorrectLights = true
 
+  const mars = star.find('Mars')
+
   camera.up.set(0, 1, 0)
-  camera.position.set(0, 50 * AU, 4 * AU)
-  camera.lookAt(0, 0, 0)
+  camera.position.copy(mars.position)
+  camera.position.y += 10
+  camera.lookAt(mars.position)
 
   const hello = async () => {
-    await fetch('/compution-buffer', { method: 'POST', body: JSON.stringify({ B: BUFFER_SIZE, M: MOMENT, N: 100 }) })
+    await fetch('/compution-buffer', { method: 'POST', body: JSON.stringify({ B: BUFFER_SIZE, M: MOMENT, N: 80 }) })
     await fetch('/compution-init', { method: 'POST', body: JSON.stringify(serializeSys(system)) })
   }
 
   hello()
 
   const objects = star.flat()
-  console.log(...objects)
   const records = []
   let ing = false
   const nextTick = () => {
-    console.log(records.length)
     const record = records.shift()
     if (!record) {
       ing = false
