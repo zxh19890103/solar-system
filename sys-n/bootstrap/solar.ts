@@ -10,7 +10,7 @@ const bootstrap = (scene: THREE.Scene, renderer: THREE.WebGLRenderer, camera: TH
 
   setSystemOptions(
     // { name: 'Mercury', provider: point, path: true },
-    { name: 'Mars', provider: sphere, rotates: true },
+    { name: 'Mars', provider: point, rotates: true, path: true, },
     // { name: 'Uranus', provider: point, path: true },
     // { name: 'Neptune', provider: point, path: true },
     // { name: 'Pluto', provider: point, path: true },
@@ -33,12 +33,9 @@ const bootstrap = (scene: THREE.Scene, renderer: THREE.WebGLRenderer, camera: TH
 
   renderer.physicallyCorrectLights = true
 
-  const mars = star.find('Mars')
-
   camera.up.set(0, 1, 0)
-  camera.position.copy(mars.position)
-  camera.position.y += 10
-  camera.lookAt(mars.position)
+  camera.position.set(0, 1 * AU, .2 * AU)
+  camera.lookAt(0, 0, 0)
 
   const hello = async () => {
     await fetch('/compution-buffer', { method: 'POST', body: JSON.stringify({ B: BUFFER_SIZE, M: MOMENT, N: 80 }) })
@@ -77,6 +74,44 @@ const bootstrap = (scene: THREE.Scene, renderer: THREE.WebGLRenderer, camera: TH
     ing = true
     nextTick()
   })
+
+  //#region editor
+  {
+    const canvasElement = renderer.domElement
+    const x0 = 0 ^ canvasElement.clientWidth / 2
+    const y0 = 0 ^ canvasElement.clientHeight / 2
+
+    let state = 0
+
+    const rotation = camera.rotation
+
+    const tick = () => {
+      if (state === 0) {
+        return
+      }
+      if (state === 1) {
+        rotation.y += .001
+      } else if (state === 2) {
+        rotation.y -= .001
+      }
+      requestAnimationFrame(tick)
+    }
+
+    canvasElement.addEventListener('mousemove', e => {
+      const { clientX, clientY } = e
+      const x = clientX - x0
+      const y = clientY - y0
+
+      const isvalid = x < 100 && x > -100 && y < 100 && y > -100
+      if (!isvalid) return
+      const nextState = x > 5 ? 1 : x < 5 ? 2 : 0
+      if (state !== nextState) {
+        state = nextState
+        tick()
+      }
+    })
+  }
+  //#endregion
 }
 
 export default bootstrap
