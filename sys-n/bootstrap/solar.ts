@@ -5,24 +5,28 @@ import { BUFFER_SIZE, CAMERA_POSITION_Y, MOMENT } from '../settings'
 import { makeCameraEditable } from '../editor'
 import { AU } from '../../sys/constants'
 import { path, point, sphere } from '../providers'
+import * as images from "../../planets-inf/images";
 
 const bootstrap = (scene: THREE.Scene, renderer: THREE.WebGLRenderer, camera: THREE.Camera) => {
 
   setSystemOptions(
-    // { name: 'Mercury', provider: point, path: true },
-    { name: 'Mars', provider: point, rotates: true, path: true, },
+    { name: 'Mercury', provider: point, path: true },
+    { name: 'Venus', provider: point, path: true },
+    // { name: 'Mars', provider: point, rotates: true, path: true, },
     // { name: 'Uranus', provider: point, path: true },
     // { name: 'Neptune', provider: point, path: true },
     // { name: 'Pluto', provider: point, path: true },
     // { name: 'Halley', provider: point, path: true },
     // { name: 'Jupiter', provider: point },
     // { name: 'Saturn' },
-    // { name: 'Earth', path: true, provider: point, rotates: true },
-    'Sun')
+    // { name: 'Earth', path: false, provider: sphere, rotates: false },
+    { name: 'Sun', map: images.MAPS_SUN_2000X1000_JPG, provider: sphere, rotates: true })
+
   initializeSystem(system, null)
 
   const star = system.celestialBody
   star.init(scene)
+  // const earth = star.find('Earth');
   const next = CelestialBody.createUniNextFn(star, true)
 
   const sunLight = new THREE.PointLight(0xffffff, 1)
@@ -31,18 +35,17 @@ const bootstrap = (scene: THREE.Scene, renderer: THREE.WebGLRenderer, camera: TH
   const ambientLight = new THREE.AmbientLight(0xffffff, 1)
   scene.add(ambientLight)
 
-  renderer.physicallyCorrectLights = true
+  // renderer.physicallyCorrectLights = true
 
+  // earth.o3.add(camera)
   camera.up.set(0, 1, 0)
-  camera.position.set(0, 1 * AU, .2 * AU)
-  camera.lookAt(0, 0, 0)
+  camera.position.set(0, 0, AU)
+  camera.lookAt(0, 0, 0);
 
-  const hello = async () => {
+  (async () => {
     await fetch('/compution-buffer', { method: 'POST', body: JSON.stringify({ B: BUFFER_SIZE, M: MOMENT, N: 80 }) })
     await fetch('/compution-init', { method: 'POST', body: JSON.stringify(serializeSys(system)) })
-  }
-
-  hello()
+  })();
 
   const objects = star.flat()
   const records = []
@@ -65,6 +68,7 @@ const bootstrap = (scene: THREE.Scene, renderer: THREE.WebGLRenderer, camera: TH
     }
     next()
     renderer.render(scene, camera)
+    // camera.lookAt(0, 0, 0)
     requestAnimationFrame(nextTick)
   }
 
@@ -107,7 +111,7 @@ const bootstrap = (scene: THREE.Scene, renderer: THREE.WebGLRenderer, camera: TH
       const nextState = x > 5 ? 1 : x < 5 ? 2 : 0
       if (state !== nextState) {
         state = nextState
-        tick()
+        // tick()
       }
     })
   }

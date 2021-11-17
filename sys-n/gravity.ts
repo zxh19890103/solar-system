@@ -252,6 +252,7 @@ export class CelestialBody {
       this.loop += 1
       this.stage = 0
       this.regressed = true
+      console.log('regressed!')
     }
   }
 
@@ -341,9 +342,8 @@ export class CelestialBody {
     const { positionArr, path, pathO3 } = this
     const { geometry } = pathO3
     return () => {
-      if (this.loop % 30 === 0) {
-        path.push(...positionArr)
-      }
+      if (this.regressed) return;
+      path.push(...positionArr);
       geometry.setAttribute('position', new THREE.Float32BufferAttribute(path, 3))
     }
   }
@@ -352,7 +352,8 @@ export class CelestialBody {
     if (!this.sys.rotates) return noop
     const { o3, info } = this
     const rotation = o3.rotation
-    const rad = BUFFER_MOMENT * Math.PI / (info.rotationPeriod * SECONDS_IN_A_DAY)
+    let rad = BUFFER_MOMENT * Math.PI / (info.rotationPeriod * SECONDS_IN_A_DAY)
+    if (rad === Infinity) rad = .001;
     return () => {
       rotation.y += rad
     }
