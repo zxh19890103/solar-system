@@ -6,13 +6,14 @@ import { makeCameraEditable } from '../editor'
 import { AU } from '../../sys/constants'
 import { path, point, sphere } from '../providers'
 import * as images from "../../planets-inf/images";
+import { BOOTSTRAP_STATE, toThreeJSCSMat } from '../jpl-data'
 
 const bootstrap = (scene: THREE.Scene, renderer: THREE.WebGLRenderer, camera: THREE.Camera) => {
 
   setSystemOptions(
-    { name: 'Mercury', provider: point, path: true },
-    { name: 'Venus', provider: point, path: true },
-    // { name: 'Mars', provider: point, rotates: true, path: true, },
+    // { name: 'Mercury', provider: sphere, path: true, rotates: false },
+    { name: 'Venus', provider: sphere, path: false },
+    // { name: 'Mars', provider: point, rotates: false, path: true, },
     // { name: 'Uranus', provider: point, path: true },
     // { name: 'Neptune', provider: point, path: true },
     // { name: 'Pluto', provider: point, path: true },
@@ -20,7 +21,7 @@ const bootstrap = (scene: THREE.Scene, renderer: THREE.WebGLRenderer, camera: TH
     // { name: 'Jupiter', provider: point },
     // { name: 'Saturn' },
     // { name: 'Earth', path: false, provider: sphere, rotates: false },
-    { name: 'Sun', map: images.MAPS_SUN_2000X1000_JPG, provider: sphere, rotates: true })
+    { name: 'Sun', map: images.K_8K_JUPITER_JPG, provider: sphere, rotates: true })
 
   initializeSystem(system, null)
 
@@ -35,11 +36,13 @@ const bootstrap = (scene: THREE.Scene, renderer: THREE.WebGLRenderer, camera: TH
   const ambientLight = new THREE.AmbientLight(0xffffff, 1)
   scene.add(ambientLight)
 
-  // renderer.physicallyCorrectLights = true
+  // put camera on the position on line.
+  const cameraWhere = new THREE.Vector3(...BOOTSTRAP_STATE.Venus.posi).applyMatrix4(toThreeJSCSMat)
+  cameraWhere.normalize()
+  cameraWhere.setLength(AU)
 
-  // earth.o3.add(camera)
   camera.up.set(0, 1, 0)
-  camera.position.set(0, 0, AU)
+  camera.position.copy(cameraWhere)
   camera.lookAt(0, 0, 0);
 
   (async () => {

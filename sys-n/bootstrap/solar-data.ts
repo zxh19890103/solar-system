@@ -207,6 +207,7 @@ type SetSystemAttrsArrayItem = {
   name: SystemName;
   provider?: (info: BodyInfo) => Object3D;
   map?: string;
+  color?: vec4;
   hidden?: boolean;
   path?: boolean;
   tail?: boolean;
@@ -231,13 +232,14 @@ export const initializeSystem = (sys: CelestialSystem, parent: CelestialSystem) 
   if (!sys.bootstrapState) return
 
   {
-    const { hidden, map, path, tail, rotates, provider } = sysoptions.get(name)
+    const { hidden, map, path, tail, rotates, provider, color } = sysoptions.get(name)
     if (hidden !== undefined) sys.hidden = hidden
     if (map !== undefined) sys.body.map = map
     if (path !== undefined) sys.path = path
     if (tail !== undefined) sys.tail = tail
     if (rotates !== undefined) sys.rotates = rotates
     if (provider !== undefined) sys.provider = provider
+    if (color !== undefined) sys.body.color = color;
   }
 
   if (sys.hidden === true) return
