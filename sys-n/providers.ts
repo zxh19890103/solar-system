@@ -1,17 +1,15 @@
 import * as THREE from 'three'
 import { BodyInfo } from "../sys/body-info"
-import { AU } from "../sys/constants"
+import { RADIUS_SCALE } from './settings'
 
 const textureLoader = new THREE.TextureLoader()
 
 function sphere(info: BodyInfo) {
   const tex = textureLoader.load(info.map)
-  const geometry = new THREE.SphereGeometry(info.radius, 60, 60)
+  const geometry = new THREE.SphereGeometry(info.radius * RADIUS_SCALE, 60, 60)
   const material = new THREE.MeshPhongMaterial({ map: tex, specular: 0x000000 })
   const mesh = new THREE.Mesh(geometry, material)
   mesh.rotateX(info.axialTilt + info.inclination)
-  // const z = zAxis(info)
-  // mesh.add(z)
   return mesh
 }
 

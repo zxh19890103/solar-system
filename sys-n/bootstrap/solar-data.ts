@@ -36,6 +36,7 @@ import * as IMAGES from '../../planets-inf/images'
 import { BOOTSTRAP_STATE } from "../jpl-data"
 import { point, sphere } from "../providers"
 import { Object3D } from "three"
+import { RADIUS_SCALE } from "../settings"
 
 const mercurySystem: CelestialSystem = {
   path: true,

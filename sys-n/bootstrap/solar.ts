@@ -11,17 +11,19 @@ import { BOOTSTRAP_STATE, toThreeJSCSMat } from '../jpl-data'
 const bootstrap = (scene: THREE.Scene, renderer: THREE.WebGLRenderer, camera: THREE.Camera) => {
 
   setSystemOptions(
-    // { name: 'Mercury', provider: sphere, path: true, rotates: false },
-    { name: 'Venus', provider: sphere, path: false },
-    // { name: 'Mars', provider: point, rotates: false, path: true, },
-    // { name: 'Uranus', provider: point, path: true },
-    // { name: 'Neptune', provider: point, path: true },
+    { name: 'Mercury', provider: point, path: false, rotates: true },
+    { name: 'Venus', provider: point, path: false, rotates: true },
+    { name: 'Earth', path: false, provider: point, rotates: true },
+    { name: 'Mars', provider: point, rotates: true, path: false, },
+    // { name: 'Uranus', provider: sphere, path: false, rotates: true },
+    { name: 'Neptune', provider: point, path: false, rotates: true },
     // { name: 'Pluto', provider: point, path: true },
-    // { name: 'Halley', provider: point, path: true },
-    // { name: 'Jupiter', provider: point },
-    // { name: 'Saturn' },
-    // { name: 'Earth', path: false, provider: sphere, rotates: false },
-    { name: 'Sun', map: images.K_8K_JUPITER_JPG, provider: sphere, rotates: true })
+    { name: 'Halley', provider: point, path: true },
+    { name: 'Holmes', provider: point, path: true },
+    // { name: 'HaleBopp', provider: point, path: true },
+    { name: 'Jupiter', provider: point, path: false, rotates: true },
+    { name: 'Saturn', provider: point, path: false, rotates: true },
+    { name: 'Sun', provider: point, rotates: false })
 
   initializeSystem(system, null)
 
@@ -33,13 +35,14 @@ const bootstrap = (scene: THREE.Scene, renderer: THREE.WebGLRenderer, camera: TH
   const sunLight = new THREE.PointLight(0xffffff, 1)
   sunLight.position.set(0, 0, 0)
   scene.add(sunLight)
-  const ambientLight = new THREE.AmbientLight(0xffffff, 1)
+  const ambientLight = new THREE.AmbientLight(0xffffff, .3)
   scene.add(ambientLight)
 
   // put camera on the position on line.
-  const cameraWhere = new THREE.Vector3(...BOOTSTRAP_STATE.Venus.posi).applyMatrix4(toThreeJSCSMat)
-  cameraWhere.normalize()
-  cameraWhere.setLength(AU)
+  // const cameraWhere = new THREE.Vector3(...BOOTSTRAP_STATE.Mercury.posi).applyMatrix4(toThreeJSCSMat)
+  // cameraWhere.normalize()
+  // cameraWhere.setLength(AU)
+  const cameraWhere = new THREE.Vector3(0, 20 * AU, 60 * AU);
 
   camera.up.set(0, 1, 0)
   camera.position.copy(cameraWhere)

@@ -353,9 +353,9 @@ export class CelestialBody {
     const { o3, info } = this
     const rotation = o3.rotation
     let rad = BUFFER_MOMENT * Math.PI / (info.rotationPeriod * SECONDS_IN_A_DAY)
-    if (rad === Infinity) rad = .001;
+    if (rad === Infinity) rad = .02;
     return () => {
-      rotation.y += rad
+      rotation.y += .02
     }
   }
 
