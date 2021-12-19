@@ -36,7 +36,6 @@ import * as IMAGES from '../../planets-inf/images'
 import { BOOTSTRAP_STATE } from "../jpl-data"
 import { point, sphere } from "../providers"
 import { Object3D } from "three"
-import { RADIUS_SCALE } from "../settings"
 
 const mercurySystem: CelestialSystem = {
   path: true,
@@ -51,7 +50,7 @@ const venusSystem: CelestialSystem = {
 }
 
 const earthSystem: CelestialSystem = {
-  body: Earth,
+  body: { ...Earth, map: IMAGES.MAPS_EARTH_1000X500_JPG },
   bootstrapState: BOOTSTRAP_STATE.Earth,
   path: false,
   provider: sphere,
@@ -67,7 +66,7 @@ const earthSystem: CelestialSystem = {
 }
 
 const marsSystem: CelestialSystem = {
-  body: { ...Mars, map: IMAGES.K_8K_MARS_JPG },
+  body: { ...Mars, map: IMAGES.MAPS_MARS_1024X512_JPG },
   bootstrapState: BOOTSTRAP_STATE.Mars,
   path: false,
   rotates: true,
@@ -96,7 +95,7 @@ const jupiterSystem: CelestialSystem = {
 }
 
 const saturnSystem: CelestialSystem = {
-  body: { ...Saturn, map: IMAGES.K_8K_SATURN_JPG },
+  body: { ...Saturn },
   bootstrapState: BOOTSTRAP_STATE.Saturn,
   provider: sphere,
   subSystems: [

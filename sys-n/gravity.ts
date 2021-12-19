@@ -39,7 +39,7 @@ export const insertCanvas = (info: BodyInfo, width: number = 200, height: number
   const color = "rgba(" + info.color.map((x) => 0 ^ (x * 255)).join(",") + ")"
   ctx.fillStyle = color
   ctx.textBaseline = "top"
-  const h = 13
+  const h = 25
   ctx.font = `${h - 1}px / 1 Wawati SC`
 
   return {
@@ -161,15 +161,6 @@ export class CelestialBody {
 
     this.periapsis = refDirection.clone().applyMatrix4(toPeriapsis)
     this.toPeriapsis = toPeriapsis
-
-    // this.paO3 = peribelionAndAphelion(this.info)
-    // this.paO3.geometry.setAttribute('position', new THREE.Float32BufferAttribute(
-    //   [
-    //     ...this.periapsis.clone().setLength(this.info.peribelion).toArray(),
-    //     ...this.periapsis.clone().negate().setLength(this.info.aphelion).toArray()
-    //   ],
-    //   3
-    // ))
   }
 
   private initSpaceAttrs() {
@@ -205,12 +196,13 @@ export class CelestialBody {
     scene.add(this.o3)
     this.pathO3 && scene.add(this.pathO3)
     this.tailO3 && this.o3.add(this.tailO3)
-
-    this.writer = insertCanvas(this.info, 200, 70)
+    const height = this.ref ? 140 : 300;
+    this.writer = insertCanvas(this.info, 250, height)
     this.writer.write(this.info.name, 0)
-    if (!this.ref) {
-      this.writer.write('epoch: J2000', 1)
-      this.writer.write('since: 2021-06-30 TDB', 2)
+    if (!this.ref && this.info.name === 'Sun') {
+      this.writer.write('---', 5)
+      this.writer.write('epoch: J2000', 6)
+      this.writer.write('since: 2021-06-30 TDB', 7)
     }
     for (const child of this.children)
       child.init(scene)
@@ -252,7 +244,6 @@ export class CelestialBody {
       this.loop += 1
       this.stage = 0
       this.regressed = true
-      console.log('regressed!')
     }
   }
 
@@ -342,8 +333,8 @@ export class CelestialBody {
     const { positionArr, path, pathO3 } = this
     const { geometry } = pathO3
     return () => {
-      if (this.regressed) return;
-      path.push(...positionArr);
+      if (this.regressed) path.splice(0, 3)
+      path.push(...positionArr)
       geometry.setAttribute('position', new THREE.Float32BufferAttribute(path, 3))
     }
   }
