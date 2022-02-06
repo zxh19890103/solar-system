@@ -1,6 +1,6 @@
-import * as THREE from 'three'
+import * as THREE from "three"
 import { BodyInfo } from "../sys/body-info"
-import { RADIUS_SCALE } from './settings'
+import { RADIUS_SCALE } from "./settings"
 
 const textureLoader = new THREE.TextureLoader()
 
@@ -14,7 +14,6 @@ function sphere(info: BodyInfo) {
 }
 
 function point(info: BodyInfo) {
-
   const geometry = new THREE.BufferGeometry()
 
   geometry.setAttribute(
@@ -36,7 +35,41 @@ function point(info: BodyInfo) {
     void main() {
       gl_FragColor=vec4(${r}, ${g}, ${b}, 1.0);
     }
-    `
+    `,
+  })
+
+  const point = new THREE.Points(geometry, material)
+
+  return point
+}
+
+function particle(color: THREE.Vector3) {
+  const geometry = new THREE.BufferGeometry()
+
+  geometry.setAttribute(
+    "position",
+    new THREE.Float32BufferAttribute([0, 0, 0], 3)
+  )
+
+  const material = new THREE.ShaderMaterial({
+    uniforms: {
+      uColor: {
+        value: color.toArray(),
+      },
+    },
+    vertexShader: `
+    void main() {
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      gl_PointSize = 1.5;
+    }
+    `,
+    fragmentShader: `
+    uniform vec3 uColor;
+
+    void main() {
+      gl_FragColor = vec4(uColor, 1.0);
+    }
+    `,
   })
 
   const point = new THREE.Points(geometry, material)
@@ -45,13 +78,9 @@ function point(info: BodyInfo) {
 }
 
 function path(info: BodyInfo) {
-
   const geometry = new THREE.BufferGeometry()
 
-  geometry.setAttribute(
-    "position",
-    new THREE.Float32BufferAttribute([], 3)
-  )
+  geometry.setAttribute("position", new THREE.Float32BufferAttribute([], 3))
 
   const [r, g, b] = info.color
 
@@ -65,9 +94,9 @@ function path(info: BodyInfo) {
     `,
     fragmentShader: `
     void main() {
-      gl_FragColor=vec4(${r * .2}, ${g * .2}, ${b * .2}, 1.0);
+      gl_FragColor=vec4(${r * 0.2}, ${g * 0.2}, ${b * 0.2}, 1.0);
     }
-    `
+    `,
   })
   const path = new THREE.Line(geometry, material)
   return path
@@ -77,18 +106,18 @@ function ring(info: BodyInfo) {
   const geometry = new THREE.BufferGeometry()
 
   const radius = info.radius * 1.5
-  const a = 2 * Math.PI / 100
+  const a = (2 * Math.PI) / 100
 
-  const points = Array(400).fill(0).map((p, i) => {
-    const r = radius + Math.random()
-    const b = a + Math.random()
-    return [r * Math.cos(b * i), Math.random() - .5, r * Math.sin(b * i)]
-  }).flat()
+  const points = Array(400)
+    .fill(0)
+    .map((p, i) => {
+      const r = radius + Math.random()
+      const b = a + Math.random()
+      return [r * Math.cos(b * i), Math.random() - 0.5, r * Math.sin(b * i)]
+    })
+    .flat()
 
-  geometry.setAttribute(
-    "position",
-    new THREE.Float32BufferAttribute(points, 3)
-  )
+  geometry.setAttribute("position", new THREE.Float32BufferAttribute(points, 3))
 
   const material = new THREE.ShaderMaterial({
     vertexShader: `
@@ -101,7 +130,7 @@ function ring(info: BodyInfo) {
     void main() {
       gl_FragColor=vec4(0.2, .4, .1, 1);
     }
-    `
+    `,
   })
 
   const point = new THREE.Points(geometry, material)
@@ -114,7 +143,10 @@ function zAxis(info: BodyInfo) {
 
   geometry.setAttribute(
     "position",
-    new THREE.Float32BufferAttribute([0, - 1.5 * info.radius, 0, 0, 1.5 * info.radius, 0], 3)
+    new THREE.Float32BufferAttribute(
+      [0, -1.5 * info.radius, 0, 0, 1.5 * info.radius, 0],
+      3
+    )
   )
 
   const material = new THREE.ShaderMaterial({
@@ -128,41 +160,44 @@ function zAxis(info: BodyInfo) {
     void main() {
       gl_FragColor=vec4(1.0, 1.0, 1.0, 1.0);
     }
-    `
+    `,
   })
 
   return new THREE.Line(geometry, material)
 }
 
 function tail(info: BodyInfo) {
-
   const geometry = new THREE.BufferGeometry()
 
-  geometry.setAttribute(
-    "position",
-    new THREE.Float32BufferAttribute([0, 0, 0, 0, 0, 0], 3)
-  )
+  geometry.setAttribute("position", new THREE.Float32BufferAttribute([], 3))
 
-  const [r, g, b] = info.color
+  geometry.setAttribute("aVertexColor", new THREE.Float32BufferAttribute([], 4))
 
   const material = new THREE.ShaderMaterial({
     vertexShader: `
+    attribute vec4 aVertexColor;
+
+    varying lowp vec4 vColor;
+
     void main() {
       gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      gl_PointSize = 1.0;
+      vColor = aVertexColor;
     }
     `,
     fragmentShader: `
+    varying lowp vec4 vColor;
+
     void main() {
-      gl_FragColor=vec4(${r}, ${g}, ${b}, 1.0);
+      gl_FragColor = vColor;
     }
-    `
+    `,
   })
-  const o3 = new THREE.Line(geometry, material)
+  const o3 = new THREE.Points(geometry, material)
   return o3
 }
 
 function peribelionAndAphelion(info: BodyInfo) {
-
   const geometry = new THREE.BufferGeometry()
 
   geometry.setAttribute(
@@ -183,17 +218,10 @@ function peribelionAndAphelion(info: BodyInfo) {
     void main() {
       gl_FragColor=vec4(${r}, ${g}, ${b}, 1.0);
     }
-    `
+    `,
   })
   const o3 = new THREE.Points(geometry, material)
   return o3
 }
 
-export {
-  point,
-  path,
-  tail,
-  sphere,
-  ring,
-  peribelionAndAphelion
-}
+export { point, path, tail, sphere, ring, peribelionAndAphelion, particle }

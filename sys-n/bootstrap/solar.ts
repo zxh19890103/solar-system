@@ -13,8 +13,8 @@ const bootstrap = (scene: THREE.Scene, renderer: THREE.WebGLRenderer, camera: TH
   setSystemOptions(
     { name: 'Mercury', provider: sphere, path: false, rotates: true },
     { name: 'Venus', provider: sphere, path: false, rotates: true },
-    { name: 'Earth', provider: sphere,  path: false, rotates: true },
-    { name: 'Luna', provider: sphere,  path: false, rotates: true },
+    { name: 'Earth', provider: sphere, path: false, rotates: true },
+    { name: 'Luna', provider: sphere, path: false, rotates: true },
     { name: 'Mars', provider: sphere, path: false, rotates: true, },
     // { name: 'Pluto', provider: point, path: true },
     // { name: 'Halley', provider: point, path: true },

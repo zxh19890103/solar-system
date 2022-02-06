@@ -232,6 +232,7 @@ export const initializeSystem = (sys: CelestialSystem, parent: CelestialSystem) 
   if (!sys.bootstrapState) return
 
   {
+    // cover
     const { hidden, map, path, tail, rotates, provider, color } = sysoptions.get(name)
     if (hidden !== undefined) sys.hidden = hidden
     if (map !== undefined) sys.body.map = map
