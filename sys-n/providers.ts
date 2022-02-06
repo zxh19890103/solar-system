@@ -1,5 +1,6 @@
 import * as THREE from "three"
 import { BodyInfo } from "../sys/body-info"
+import { Particle } from "./particle/Particle"
 import { RADIUS_SCALE } from "./settings"
 
 const textureLoader = new THREE.TextureLoader()
@@ -43,7 +44,7 @@ function point(info: BodyInfo) {
   return point
 }
 
-function particle(color: THREE.Vector3) {
+function particle(par: Particle) {
   const geometry = new THREE.BufferGeometry()
 
   geometry.setAttribute(
@@ -54,20 +55,29 @@ function particle(color: THREE.Vector3) {
   const material = new THREE.ShaderMaterial({
     uniforms: {
       uColor: {
-        value: color.toArray(),
+        value: par.color.toArray(),
       },
+      uRadius: {
+        value: par.radius
+      },
+      uAlpha: {
+        value: par.alpha
+      }
     },
     vertexShader: `
+    uniform float uRadius;
+
     void main() {
       gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-      gl_PointSize = 1.5;
+      gl_PointSize = uRadius;
     }
     `,
     fragmentShader: `
     uniform vec3 uColor;
+    uniform float uAlpha;
 
     void main() {
-      gl_FragColor = vec4(uColor, 1.0);
+      gl_FragColor = vec4(uColor, uAlpha);
     }
     `,
   })

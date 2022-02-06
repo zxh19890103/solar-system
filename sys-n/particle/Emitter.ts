@@ -2,10 +2,7 @@ import * as THREE from "three"
 import { CelestialBody } from "../gravity"
 import { Particle } from "./Particle"
 import { ParticleSystem } from "./System"
-
-const random = (min: number, max: number) => {
-  return Math.random() * (max - min) + min
-}
+import { random } from "./util"
 
 export abstract class ParticleEmitter extends Particle {
   private particles: Particle[] = []
@@ -18,10 +15,15 @@ export abstract class ParticleEmitter extends Particle {
 
   emit() {
     if (this.dead) return
-    let c = 1
+    let c = 3
     this.isEmitting = true
     while (c--) {
-      const particle = new Particle(random(.2, 5))
+      const particle = new Particle({
+        life: random(0.2, 10),
+        radius: random(0.3, 3),
+        alpha: random(0, 1),
+      })
+
       particle.parent = this
 
       this.onEmit(particle)

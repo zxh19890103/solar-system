@@ -23,8 +23,12 @@ export class ParticleSystem {
   }
 
   makeComets(body: CelestialBody) {
-    const dust = new CometParticleEmitter(body, 'dust')
+    const dust = new CometParticleEmitter(body, "dust")
+    const gas = new CometParticleEmitter(body, "gas")
+    // const self = new CometParticleEmitter(body, "self")
     this.addEmitter(dust)
+    this.addEmitter(gas)
+    // this.addEmitter(self)
   }
 
   addEmitter(emitter: ParticleEmitter) {
@@ -32,7 +36,7 @@ export class ParticleSystem {
     emitter.system = this
 
     emitter.onParticleCreated = (par: Particle) => {
-      const o3d = particle(par.color)
+      const o3d = particle(par)
       par.body = o3d
       this.pool.add(o3d)
       this.container.add(o3d)

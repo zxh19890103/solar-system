@@ -1,6 +1,7 @@
 {
   "editor.fontSize": 18,
   "prettier.semi": false,
+  "prettier.singleQuote": false,
   "files.exclude": {
     "**/node_modules": true
   }

@@ -25,7 +25,7 @@ const bootstrap = (
     {
       name: "Tempel1",
       provider: point,
-      tail: true,
+      tail: false,
       path: true,
       hidden: false,
     },
@@ -57,16 +57,16 @@ const bootstrap = (
 
   particleSys.makeComets(halley)
 
-  ;(async () => {
-    await fetch("/compution-buffer", {
-      method: "POST",
-      body: JSON.stringify({ B: BUFFER_SIZE, M: MOMENT, N: 80 }),
-    })
-    await fetch("/compution-init", {
-      method: "POST",
-      body: JSON.stringify(serializeSys(system)),
-    })
-  })()
+    ; (async () => {
+      await fetch("/compution-buffer", {
+        method: "POST",
+        body: JSON.stringify({ B: BUFFER_SIZE, M: MOMENT, N: 80 }),
+      })
+      await fetch("/compution-init", {
+        method: "POST",
+        body: JSON.stringify(serializeSys(system)),
+      })
+    })()
 
   const objects = star.flat()
   const records = []

@@ -14,7 +14,7 @@ import {
   ZERO_ACC,
 } from "./settings"
 
-const noop = () => {}
+const noop = () => { }
 
 const setupDisplay = () => {
   const div = document.createElement("div")
@@ -87,9 +87,8 @@ class TickableObject {
     const { date } = this
     const month = date.getMonth() + 1
     const on = date.getDate()
-    this.t = `${date.getFullYear()}/${month < 10 ? "0" + month : month}/${
-      on < 10 ? "0" + on : on
-    }`
+    this.t = `${date.getFullYear()}/${month < 10 ? "0" + month : month}/${on < 10 ? "0" + on : on
+      }`
     this.delay = true
     setTimeout(() => {
       this.delay = false
@@ -376,6 +375,10 @@ export class CelestialBody {
     let computed = false
 
     return () => {
+      const mat = new THREE.Matrix4()
+      mat.lookAt(this.o3.position, new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, 1))
+      this.o3.rotation.setFromRotationMatrix(mat)
+
       if (computed) return
 
       computed = true

@@ -13,7 +13,7 @@ const camera = new THREE.PerspectiveCamera(
   HaleBopp.aphelion
 )
 
-const renderer = new THREE.WebGLRenderer({ alpha: true })
+const renderer = new THREE.WebGLRenderer({ alpha: true, premultipliedAlpha: true })
 renderer.setClearColor(0x000000, 0)
 renderer.setSize(window.innerWidth, window.innerHeight)
 document.body.appendChild(renderer.domElement)
