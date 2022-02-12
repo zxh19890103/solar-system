@@ -16,6 +16,7 @@ export class CometParticleEmitter extends CelestialObjParticleEmitter {
     super(celestialObj)
     this.type = type
     this.color = this.getColor()
+    this.rate = type === "dust" ? 10 : 1
   }
 
   private getColor() {
@@ -38,11 +39,11 @@ export class CometParticleEmitter extends CelestialObjParticleEmitter {
         particle.life = random(1, 2)
         // follow the comet
         particle.velocity.copy(this.velocity)
-        particle.acceleration.copy(towards.setLength(random(2000, 3000)))
+        particle.acceleration.copy(towards.setLength(random(40000, 80000)))
         break
       }
       case "gas": {
-        particle.life = random(0.2, 1)
+        particle.life = random(0.2, 0.4)
         // point to star
         particle.velocity.copy(towards.setLength(random(700000, 900000)))
         particle.acceleration.copy(towards.setLength(random(20000, 24000)))

@@ -9,13 +9,14 @@ export abstract class ParticleEmitter extends Particle {
   system: ParticleSystem = null
   isEmitting = false
   size = 0
+  rate = 3
 
   onParticleCreated: (par: Particle) => void
   onParticleDead: (par: Particle) => void
 
   emit() {
     if (this.dead) return
-    let c = 3
+    let c = this.rate
     this.isEmitting = true
     while (c--) {
       const particle = new Particle({
