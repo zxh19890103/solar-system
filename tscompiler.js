@@ -1,10 +1,10 @@
-const fs = require('fs')
-const ts = require('typescript')
-const path = require('path')
-const tsconfig = require('./tsconfig.json')
+const fs = require("fs")
+const ts = require("typescript")
+const path = require("path")
+const tsconfig = require("./tsconfig.json")
 
 const compileTs = (entryFile) => {
-  console.log('compile', entryFile)
+  console.log("compile", entryFile)
   setReferer(path.dirname(entryFile))
   const sourceFile = ts.createSourceFile(
     entryFile,
@@ -12,34 +12,31 @@ const compileTs = (entryFile) => {
     ts.ScriptTarget.ESNext
   )
 
-  let input = ''
+  let input = ""
   ts.forEachChild(sourceFile, (node) => {
     if (node.kind === ts.SyntaxKind.ImportDeclaration) {
       input += transformTSImport(node, sourceFile)
     } else {
       const text = node.getText(sourceFile)
-      input += text + '\n'
+      input += text + "\n"
     }
   })
 
-  const output = ts.transpile(
-    input,
-    tsconfig.compilerOptions
-  )
+  const output = ts.transpile(input, tsconfig.compilerOptions)
 
   jsFiles.set(entryFile, {
     ctimeMs: Date.now(),
-    content: output
+    content: output,
   })
 }
 
 /**
- * 
- * @param {ts.Node} node 
+ *
+ * @param {ts.Node} node
  * @param {ts.SourceFile} sourceFile
  */
 const transformTSImport = (node, sourceFile) => {
-  let importStatement = ''
+  let importStatement = ""
   for (const child of node.getChildren(sourceFile)) {
     switch (child.kind) {
       case ts.SyntaxKind.StringLiteral: {
@@ -49,16 +46,19 @@ const transformTSImport = (node, sourceFile) => {
         const text = child.text
         const importFrom = tsResolve(text, REFERER)
         if (importFrom) {
-          if (typeof importFrom === 'string')
-            importStatement += '\'' + importFrom + '\' '
+          if (typeof importFrom === "string")
+            importStatement += "'" + importFrom + "' "
           else {
             if (importFrom.module) {
-              importStatement += '\'' + importFrom.from + '\' '
+              importStatement += "'" + importFrom.from + "' "
             } else {
               // it's not a module.
               return importStatement
-                .replace('import ', 'const ')
-                .replace('from ', `= await importAnyJS("${importFrom.from}"); \n`)
+                .replace("import ", "const ")
+                .replace(
+                  "from ",
+                  `= await importAnyJS("${importFrom.from}"); \n`
+                )
             }
           }
         } else {
@@ -67,11 +67,11 @@ const transformTSImport = (node, sourceFile) => {
         break
       }
       default:
-        importStatement += child.getFullText(sourceFile) + ' '
+        importStatement += child.getFullText(sourceFile) + " "
         break
     }
   }
-  return importStatement + '\n'
+  return importStatement + "\n"
 }
 
 /**
@@ -80,13 +80,24 @@ const transformTSImport = (node, sourceFile) => {
  * @param {string} refer is an absolute path of .ts file.
  */
 const tsResolve = (dep, refer) => {
+  //////// break
+  if (dep.startsWith("three/examples/jsm")) {
+    const modulepath = require.resolve(dep, {
+      paths: [path.join(__dirname, "./warehouse")],
+    })
+    // http://localhost:9001/Users/singhijohn/WorkSpace/solar-system/warehouse/node_modules/three/examples/jsm/controls/ArcballControls.js/
+    return "/" + path.relative(__dirname, modulepath)
+  }
 
   // it's npm package
   if (/^\w+$/.test(dep)) {
-    const mainfile = require.resolve(dep, { paths: [refer] })
-    const moduleFile = tsResolvePackage(mainfile.replace(new RegExp(`/${dep}.*`), `/${dep}/`))
-    if (moduleFile)
-      return moduleFile
+    const mainfile = require.resolve(dep, {
+      paths: [refer, path.join(__dirname, "./warehouse")],
+    })
+    const moduleFile = tsResolvePackage(
+      mainfile.replace(new RegExp(`/${dep}.*`), `/${dep}/`)
+    )
+    if (moduleFile) return moduleFile
   }
 
   // it's absolute Or relative path.
@@ -94,39 +105,38 @@ const tsResolve = (dep, refer) => {
     return null
   }
 
-  if (dep.endsWith('.ts'))
-    return dep
+  if (dep.endsWith(".ts")) return dep
 
   const abspath = path.join(refer, dep)
 
-  if (fs.existsSync(abspath + '.ts')) {
-    return dep + '.ts'
+  if (fs.existsSync(abspath + ".ts")) {
+    return dep + ".ts"
   }
 
   // as a folder
   if (fs.existsSync(abspath)) {
-
-    const indexFile = path.join(abspath, 'index.ts')
+    const indexFile = path.join(abspath, "index.ts")
     if (fs.existsSync(indexFile)) {
       // Warning! join delete the relative symbol of path.
-      return dep + '/index.ts'
+      return dep + "/index.ts"
     }
 
     const moduleFile = tsResolvePackage(abspath)
-    if (moduleFile)
-      return moduleFile
+    if (moduleFile) return moduleFile
   }
 
   return null
 }
 
 const tsResolvePackage = (packageDir) => {
-  const packageFile = path.join(packageDir, 'package.json')
-  if (!fs.existsSync(packageFile))
-    return null
+  const packageFile = path.join(packageDir, "package.json")
+  if (!fs.existsSync(packageFile)) return null
   const { main, module } = require(packageFile)
   if (module) {
-    return { from: normalizeDepUri(path.join(packageDir, module)), module: true }
+    return {
+      from: normalizeDepUri(path.join(packageDir, module)),
+      module: true,
+    }
   }
   if (main) {
     return { from: normalizeDepUri(path.join(packageDir, main)), module: false }
@@ -135,12 +145,12 @@ const tsResolvePackage = (packageDir) => {
 }
 
 const normalizeDepUri = (dep) => {
-  const relativePath = '/' + path.relative(ROOT_DIR, dep)
+  const relativePath = "/" + path.relative(ROOT_DIR, dep)
   return relativePath
 }
 
 /**
- * @param {string} rootDir 
+ * @param {string} rootDir
  */
 const emitScriptsHTMLTags = () => {
   const scriptTags = []
@@ -148,7 +158,7 @@ const emitScriptsHTMLTags = () => {
     scriptTags.push(`registerGlobalScript("${script}");\n`)
   }
   globalImportScripts.clear()
-  return scriptTags.join('')
+  return scriptTags.join("")
 }
 
 const readScriptContent = (url) => {
@@ -165,24 +175,24 @@ const readScriptContent = (url) => {
 }
 
 const test = () => {
-  console.log('test >>>')
+  console.log("test >>>")
   setRootDir(__dirname)
   // console.log('>>> root dir:', __dirname)
   // compileTs('./module.ts')
   // console.log(jsFiles.get('./module.ts'))
   // console.log(emitScriptsHTMLTags(__dirname))
-  console.log(compileTs('sys-n/app.ts'))
+  console.log(compileTs("sys-n/app.ts"))
   // console.log(...jsFiles)
   return 0
 }
 
 const globalImportScripts = new Set()
 const jsFiles = new Map()
-let ROOT_DIR = '/'
+let ROOT_DIR = "/"
 const setRootDir = (value) => {
   ROOT_DIR = value
 }
-let REFERER = ''
+let REFERER = ""
 const setReferer = (value) => {
   REFERER = value
 }

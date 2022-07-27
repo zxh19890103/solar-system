@@ -66,7 +66,7 @@ data: ${JSON.stringify(payload)}
   }
 }
 
-fs.watch("./rocket", {
+fs.watch("./warehouse", {
   recursive: true
 }, (event, name) => {
   if (event !== "change") return
