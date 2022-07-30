@@ -1,0 +1,7 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "noImplicitThis": true,
+    "esModuleInterop": true
+  }
+}

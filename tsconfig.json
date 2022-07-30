@@ -4,6 +4,7 @@
     "target": "ESNext",
     "moduleResolution": "node",
     "resolveJsonModule": true,
+    "esModuleInterop": true,
     "lib": [
       "ScriptHost",
       "DOM",
@@ -15,7 +16,5 @@
     ],
     "noImplicitThis": true
   },
-  "exclude": [
-    "./legacy/**/*"
-  ]
+  "exclude": ["./legacy/**/*"]
 }

@@ -139,7 +139,7 @@ const tsResolvePackage = (packageDir) => {
     }
   }
   if (main) {
-    return { from: normalizeDepUri(path.join(packageDir, main)), module: false }
+    return { from: normalizeDepUri(path.join(packageDir, main)), module: true }
   }
   return null
 }
