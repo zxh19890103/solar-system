@@ -16,6 +16,7 @@ interface Constructor<M> {
 
 abstract class Base<V> {
   readonly id = _id_seed++
+  $$parent: any = null
 
   views: Set<V> = new Set()
 
@@ -49,13 +50,14 @@ namespace api {
     z: number
   }
 
-  export interface ViewContainer {
-    add(...items: any[]): void
-    remove(...items: any[]): void
-    make: (v: any) => any
+  export interface ViewContainer<M, V> {
     $$value: any
-    [k: string]: any
+    $$make: ViewMake<M, V>
+    add(...items: V[]): void
+    remove(...items: V[]): void
   }
+
+  export type ViewMake<M, V> = (m: M) => V
 
   export class Person extends Base<PersonView> {
     position: Position = { x: 0, y: 0, z: 0 }
@@ -84,8 +86,9 @@ namespace api {
   export class List<V, M extends Base<V>> extends L.Evented {
     items: Set<M> = new Set()
     index: Map<number, M> = new Map()
+    size: number = 0
     private _item_C: Constructor<M> = null
-    private containers: ViewContainer[] = []
+    private containers: ViewContainer<M, V>[] = []
 
     private isBatching = false
 
@@ -121,9 +124,13 @@ namespace api {
       this.items.add(m)
       this.index.set(m.id, m)
 
+      m.$$parent = this
+
+      this.size += 1
+
       if (this.isBatching) return
       for (const c of this.containers) {
-        c.add(c.make(m))
+        c.add(c.$$make(m))
       }
     }
 
@@ -137,7 +144,7 @@ namespace api {
       this.isBatching = false
 
       for (const c of this.containers) {
-        c.add(...items.map(c.make))
+        c.add(...items.map(c.$$make))
       }
     }
 
@@ -145,6 +152,10 @@ namespace api {
       if (!this.items.has(m)) return
       this.items.delete(m)
       this.index.delete(m.id)
+
+      m.$$parent = null
+
+      this.size -= 1
 
       m.requestHookCall("Trash")
 
@@ -174,7 +185,7 @@ namespace api {
       }
     }
 
-    addContainer(c: ViewContainer) {
+    addContainer(c: ViewContainer<M, V>) {
       this.containers.push(c)
     }
   }
@@ -186,6 +197,10 @@ class Person2D extends L.Circle implements api.PersonView {
   constructor(person: api.Person, options: any) {
     super([0, 0], { radius: 1000 })
     baseViewConstruct.call(this, person, options)
+
+    this.on("click", (evt) => {
+      this.model.$$parent.remove(this.model)
+    })
   }
 
   onWalk(): void {
@@ -237,76 +252,81 @@ namespace containers {
     | { use: "three"; name: "Group" }
     | { use: "three"; name: "Object3D" }
 
-  export function create(
-    strategy: ConstructStrategy,
-    make: (m: any) => any,
-    ...items: any[]
-  ): api.ViewContainer {
-    const { use, name } = strategy
-    switch (use) {
-      case "leaflet": {
-        const c = new L[name](items.map(make), strategy.options)
-        return {
-          $$value: c,
-          add(...vs) {
-            for (const v of vs) {
-              this.$$value.addLayer(v)
-            }
-          },
-          remove(...vs) {
-            for (const v of vs) {
-              this.$$value.removeLayer(v)
-            }
-          },
-          make,
-        }
+  export class LeafletContainer<M, V> implements api.ViewContainer<M, V> {
+    $$make: api.ViewMake<M, V>
+    $$value: any
+
+    constructor(value: any, make: api.ViewMake<M, V>, ...initialItems: M[]) {
+      this.$$value = value
+      this.$$make = make
+
+      this.add(...initialItems.map(make))
+    }
+
+    add(...items: V[]): void {
+      for (const item of items) {
+        this.$$value.addLayer(item)
       }
-      case "three": {
-        const c = new THREE[name]()
-        for (const item of items.map(make)) c.add(item)
-        return {
-          $$value: c,
-          add(...vs) {
-            this.$$value.add(...vs)
-          },
-          remove(...vs) {
-            this.$$value.remove(...vs)
-          },
-          make,
-        }
+    }
+
+    remove(...items: V[]): void {
+      for (const item of items) {
+        this.$$value.removeLayer(item)
       }
+    }
+  }
+
+  export class ThreeContainer<M, V> implements api.ViewContainer<M, V> {
+    $$make: api.ViewMake<M, V> = null
+    /**
+     * L.FeatureGroup, L.LayerGroup, THREE.Group, THREE.Object3D
+     */
+    $$value: any = null
+
+    constructor(value: any, make: api.ViewMake<M, V>, ...initialItems: M[]) {
+      this.$$value = value
+      this.$$make = make
+
+      this.add(...initialItems.map(make))
+    }
+
+    add(...items: V[]): void {
+      for (const item of items) {
+        this.$$value.add(item)
+      }
+    }
+
+    remove(...items: V[]): void {
+      this.$$value.remove(...items)
     }
   }
 }
 
 class Graph {
-  persons: api.List<api.PersonView, api.Person> = new api.List(
-    api.Person,
-    []
-  ).fromJSON(Array(1).fill(0))
+  persons = new api.List<api.PersonView, api.Person>(api.Person, []).fromJSON(
+    Array(1).fill(0)
+  )
 
   render() {
-    const container = containers.create(
-      { use: "leaflet", name: "FeatureGroup" },
-      (p) => new Person2D(p, {}),
+    const c = new containers.LeafletContainer(
+      new L.FeatureGroup(),
+      (p: api.Person) => new Person2D(p, {}),
       ...this.persons
     )
 
-    this.persons.addContainer(container)
-
-    return [container]
+    this.persons.addContainer(c)
+    return [c]
   }
 
   render3d() {
-    const container = containers.create(
-      { use: "three", name: "Group" },
-      (p) => new Person3D(p, {}),
+    const c = new containers.ThreeContainer(
+      new THREE.Group(),
+      (p: api.Person) => new Person3D(p, {}),
       ...this.persons
     )
 
-    this.persons.addContainer(container)
-
-    return [container]
+    this.persons.addContainer(c)
+    return [c]
   }
 }
 
@@ -314,17 +334,19 @@ class Graph {
  * 问题：model 的状态变化怎么通知到 view
  * 回答：通过 requestHookCall
  */
-
 // leaflet
 
 const App = () => {
   const graph = new Graph()
 
-  const loop = () => {
-    setTimeout(loop, 200)
+  let size = 0
 
-    if (Math.random() > 0.1) {
+  const loop = () => {
+    setTimeout(loop, 3000)
+
+    if (size < 30 && Math.random() > 0.1) {
       graph.persons.add(new api.Person().fromJSON(null))
+      size += 1
     } else {
       graph.persons.removeById(0 ^ randInt(0, _id_seed))
     }
