@@ -246,12 +246,6 @@ class Person3D extends THREE.Mesh implements api.PersonView {
 }
 
 namespace containers {
-  type ConstructStrategy =
-    | { use: "leaflet"; name: "FeatureGroup"; options?: L.LayerOptions }
-    | { use: "leaflet"; name: "LayerGroup"; options?: L.LayerOptions }
-    | { use: "three"; name: "Group" }
-    | { use: "three"; name: "Object3D" }
-
   export class LeafletContainer<M, V> implements api.ViewContainer<M, V> {
     $$make: api.ViewMake<M, V>
     $$value: any
