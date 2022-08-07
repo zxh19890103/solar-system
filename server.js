@@ -2,7 +2,9 @@ const fs = require("fs")
 const http = require("http")
 const path = require("path")
 const tsCompiler = require('./tscompiler')
+const modules = require('./modules')
 const { LAST_HANDLER } = require('./last-handler')
+
 /**
  * @typedef {(req: http.IncomingMessage, res: http.ServerResponse, next: () => Promise<void>) => Promise<void>} MyRouteHandler
  * @typedef {Object} MyRoute
@@ -66,12 +68,14 @@ data: ${JSON.stringify(payload)}
   }
 }
 
-fs.watch("./warehouse", {
-  recursive: true
-}, (event, name) => {
-  if (event !== "change") return
-  if (!name.endsWith(".ts")) return
-  eventSource.emit({ reload: true })
+modules.watch.forEach(p => {
+  fs.watch(p, {
+    recursive: true
+  }, (event, name) => {
+    if (event !== "change") return
+    if (!/\.(ts|html|css|js)$/.test(name)) return
+    eventSource.emit({ reload: true })
+  })
 })
 
 /**

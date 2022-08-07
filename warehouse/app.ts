@@ -1,9 +1,6 @@
 import { Warehouse } from "./Warehouse.class"
 import * as THREE from "three"
 import { Robot } from "./Robot.class"
-import { ArcballControls } from "./ArcballControls"
-import { FlyControls } from "./FlyControls"
-import { OrbitControls } from "./OrbitControls"
 import { Controls } from "./Controls"
 
 let scene: THREE.Scene = null

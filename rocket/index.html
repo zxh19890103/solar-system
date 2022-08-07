@@ -32,10 +32,8 @@
       }
       const payload = JSON.parse(data.data)
       if (payload.buffer) {
-        phases['buffer']()
         console.log('sse buffer')
       } else if (payload.init) {
-        phases['init']()
         console.log('sse init')
       } else {
         for (const callback of __COMPUTION_RESULT_CALLBACKS__) {

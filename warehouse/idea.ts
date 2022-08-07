@@ -1,11 +1,8 @@
 import * as THREE from "three"
 import { ArcballControls } from "./ArcballControls"
-// import L from "leaflet"
-declare var L
-// import React from "react"
-declare var React
-// import ReactDOM from "react-dom"
-declare var ReactDOM
+import L from /*globalExportName: L*/"leaflet"
+import React from /*globalExportName: React,resolveAs:react/umd/react.development*/ "react"
+import ReactDOM from /*globalExportName: ReactDOM,resolveAs:react-dom/umd/react-dom.development*/ "react-dom"
 
 const { random } = Math
 

@@ -1,6 +1,7 @@
 const fs = require("fs")
 const ts = require("typescript")
 const path = require("path")
+const modules = require("./modules")
 const tsconfig = require("./tsconfig.json")
 
 const compileTs = (entryFile) => {
@@ -36,42 +37,74 @@ const compileTs = (entryFile) => {
  * @param {ts.SourceFile} sourceFile
  */
 const transformTSImport = (node, sourceFile) => {
-  let importStatement = ""
+  const importStatement = { from: null, imports: null, name: "T" }
+
   for (const child of node.getChildren(sourceFile)) {
     switch (child.kind) {
+      case ts.SyntaxKind.ImportClause: {
+        importStatement.name = child.getFullText(sourceFile).trim()
+        break
+      }
       case ts.SyntaxKind.StringLiteral: {
-        /**
-         * @type {string}
-         */
-        const text = child.text
+        let text = child.text
+        
+        const { resolveAs, globalExportName } = resolveModifiersBeforeFrom(
+          child,
+          sourceFile
+        )
+
+        if (resolveAs) text = resolveAs
         const importFrom = tsResolve(text, REFERER)
+
         if (importFrom) {
-          if (typeof importFrom === "string")
-            importStatement += "'" + importFrom + "' "
-          else {
+          if (typeof importFrom === "string") {
+            importStatement.imports = `import`
+            importStatement.from = `from "${importFrom}"`
+          } else {
             if (importFrom.module) {
-              importStatement += "'" + importFrom.from + "' "
+              importStatement.imports = `import`
+              importStatement.from = `from "${importFrom.from}"`
             } else {
-              // it's not a module.
-              return importStatement
-                .replace("import ", "const ")
-                .replace(
-                  "from ",
-                  `= await importAnyJS("${importFrom.from}"); \n`
-                )
+              importStatement.imports = `const`
+              importStatement.from = `= await importAnyJS("${importFrom.from}", "${globalExportName}")`
             }
           }
         } else {
           return `console.warn("Path ${text} is not there!");`
         }
-        break
       }
       default:
-        importStatement += child.getFullText(sourceFile) + " "
         break
     }
   }
-  return importStatement + "\n"
+
+  return `${importStatement.imports} ${importStatement.name} ${importStatement.from}`
+}
+
+/**
+ *
+ * @param {ts.Node} node
+ * @returns { { resolveAs: string; globalExportName: string } }
+ */
+const resolveModifiersBeforeFrom = (node, sourceFile) => {
+  const text = node.getFullText(sourceFile).trim()
+  const match = /\/\*(.+)\*\//.exec(text)
+
+  if (!match) {
+    return {
+      resolveAs: null,
+      globalExportName: "U",
+    }
+  }
+
+  const [, cfg] = match
+  const pairs = cfg.split(/[:,]/)
+  const cfgo = {}
+  for (let i = 0, s = pairs.length; i < s; ) {
+    cfgo[pairs[i].trim()] = pairs[(i += 1)].trim()
+    i += 1
+  }
+  return cfgo
 }
 
 /**
@@ -80,24 +113,24 @@ const transformTSImport = (node, sourceFile) => {
  * @param {string} refer is an absolute path of .ts file.
  */
 const tsResolve = (dep, refer) => {
-  //////// break
-  if (dep.startsWith("three/examples/jsm")) {
-    const modulepath = require.resolve(dep, {
-      paths: [path.join(__dirname, "./warehouse")],
-    })
-    // http://localhost:9001/Users/singhijohn/WorkSpace/solar-system/warehouse/node_modules/three/examples/jsm/controls/ArcballControls.js/
-    return "/" + path.relative(__dirname, modulepath)
-  }
-
   // it's npm package
-  if (/^\w+$/.test(dep)) {
+  if (/^[\w-]+/.test(dep)) {
     const mainfile = require.resolve(dep, {
-      paths: [refer, path.join(__dirname, "./warehouse")],
+      paths: [refer],
     })
+
     const moduleFile = tsResolvePackage(
       mainfile.replace(new RegExp(`/${dep}.*`), `/${dep}/`)
     )
-    if (moduleFile) return moduleFile
+
+    if (moduleFile) {
+      return moduleFile
+    } else {
+      return {
+        module: false,
+        from: normalizeDepUri(mainfile),
+      }
+    }
   }
 
   // it's absolute Or relative path.
@@ -139,7 +172,10 @@ const tsResolvePackage = (packageDir) => {
     }
   }
   if (main) {
-    return { from: normalizeDepUri(path.join(packageDir, main)), module: true }
+    return {
+      from: normalizeDepUri(path.join(packageDir, main)),
+      module: false,
+    }
   }
   return null
 }

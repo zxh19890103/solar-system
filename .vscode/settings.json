@@ -1,6 +1,6 @@
 {
   "editor.fontSize": 18,
-  "editor.fontFamily": "Yuppy SC",
+  // "editor.fontFamily": "Yuppy SC",
   "prettier.semi": false,
   "prettier.singleQuote": false,
   "files.exclude": {

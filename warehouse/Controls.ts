@@ -9,7 +9,7 @@ export class Controls {
           if (isShift) {
             camera.rotation.y += .1
           } else {
-            camera.position.x -= 100
+            camera.position.x -= 1000
           }
           evt.stopPropagation()
           evt.preventDefault()
@@ -18,7 +18,7 @@ export class Controls {
           if (isShift) {
             camera.rotation.y -= .1
           } else {
-            camera.position.x += 100
+            camera.position.x += 1000
           }
           evt.stopPropagation()
           evt.preventDefault()
@@ -27,7 +27,7 @@ export class Controls {
           if (isShift) {
             camera.rotation.x += 0.01
           } else {
-            camera.position.y += 100
+            camera.position.y += 1000
           }
           evt.stopPropagation()
           evt.preventDefault()
@@ -36,7 +36,7 @@ export class Controls {
           if (isShift) {
             camera.rotation.x -= 0.01
           } else {
-            camera.position.y -= 100
+            camera.position.y -= 1000
           }
           evt.stopPropagation()
           evt.preventDefault()

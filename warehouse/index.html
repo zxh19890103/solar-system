@@ -17,33 +17,6 @@
 <body>
   <script src="/runtime.js"></script>
   <script type="module" src="/warehouse/app.ts"></script>
-  <script>
-    const __COMPUTION_RESULT_CALLBACKS__ = []
-    function computionResultJsonp(callback) {
-      __COMPUTION_RESULT_CALLBACKS__.push(callback)
-    }
-    const es = new EventSource("/sse-open")
-    es.onmessage = (evt) => {
-      const data = JSON.parse(evt.data)
-      if (data.reload) {
-        console.log('sse reload')
-        location.reload()
-        return
-      }
-      const payload = JSON.parse(data.data)
-      if (payload.buffer) {
-        phases['buffer']()
-        console.log('sse buffer')
-      } else if (payload.init) {
-        phases['init']()
-        console.log('sse init')
-      } else {
-        for (const callback of __COMPUTION_RESULT_CALLBACKS__) {
-          callback(payload)
-        }
-      }
-    }
-  </script>
 </body>
 
 </html>
