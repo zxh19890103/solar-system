@@ -6,7 +6,6 @@ import { Controls } from "./Controls"
 let scene: THREE.Scene = null
 let camera: THREE.PerspectiveCamera = null
 let renderer: THREE.WebGLRenderer = null
-let controls: any = null
 
 const log = console.log
 
@@ -38,22 +37,7 @@ const setup = () => {
   renderer.setClearColor(0x000000, 0)
   renderer.setSize(W, H)
 
-  // const controls = new ArcballControls(camera, renderer.domElement, scene)
-  {
-    // controls = new OrbitControls(camera, renderer.domElement) as any
-    // controls.listenToKeyEvents(window) // optional
-    // controls.enableDamping = true // an animation loop is required when either damping or auto-rotation are enabled
-    // controls.dampingFactor = 0.05
-
-    // controls.screenSpacePanning = false
-
-    // controls.minDistance = 0
-    // controls.maxDistance = 500000
-
-    // controls.maxPolarAngle = Math.PI / 2
-
-    controls = new Controls(camera)
-  }
+  new Controls(camera)
 
   document.body.appendChild(renderer.domElement)
 }
@@ -81,6 +65,7 @@ const run = () => {
   let dx = 100,
     dy = 2000
 
+
   const walk = () => {
     x += dx
 
@@ -96,8 +81,6 @@ const run = () => {
     robot.position.set(x, y, 0)
   }
 
-  // const clock = new THREE.Clock()
-
   const loop = () => {
     requestAnimationFrame(loop)
     walk()
@@ -109,5 +92,28 @@ const run = () => {
   requestAnimationFrame(loop)
 }
 
+const shelf = () => {
+  const warehouse = new Warehouse()
+  scene.add(warehouse)
+  warehouse.layout({
+    m: 1,
+    n: 1,
+    l: 4000,
+    w: 1000,
+    h: 3000,
+    gapX: 1000,
+    gapY: 1000,
+  })
+
+  camera.lookAt(0, 0, 0)
+
+  const loop = () => {
+    requestAnimationFrame(loop)
+    renderer.render(scene, camera)
+  }
+
+  requestAnimationFrame(loop)
+}
+
 setup()
-run()
+shelf()

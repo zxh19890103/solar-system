@@ -449,10 +449,10 @@ namespace view {
 }
 
 class Graph {
-  persons = new model.List<model.PersonView, model.Person>(
-    model.Person,
-    []
-  ).fromJSON(Array(1).fill(0))
+  private persons: model.List<model.PersonView, model.Person> = null
+  constructor(state: State) {
+    this.persons = state.persons
+  }
 
   render() {
     const c = new view.LeafletContainer(
@@ -483,8 +483,19 @@ class Graph {
  */
 // leaflet
 
+interface State {
+  persons: model.List<model.PersonView, model.Person>
+}
+
 const App = () => {
-  const graph = new Graph()
+  const state = {
+    persons: new model.List<model.PersonView, model.Person>(
+      model.Person,
+      []
+    ).fromJSON(Array(1).fill(0)),
+  }
+
+  const graph = new Graph(state)
 
   let size = 0
 
@@ -492,11 +503,11 @@ const App = () => {
     setTimeout(loop, 5)
 
     if (size < 100 && Math.random() > 0.1) {
-      graph.persons.add(new model.Person().fromJSON(null))
+      state.persons.add(new model.Person().fromJSON(null))
       size += 1
     }
 
-    for (const p of graph.persons) p.walk()
+    for (const p of state.persons) p.walk()
   }
 
   setTimeout(loop, 3000)
@@ -617,7 +628,7 @@ const App = () => {
             href: "javascript:void(0);",
             style: { marginLeft: 10 },
             onClick: () => {
-              graph.persons.remove(person)
+              state.persons.remove(person)
             },
           },
           "RM"
@@ -629,16 +640,16 @@ const App = () => {
       const [_, tick] = React.useReducer(reducer, seq)
 
       React.useEffect(() => {
-        graph.persons.on("add add.range remove remove.range", tick)
+        state.persons.on("add add.range remove remove.range", tick)
         return () => {
-          graph.persons.off("add add.range remove remove.range", tick)
+          state.persons.off("add add.range remove remove.range", tick)
         }
       }, [])
 
       return h(
         "ul",
         {},
-        ...graph.persons.map((p) => {
+        ...state.persons.map((p) => {
           return h(Item, { person: p, key: p.id })
         })
       )
